@@ -359,6 +359,22 @@
                             assignedStaff.push(s); // Assign the staff member to the patient for shared care
                         }
                     });
+
+                    // Assign the second half of the hour to another staff member
+                    const nextStaffIndex = (index + 1) % staff.length; // Get the next staff member
+                    const nextStaff = staff[nextStaffIndex];
+                    const secondHalfBreakTime = `${shortBreakTime.split('-')[1]}-${timeSlots[shortBreakHour + 1]?.split('-')[1] || "END"}`;
+                    schedule[shortBreakTime].staffBreaks[nextStaff] = "30-MIN BREAK";
+                    staffStats[nextStaff].shortBreakTime = secondHalfBreakTime;
+                    staffStats[nextStaff].breakTime += 0.5;
+
+                    // Allow shared patient care during the second half of the break
+                    patients.forEach(patient => {
+                        const assignedStaff = schedule[shortBreakTime].patientAssignments[patient.name];
+                        if (assignedStaff.length < patient.staffCount) {
+                            assignedStaff.push(nextStaff); // Assign the next staff member to the patient for shared care
+                        }
+                    });
                 }
             });
 
