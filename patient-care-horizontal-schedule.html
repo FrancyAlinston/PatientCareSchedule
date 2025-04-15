@@ -121,7 +121,14 @@
         <h1>Patient Care Schedule - Horizontal Timeline</h1>
         
         <div class="setup-section">
-            <h2>Staff Names</h2>
+            <h2>Security Staff</h2>
+            <div class="security-staff-inputs" id="securityStaffInputs">
+                <!-- Initially empty -->
+            </div>
+            <button id="addSecurityStaffBtn">Add Security Staff</button>
+            <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+
+            <h2>Other Staff</h2>
             <div class="staff-inputs" id="staffInputs">
                 <!-- Initially empty -->
             </div>
@@ -193,6 +200,7 @@
         
         // Generate a schedule automatically
         function generateSchedule() {
+            const securityStaffInputs = document.querySelectorAll('.security-container');
             const staffInputs = document.querySelectorAll('.staff-container');
             const patientInputs = document.querySelectorAll('#patientInputs input');
         
@@ -200,17 +208,25 @@
             const excludedHours = {};
             const securityStaff = new Set();
         
-            staffInputs.forEach(container => {
-                const staffName = container.querySelector('.staff-name').value.trim();
+            // Process security staff
+            securityStaffInputs.forEach(container => {
+                const staffName = container.querySelector('.security-name').value.trim();
                 const excludeHours = parseInt(container.querySelector('.exclude-hours').value);
-                const isSecurity = container.querySelector('.security-checkbox').checked;
         
                 if (staffName) {
                     staff.push(staffName);
                     excludedHours[staffName] = excludeHours;
-                    if (isSecurity) {
-                        securityStaff.add(staffName);
-                    }
+                    securityStaff.add(staffName);
+                }
+            });
+        
+            // Process other staff
+            staffInputs.forEach(container => {
+                const staffName = container.querySelector('.staff-name').value.trim();
+        
+                if (staffName) {
+                    staff.push(staffName);
+                    excludedHours[staffName] = 0; // No additional excluded hours for non-security staff
                 }
             });
         
@@ -446,21 +462,15 @@
         // Initialize the page
         window.onload = function() {
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-            document.getElementById('addStaffBtn').addEventListener('click', () => {
-                const staffInputs = document.getElementById('staffInputs');
-                const staffContainer = document.createElement('div');
-                staffContainer.className = 'staff-container';
+            document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
+                const securityStaffInputs = document.getElementById('securityStaffInputs');
+                const securityContainer = document.createElement('div');
+                securityContainer.className = 'security-container';
 
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
-                newInput.placeholder = `Staff ${staffInputs.children.length + 1}`;
-                newInput.className = 'staff-name';
-
-                const securityCheckbox = document.createElement('input');
-                securityCheckbox.type = 'checkbox';
-                securityCheckbox.className = 'security-checkbox';
-                const securityLabel = document.createElement('label');
-                securityLabel.textContent = 'Security';
+                newInput.placeholder = `Security Staff ${securityStaffInputs.children.length + 1}`;
+                newInput.className = 'security-name';
 
                 const excludeHoursLabel = document.createElement('span');
                 excludeHoursLabel.textContent = 'Exclude Hours: ';
@@ -471,11 +481,9 @@
                 excludeHoursInput.min = 0;
                 excludeHoursInput.max = 12;
                 excludeHoursInput.className = 'exclude-hours';
-                excludeHoursInput.disabled = true; // Initially disabled
 
                 const plusButton = document.createElement('button');
                 plusButton.textContent = '+';
-                plusButton.disabled = true; // Initially disabled
                 plusButton.addEventListener('click', () => {
                     if (excludeHoursInput.value < 12) {
                         excludeHoursInput.value = parseInt(excludeHoursInput.value) + 1;
@@ -484,29 +492,39 @@
 
                 const minusButton = document.createElement('button');
                 minusButton.textContent = '-';
-                minusButton.disabled = true; // Initially disabled
                 minusButton.addEventListener('click', () => {
                     if (excludeHoursInput.value > 0) {
                         excludeHoursInput.value = parseInt(excludeHoursInput.value) - 1;
                     }
                 });
 
-                // Enable exclude hours input and buttons only if "Security" is checked
-                securityCheckbox.addEventListener('change', () => {
-                    const isSecurity = securityCheckbox.checked;
-                    excludeHoursInput.disabled = !isSecurity;
-                    plusButton.disabled = !isSecurity;
-                    minusButton.disabled = !isSecurity;
-                });
+                securityContainer.appendChild(newInput);
+                securityContainer.appendChild(excludeHoursLabel);
+                securityContainer.appendChild(excludeHoursInput);
+                securityContainer.appendChild(plusButton);
+                securityContainer.appendChild(minusButton);
+
+                securityStaffInputs.appendChild(securityContainer);
+            });
+
+            document.getElementById('removeSecurityStaffBtn').addEventListener('click', () => {
+                const securityStaffInputs = document.getElementById('securityStaffInputs');
+                if (securityStaffInputs.children.length > 0) {
+                    securityStaffInputs.removeChild(securityStaffInputs.lastElementChild);
+                }
+            });
+
+            document.getElementById('addStaffBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                const staffContainer = document.createElement('div');
+                staffContainer.className = 'staff-container';
+
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Staff ${staffInputs.children.length + 1}`;
+                newInput.className = 'staff-name';
 
                 staffContainer.appendChild(newInput);
-                staffContainer.appendChild(securityCheckbox);
-                staffContainer.appendChild(securityLabel);
-                staffContainer.appendChild(excludeHoursLabel);
-                staffContainer.appendChild(excludeHoursInput);
-                staffContainer.appendChild(plusButton);
-                staffContainer.appendChild(minusButton);
-
                 staffInputs.appendChild(staffContainer);
             });
 
