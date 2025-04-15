@@ -1,0 +1,12 @@
+{
+  "name": "patient-care-schedule",
+  "version": "1.0.0",
+  "description": "A project for managing patient care schedules",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0"
+  }
+}
