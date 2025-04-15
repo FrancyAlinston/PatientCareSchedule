@@ -465,14 +465,31 @@
             renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
         }
         
-        // Render the schedule to the HTML table with horizontal timeline
+        // Generate a unique color for each staff member
+        function generateStaffColors(staff) {
+            const colors = {};
+            const colorPalette = [
+                "#ffadad", "#ffd6a5", "#fdffb6", "#caffbf", "#9bf6ff",
+                "#a0c4ff", "#bdb2ff", "#ffc6ff", "#fffffc", "#d0f4de"
+            ]; // Add more colors if needed
+
+            staff.forEach((s, index) => {
+                colors[s] = colorPalette[index % colorPalette.length]; // Cycle through the palette
+            });
+
+            return colors;
+        }
+
+        // Updated renderSchedule function
         function renderSchedule(schedule, staff, patients, staffStats) {
+            // Generate colors for staff
+            const staffColors = generateStaffColors(staff);
+
             // Setup patient schedule header (time slots horizontally)
             const scheduleHeader = document.getElementById('scheduleHeader');
             let headerHTML = '<tr><th>Patient</th>';
             
             timeSlots.forEach(time => {
-                // Extract the ending hour from the time slot (e.g., "7:00-8:00" -> "8:00")
                 const endingHour = time.split('-')[1];
                 headerHTML += `<th>${endingHour}</th>`;
             });
@@ -500,9 +517,11 @@
                     
                     if (assignedStaff.length === 0) {
                         cell.textContent = "UNASSIGNED";
-                        cell.style.backgroundColor = "#ffeaa7";
+                        cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
                     } else {
                         cell.textContent = assignedStaff.join(", ");
+                        cell.style.backgroundColor = staffColors[assignedStaff[0]]; // Use the first staff's color
+                        cell.style.color = "#ffffff"; // Ensure text is visible
                     }
                     
                     row.appendChild(cell);
@@ -526,6 +545,8 @@
                 const staffCell = document.createElement('td');
                 staffCell.textContent = s;
                 staffCell.className = 'row-header';
+                staffCell.style.backgroundColor = staffColors[s]; // Assign staff color
+                staffCell.style.color = "#ffffff"; // Ensure text is visible
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
@@ -540,11 +561,12 @@
                         cell.textContent = "LUNCH";
                         cell.className = 'staff-lunch';
                     } else {
-                        // Find if this staff is assigned to any patient during this time
                         let assigned = false;
                         for (const patient in schedule[time].patientAssignments) {
                             if (schedule[time].patientAssignments[patient].includes(s)) {
                                 cell.textContent = patient;
+                                cell.style.backgroundColor = staffColors[s]; // Assign staff color
+                                cell.style.color = "#ffffff"; // Ensure text is visible
                                 assigned = true;
                                 break;
                             }
