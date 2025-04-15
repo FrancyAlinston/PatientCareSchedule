@@ -246,18 +246,18 @@
                 };
             });
             
-            // Schedule 30-minute break for each staff member in allowed hours (not in the first 2 or last 2 hours)
+            // Schedule 30-minute break for each staff member in allowed hours (not in the first 3 or last 2 hours)
             // and 1-hour lunch break in later hours
             staff.forEach((s, index) => {
-                // Determine short break hour (in allowed hours: 3rd to 10th hour)
-                const shortBreakHour = 2 + (index % 6); // 2nd index ensures breaks start from the 3rd hour
+                // Determine short break hour (in allowed hours: 4th to 9th hour)
+                const shortBreakHour = 3 + (index % (timeSlots.length - 5)); // Exclude first 3 and last 2 hours
                 const shortBreakTime = timeSlots[shortBreakHour];
                 schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
                 staffStats[s].shortBreakTime = shortBreakTime;
                 staffStats[s].breakTime += 0.5;
 
-                // Determine lunch hour (in allowed hours: 5th to 10th hour)
-                const lunchHour = 4 + (index % 6); // 4th index ensures lunch starts from the 5th hour
+                // Determine lunch hour (in allowed hours: 5th to 9th hour)
+                const lunchHour = 4 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
                 const lunchTime = timeSlots[lunchHour];
                 schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
                 staffStats[s].lunchTime = lunchTime;
