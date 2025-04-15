@@ -329,8 +329,39 @@
             }
         }
 
-        // Add event listener for the shift toggle button
-        document.getElementById("toggleShiftBtn").addEventListener("click", toggleShift);
+        // Function to determine the current shift based on system time
+        function setShiftBasedOnTime() {
+            const currentHour = new Date().getHours(); // Get the current hour (0-23)
+            const heading = document.querySelector("h1");
+            const toggleShiftButton = document.getElementById("toggleShiftBtn");
+
+            if (currentHour >= 8 && currentHour < 19) {
+                // Day shift: 08:00 to 19:00
+                currentShift = "day";
+                timeSlots = [...dayShiftSlots];
+                heading.textContent = "Day Shift Allocation";
+                toggleShiftButton.textContent = "Switch to Night Shift";
+            } else {
+                // Night shift: 19:00 to 08:00
+                currentShift = "night";
+                timeSlots = [...nightShiftSlots];
+                heading.textContent = "Night Shift Allocation";
+                toggleShiftButton.textContent = "Switch to Day Shift";
+            }
+
+            // Clear and regenerate the schedule
+            document.getElementById("scheduleHeader").innerHTML = "";
+            document.getElementById("scheduleBody").innerHTML = "";
+            document.getElementById("staffHeader").innerHTML = "";
+            document.getElementById("staffBody").innerHTML = "";
+            document.getElementById("breakHoursTable").querySelector("tbody").innerHTML = "";
+            document.getElementById("stats").innerHTML = "";
+
+            // Optionally regenerate the schedule if inputs are already filled
+            if (document.querySelectorAll(".patient-container").length > 0) {
+                generateSchedule();
+            }
+        }
 
         // Generate a schedule automatically
         function generateSchedule() {
@@ -577,79 +608,83 @@
             }
         }
         
-        // Initialize the page
-        window.onload = function() {
-            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-            document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
-                const securityStaffInputs = document.getElementById('securityStaffInputs');
-                const securityContainer = document.createElement('div');
-                securityContainer.className = 'security-container';
+        // Call the function to set the shift based on the system time when the page loads
+        window.onload = function () {
+            setShiftBasedOnTime();
 
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
+            // Add event listeners for buttons
+            document.getElementById("generateBtn").addEventListener("click", generateSchedule);
+            document.getElementById("toggleShiftBtn").addEventListener("click", toggleShift);
+            document.getElementById("addSecurityStaffBtn").addEventListener("click", () => {
+                const securityStaffInputs = document.getElementById("securityStaffInputs");
+                const securityContainer = document.createElement("div");
+                securityContainer.className = "security-container";
+
+                const newInput = document.createElement("input");
+                newInput.type = "text";
                 newInput.placeholder = `Security Staff ${securityStaffInputs.children.length + 1}`;
-                newInput.className = 'security-name';
+                newInput.className = "security-name";
 
                 securityContainer.appendChild(newInput);
                 securityStaffInputs.appendChild(securityContainer);
             });
 
-            document.getElementById('removeSecurityStaffBtn').addEventListener('click', () => {
-                const securityStaffInputs = document.getElementById('securityStaffInputs');
+            document.getElementById("removeSecurityStaffBtn").addEventListener("click", () => {
+                const securityStaffInputs = document.getElementById("securityStaffInputs");
                 if (securityStaffInputs.children.length > 0) {
                     securityStaffInputs.removeChild(securityStaffInputs.lastElementChild);
                 }
             });
 
-            document.getElementById('addStaffBtn').addEventListener('click', () => {
-                const staffInputs = document.getElementById('staffInputs');
-                const staffContainer = document.createElement('div');
-                staffContainer.className = 'staff-container';
+            document.getElementById("addStaffBtn").addEventListener("click", () => {
+                const staffInputs = document.getElementById("staffInputs");
+                const staffContainer = document.createElement("div");
+                staffContainer.className = "staff-container";
 
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
+                const newInput = document.createElement("input");
+                newInput.type = "text";
                 newInput.placeholder = `Health Care Worker ${staffInputs.children.length + 1}`;
-                newInput.className = 'staff-name';
+                newInput.className = "staff-name";
 
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
             });
 
-            document.getElementById('removeStaffBtn').addEventListener('click', () => {
-                const staffInputs = document.getElementById('staffInputs');
+            document.getElementById("removeStaffBtn").addEventListener("click", () => {
+                const staffInputs = document.getElementById("staffInputs");
                 if (staffInputs.children.length > 0) {
                     staffInputs.removeChild(staffInputs.lastElementChild);
                 }
             });
 
-            document.getElementById('addPatientBtn').addEventListener('click', () => {
-                const patientInputs = document.getElementById('patientInputs');
-                const patientContainer = document.createElement('div');
-                patientContainer.className = 'patient-container';
+            document.getElementById("addPatientBtn").addEventListener("click", () => {
+                const patientInputs = document.getElementById("patientInputs");
+                const patientContainer = document.createElement("div");
+                patientContainer.className = "patient-container";
 
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
+                const newInput = document.createElement("input");
+                newInput.type = "text";
                 newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
-                newInput.className = 'patient-name';
+                newInput.className = "patient-name";
 
-                const staffCountLabel = document.createElement('label');
-                staffCountLabel.textContent = 'Staff Level: ';
+                const staffCountLabel = document.createElement("label");
+                staffCountLabel.textContent = "Staff Level: ";
 
-                const staffCountSelect = document.createElement('select');
-                staffCountSelect.className = 'staff-count';
+                const staffCountSelect = document.createElement("select");
+                staffCountSelect.className = "staff-count";
 
-                const option1 = document.createElement('option');
+                const option1 = document.createElement("option");
                 option1.value = 1;
-                option1.textContent = 'Level 1:1 (1 Staff)';
+                option1.textContent = "Level 1:1 (1 Staff)";
                 option1.selected = true; // Default to Level 1:1
 
-                const option2 = document.createElement('option');
+                const option2 = document.createElement("option");
                 option2.value = 2;
-                option2.textContent = 'Level 2:1 (2 Staff)';
+                option2.textContent = "Level 2:1 (2 Staff)";
 
-                const option3 = document.createElement('option');
+                const option3 = document.createElement("option");
                 option3.value = 3;
-                option3.textContent = 'Level 3:1 (3 Staff)';
+                option3.textContent = "Level 3:1 (3 Staff)";
 
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
@@ -661,33 +696,33 @@
                 patientInputs.appendChild(patientContainer);
             });
 
-            document.getElementById('removePatientBtn').addEventListener('click', () => {
-                const patientInputs = document.getElementById('patientInputs');
+            document.getElementById("removePatientBtn").addEventListener("click", () => {
+                const patientInputs = document.getElementById("patientInputs");
                 if (patientInputs.children.length > 0) {
                     patientInputs.removeChild(patientInputs.lastElementChild);
                 }
             });
 
             // Reset button functionality
-            document.getElementById('resetBtn').addEventListener('click', () => {
-                const staffInputs = document.getElementById('staffInputs');
-                const patientInputs = document.getElementById('patientInputs');
-                staffInputs.innerHTML = ''; // Clear all staff inputs
-                patientInputs.innerHTML = ''; // Clear all patient inputs
+            document.getElementById("resetBtn").addEventListener("click", () => {
+                const staffInputs = document.getElementById("staffInputs");
+                const patientInputs = document.getElementById("patientInputs");
+                staffInputs.innerHTML = ""; // Clear all staff inputs
+                patientInputs.innerHTML = ""; // Clear all patient inputs
             });
 
-            document.getElementById('toggleModeBtn').addEventListener('click', () => {
+            document.getElementById("toggleModeBtn").addEventListener("click", () => {
                 const body = document.body;
-                const toggleButton = document.getElementById('toggleModeBtn');
+                const toggleButton = document.getElementById("toggleModeBtn");
 
                 // Toggle the dark-mode class on the body
-                body.classList.toggle('dark-mode');
+                body.classList.toggle("dark-mode");
 
                 // Update the button text based on the current mode
-                if (body.classList.contains('dark-mode')) {
-                    toggleButton.textContent = 'Switch to Light Mode';
+                if (body.classList.contains("dark-mode")) {
+                    toggleButton.textContent = "Switch to Light Mode";
                 } else {
-                    toggleButton.textContent = 'Switch to Dark Mode';
+                    toggleButton.textContent = "Switch to Dark Mode";
                 }
             });
         };
