@@ -310,7 +310,7 @@
 
             <button id="generateBtn">Generate Schedule</button>
             <button id="resetBtn">Reset</button>
-            <button id="printBtn">Print Schedule</button>
+            <button id="printBtn" style="display: none;">Print Schedule</button>
         </div>
         
         <div class="legend">
@@ -522,6 +522,10 @@
             });
 
             renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
+
+            // After generating the schedule, make the Print button visible
+            const printButton = document.getElementById('printBtn');
+            printButton.style.display = 'inline-block';
         }
         
         // Helper function to calculate text color based on background color brightness
