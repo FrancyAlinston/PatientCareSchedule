@@ -257,8 +257,12 @@
                 box-shadow: none; /* Remove shadows for printing */
             }
 
-            .setup-section, .legend, .schedule-container:nth-child(n+3), .stats, button {
+            .setup-section, .legend, .stats, .schedule-container:nth-child(n+2), button {
                 display: none; /* Hide everything below the Patient Care Schedule table */
+            }
+
+            .schedule-container:first-child {
+                display: block; /* Ensure the Patient Care Schedule table is visible */
             }
 
             table {
