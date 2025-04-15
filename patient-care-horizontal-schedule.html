@@ -161,7 +161,7 @@
             <button id="addSecurityStaffBtn">Add Security Staff</button>
             <button id="removeSecurityStaffBtn">Remove Security Staff</button>
 
-            <h2>Health Care Worker</h2>
+            <h2>Health Care Worker (HCW)</h2>
             <div class="staff-inputs" id="staffInputs">
                 <!-- Initially empty -->
             </div>
@@ -494,9 +494,9 @@
         // Render statistics
         function renderStats(staffStats, staff, patients) {
             const statsDiv = document.getElementById('stats');
-            let statsHtml = '<h2>Staff Work Summary</h2>';
+            let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
             statsHtml += '<table>';
-            statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
+            statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
             
             staff.forEach(s => {
                 statsHtml += `<tr>
@@ -512,12 +512,12 @@
             
             // Add schedule coverage
             statsHtml += '<h2>Schedule Coverage</h2>';
-            statsHtml += `<p>Total Staff: ${staff.length}</p>`;
+            statsHtml += `<p>Total HCWs: ${staff.length}</p>`;
             statsHtml += `<p>Total Patients: ${patients.length}</p>`;
             
-            // Calculate patient-to-staff ratio
+            // Calculate patient-to-HCW ratio
             const ratio = staff.length / patients.length;
-            statsHtml += `<p>Staff-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
+            statsHtml += `<p>HCW-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
             
             statsDiv.innerHTML = statsHtml;
         }
@@ -588,7 +588,7 @@
 
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
-                newInput.placeholder = `Staff ${staffInputs.children.length + 1}`;
+                newInput.placeholder = `Health Care Worker ${staffInputs.children.length + 1}`;
                 newInput.className = 'staff-name';
 
                 staffContainer.appendChild(newInput);
