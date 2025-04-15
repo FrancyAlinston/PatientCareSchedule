@@ -331,63 +331,37 @@
                 };
             });
 
-            // Schedule 30-minute breaks for each staff member (not in the first 2 hours)
+            // Schedule 30-minute breaks and 1-hour lunch for each staff member
             staff.forEach((s, index) => {
-                const breakStartIndex = 2; // Breaks start after the first 2 hours
-                const breakEndIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the last time slot before noon
-                let shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
+                let totalBreakTime = 0; // Track total break time for each staff member
 
-                // Check if staff is short; if so, allow shared patient care
-                if (staff.length < patients.length) {
-                    if (index % 2 === 0) {
-                        shortBreakHour = timeSlots.length - 1; // Assign break to the last hour
-                    } else {
-                        shortBreakHour = -1; // Skip the break
-                    }
-                }
-
-                if (shortBreakHour >= 0) {
-                    const shortBreakTime = timeSlots[shortBreakHour];
-                    schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
-                    staffStats[s].shortBreakTime = shortBreakTime;
-                    staffStats[s].breakTime += 0.5;
-
-                    // Allow shared patient care during the break
-                    patients.forEach(patient => {
-                        const assignedStaff = schedule[shortBreakTime].patientAssignments[patient.name];
-                        if (assignedStaff.length < patient.staffCount) {
-                            assignedStaff.push(s); // Assign the staff member to the patient for shared care
-                        }
-                    });
-
-                    // Assign the second half of the hour to another staff member
-                    const nextStaffIndex = (index + 1) % staff.length; // Get the next staff member
-                    const nextStaff = staff[nextStaffIndex];
-                    const secondHalfBreakTime = `${shortBreakTime.split('-')[1]}-${timeSlots[shortBreakHour + 1]?.split('-')[1] || "END"}`;
-                    schedule[shortBreakTime].staffBreaks[nextStaff] = "30-MIN BREAK";
-                    staffStats[nextStaff].shortBreakTime = secondHalfBreakTime;
-                    staffStats[nextStaff].breakTime += 0.5;
-
-                    // Allow shared patient care during the second half of the break
-                    patients.forEach(patient => {
-                        const assignedStaff = schedule[shortBreakTime].patientAssignments[patient.name];
-                        if (assignedStaff.length < patient.staffCount) {
-                            assignedStaff.push(nextStaff); // Assign the next staff member to the patient for shared care
-                        }
-                    });
-                }
-            });
-
-            // Schedule 1-hour lunch break for each staff member after 12 noon
-            staff.forEach((s, index) => {
+                // Schedule 1-hour lunch break after 12 noon
                 const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the first time slot starting at 12 noon
                 const lunchHour = lunchStartIndex + (index % (timeSlots.length - lunchStartIndex)); // Stagger lunch breaks
                 const lunchTime = timeSlots[lunchHour];
 
-                // Assign the lunch break
                 schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
                 staffStats[s].lunchTime = lunchTime;
                 staffStats[s].breakTime += 1;
+                totalBreakTime += 1; // Add lunch to total break time
+
+                // Schedule 30-minute breaks (not in the first 2 hours)
+                const breakStartIndex = 2; // Breaks start after the first 2 hours
+                const breakEndIndex = lunchStartIndex; // Breaks end before lunch
+                let shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
+
+                if (totalBreakTime < 1.3) {
+                    const shortBreakTime = timeSlots[shortBreakHour];
+                    schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                    staffStats[s].shortBreakTime = shortBreakTime;
+                    staffStats[s].breakTime += 0.5;
+                    totalBreakTime += 0.5; // Add 30-minute break to total break time
+                }
+
+                // Ensure total break time does not exceed 1.3 hours
+                if (totalBreakTime > 1.3) {
+                    console.warn(`Staff ${s} has exceeded the allowed break time of 1.3 hours.`);
+                }
             });
 
             // Assign staff to patients
