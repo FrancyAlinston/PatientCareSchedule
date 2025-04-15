@@ -80,6 +80,12 @@
             gap: 15px;
             margin-bottom: 15px;
         }
+        .patient-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+            gap: 15px; /* Add spacing between rows and columns */
+            margin-bottom: 15px;
+        }
         input, select {
             padding: 8px;
             border: 1px solid #dfe4ea;
@@ -226,6 +232,11 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
+        }
+        .patient-container {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Add spacing between input and dropdown */
         }
     </style>
 </head>
@@ -703,8 +714,6 @@
                 const patientInputs = document.getElementById("patientInputs");
                 const patientContainer = document.createElement("div");
                 patientContainer.className = "patient-container";
-                patientContainer.style.display = "flex"; // Align items horizontally
-                patientContainer.style.gap = "10px"; // Add spacing between elements
 
                 // Create Patient Name Input
                 const newInput = document.createElement("input");
@@ -718,16 +727,15 @@
 
                 const option1 = document.createElement("option");
                 option1.value = 1;
-                option1.textContent = "Level 1:1 (1 Staff)";
-                option1.selected = true; // Default to Level 1:1
+                option1.textContent = "1:1"; // Simplified option
 
                 const option2 = document.createElement("option");
                 option2.value = 2;
-                option2.textContent = "Level 2:1 (2 Staff)";
+                option2.textContent = "2:1"; // Simplified option
 
                 const option3 = document.createElement("option");
                 option3.value = 3;
-                option3.textContent = "Level 3:1 (3 Staff)";
+                option3.textContent = "3:1"; // Simplified option
 
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
