@@ -136,7 +136,7 @@
             <button id="removePatientBtn">Remove Patient</button>
 
             <button id="generateBtn">Generate Schedule</button>
-            <button id="resetBtn">Reset</button> <!-- New Reset Button -->
+            <button id="resetBtn">Reset</button>
         </div>
         
         <div class="legend">
@@ -193,24 +193,40 @@
         
         // Generate a schedule automatically
         function generateSchedule() {
-            // Get staff and patient names from inputs
-            const staffInputs = document.querySelectorAll('#staffInputs input');
+            const staffInputs = document.querySelectorAll('.staff-container');
             const patientInputs = document.querySelectorAll('#patientInputs input');
-            
-            const staff = Array.from(staffInputs).map(input => input.value.trim()).filter(name => name !== "");
+        
+            const staff = [];
+            const excludedHours = {};
+            const securityStaff = new Set();
+        
+            staffInputs.forEach(container => {
+                const staffName = container.querySelector('.staff-name').value.trim();
+                const excludeHours = parseInt(container.querySelector('.exclude-hours').value);
+                const isSecurity = container.querySelector('.security-checkbox').checked;
+        
+                if (staffName) {
+                    staff.push(staffName);
+                    excludedHours[staffName] = excludeHours;
+                    if (isSecurity) {
+                        securityStaff.add(staffName);
+                    }
+                }
+            });
+        
             const patients = Array.from(patientInputs).map(input => input.value.trim()).filter(name => name !== "");
-            
+        
             // Validate inputs
             if (staff.length === 0) {
                 alert("Please enter at least one staff name");
                 return;
             }
-            
+        
             if (patients.length === 0) {
                 alert("Please enter at least one patient name");
                 return;
             }
-            
+        
             // Initialize schedule data structure
             const schedule = {};
             timeSlots.forEach(time => {
@@ -218,18 +234,18 @@
                     patientAssignments: {},
                     staffBreaks: {}
                 };
-                
+        
                 // Initialize each patient to have no staff assigned
                 patients.forEach(patient => {
                     schedule[time].patientAssignments[patient] = "";
                 });
-                
+        
                 // Initialize each staff to not be on break
                 staff.forEach(s => {
                     schedule[time].staffBreaks[s] = "";
                 });
             });
-            
+        
             // Track total work and break time for each staff
             const staffStats = {};
             staff.forEach(s => {
@@ -240,49 +256,49 @@
                     lunchTime: ""
                 };
             });
-            
+        
             // Schedule 30-minute break for each staff member in allowed hours (not in the first 3 or last 2 hours)
             // and 1-hour lunch break in later hours
             staff.forEach((s, index) => {
-                // Determine short break hour (in allowed hours: 4th to 9th hour)
                 const shortBreakHour = 3 + (index % (timeSlots.length - 5)); // Exclude first 3 and last 2 hours
                 const shortBreakTime = timeSlots[shortBreakHour];
                 schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
                 staffStats[s].shortBreakTime = shortBreakTime;
                 staffStats[s].breakTime += 0.5;
-
-                // Determine lunch hour (in allowed hours: 5th to 9th hour)
+        
                 const lunchHour = 4 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
                 const lunchTime = timeSlots[lunchHour];
                 schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
                 staffStats[s].lunchTime = lunchTime;
                 staffStats[s].breakTime += 1;
             });
-            
+        
             // For each time slot and each patient, assign available staff members
-            timeSlots.forEach(time => {
-                // Create a list of available staff for this time slot
-                // (staff who are not on break during this time)
-                const availableStaff = staff.filter(s => schedule[time].staffBreaks[s] === "");
-
-                // Sort available staff by their current work hours (ascending)
+            timeSlots.forEach((time, timeIndex) => {
+                const availableStaff = staff.filter(s => {
+                    const isOnBreak = schedule[time].staffBreaks[s] !== "";
+                    const isSecurity = securityStaff.has(s);
+                    const isInRestrictedTime =
+                        (timeIndex < Math.ceil(3.3 * (timeSlots.length / 12))) || // First 3.3 hours
+                        (timeIndex >= timeSlots.length - 2); // Last 2 hours
+                    const hasAdditionalExclusion = timeIndex < excludedHours[s] || timeIndex >= timeSlots.length - excludedHours[s];
+        
+                    return !isOnBreak && (!isSecurity || !isInRestrictedTime) && !hasAdditionalExclusion;
+                });
+        
                 availableStaff.sort((a, b) => staffStats[a].workHours - staffStats[b].workHours);
-
-                // Assign staff to patients
+        
                 patients.forEach((patient, index) => {
-                    // If we have enough available staff for all patients
                     if (index < availableStaff.length) {
                         const assignedStaff = availableStaff[index];
                         schedule[time].patientAssignments[patient] = assignedStaff;
                         staffStats[assignedStaff].workHours += 1;
                     } else {
-                        // Not enough staff, leave unassigned
                         schedule[time].patientAssignments[patient] = "UNASSIGNED";
                     }
                 });
             });
-            
-            // Render the schedule
+        
             renderSchedule(schedule, staff, patients, staffStats);
         }
         
@@ -432,10 +448,55 @@
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
             document.getElementById('addStaffBtn').addEventListener('click', () => {
                 const staffInputs = document.getElementById('staffInputs');
+                const staffContainer = document.createElement('div');
+                staffContainer.className = 'staff-container';
+
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.placeholder = `Staff ${staffInputs.children.length + 1}`;
-                staffInputs.appendChild(newInput);
+                newInput.className = 'staff-name';
+
+                const securityCheckbox = document.createElement('input');
+                securityCheckbox.type = 'checkbox';
+                securityCheckbox.className = 'security-checkbox';
+                const securityLabel = document.createElement('label');
+                securityLabel.textContent = 'Security';
+
+                const excludeHoursLabel = document.createElement('span');
+                excludeHoursLabel.textContent = 'Exclude Hours: ';
+
+                const excludeHoursInput = document.createElement('input');
+                excludeHoursInput.type = 'number';
+                excludeHoursInput.value = 0;
+                excludeHoursInput.min = 0;
+                excludeHoursInput.max = 12;
+                excludeHoursInput.className = 'exclude-hours';
+
+                const plusButton = document.createElement('button');
+                plusButton.textContent = '+';
+                plusButton.addEventListener('click', () => {
+                    if (excludeHoursInput.value < 12) {
+                        excludeHoursInput.value = parseInt(excludeHoursInput.value) + 1;
+                    }
+                });
+
+                const minusButton = document.createElement('button');
+                minusButton.textContent = '-';
+                minusButton.addEventListener('click', () => {
+                    if (excludeHoursInput.value > 0) {
+                        excludeHoursInput.value = parseInt(excludeHoursInput.value) - 1;
+                    }
+                });
+
+                staffContainer.appendChild(newInput);
+                staffContainer.appendChild(securityCheckbox);
+                staffContainer.appendChild(securityLabel);
+                staffContainer.appendChild(excludeHoursLabel);
+                staffContainer.appendChild(excludeHoursInput);
+                staffContainer.appendChild(plusButton);
+                staffContainer.appendChild(minusButton);
+
+                staffInputs.appendChild(staffContainer);
             });
 
             document.getElementById('removeStaffBtn').addEventListener('click', () => {
