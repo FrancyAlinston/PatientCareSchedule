@@ -124,15 +124,15 @@
             background-color: var(--table-cell-bg-color); /* Ensure table cells adapt to dark mode */
             color: var(--table-cell-text-color); /* Ensure text color adapts to dark mode */
         }
-        th {
-            background-color: var(--table-header-bg-color); /* Ensure header adapts to dark mode */
-            color: var(--table-header-text-color); /* Ensure header text color adapts to dark mode */
-            font-weight: bold;
-            position: sticky;
-            top: 0;
+        tr:nth-child(even) td {
+            background-color: var(--container-bg-color); /* Alternate row color for better readability */
+        }
+        tr:nth-child(odd) td {
+            background-color: var(--table-cell-bg-color); /* Default row color */
         }
         .row-header {
-            background-color: #f1f2f6;
+            background-color: var(--table-header-bg-color); /* Ensure row headers adapt to dark mode */
+            color: var(--table-header-text-color); /* Ensure row header text color adapts to dark mode */
             font-weight: bold;
             text-align: left;
         }
@@ -148,10 +148,11 @@
         }
         .stats {
             margin-top: 20px;
-            background-color: #f9fbfd;
+            background-color: var(--container-bg-color); /* Use dark mode container background */
             padding: 20px;
             border-radius: 8px;
             border: 1px solid #e0e4e8;
+            color: var(--text-color); /* Ensure text color adapts to dark mode */
         }
         .legend {
             display: flex;
