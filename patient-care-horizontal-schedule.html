@@ -293,7 +293,10 @@
 <body>
     <div class="container">
         <div class="schedule-container">
-            <h1>Day Shift Allocation</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
+                <h1 id="shiftHeading">Day Shift Allocation</h1>
+            </div>
             <div style="text-align: right; margin-bottom: 20px;">
                 <button id="toggleModeBtn" title="Toggle Mode"></button>
             </div>
@@ -392,6 +395,51 @@
             "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00"
         ];
         
+        // Define day and night shift time slots
+        const dayShiftSlots = [
+            "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
+            "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00",
+            "16:00-17:00", "17:00-18:00", "18:00-19:00"
+        ];
+
+        const nightShiftSlots = [
+            "19:00-20:00", "20:00-21:00", "21:00-22:00", "22:00-23:00",
+            "23:00-00:00", "00:00-01:00", "01:00-02:00", "02:00-03:00",
+            "03:00-04:00", "04:00-05:00", "05:00-06:00", "06:00-07:00",
+            "07:00-08:00"
+        ];
+
+        // Current shift state
+        let isDayShift = true;
+
+        // Function to toggle shift
+        document.getElementById('toggleShiftBtn').addEventListener('click', () => {
+            const shiftHeading = document.getElementById('shiftHeading');
+            const toggleShiftBtn = document.getElementById('toggleShiftBtn');
+
+            // Toggle shift state
+            isDayShift = !isDayShift;
+
+            // Update heading and button text
+            if (isDayShift) {
+                shiftHeading.textContent = "Day Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Night Shift";
+                timeSlots.length = 0; // Clear current time slots
+                timeSlots.push(...dayShiftSlots); // Set to day shift slots
+            } else {
+                shiftHeading.textContent = "Night Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Day Shift";
+                timeSlots.length = 0; // Clear current time slots
+                timeSlots.push(...nightShiftSlots); // Set to night shift slots
+            }
+
+            // Regenerate the schedule if needed
+            const scheduleHeader = document.getElementById('scheduleHeader');
+            scheduleHeader.innerHTML = ''; // Clear the header
+            const scheduleBody = document.getElementById('scheduleBody');
+            scheduleBody.innerHTML = ''; // Clear the body
+        });
+
         // Generate a schedule automatically
         function generateSchedule() {
             const patientInputs = document.querySelectorAll('.patient-container');
