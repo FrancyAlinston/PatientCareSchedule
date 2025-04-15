@@ -123,25 +123,20 @@
         <div class="setup-section">
             <h2>Staff Names</h2>
             <div class="staff-inputs" id="staffInputs">
-                <input type="text" placeholder="Staff 1" value="1stAD">
-                <input type="text" placeholder="Staff 2" value="2ndFD">
-                <input type="text" placeholder="Staff 3" value="3rdAS">
-                <input type="text" placeholder="Staff 4" value="4thJB">
+                <!-- Initially empty -->
             </div>
             <button id="addStaffBtn">Add Staff</button>
             <button id="removeStaffBtn">Remove Staff</button>
 
             <h2>Patient Names</h2>
             <div class="patient-inputs" id="patientInputs">
-                <input type="text" placeholder="Patient 1" value="Mary">
-                <input type="text" placeholder="Patient 2" value="Tiff">
-                <input type="text" placeholder="Patient 3" value="Cath">
-                <input type="text" placeholder="Patient 4" value="Mith">
+                <!-- Initially empty -->
             </div>
             <button id="addPatientBtn">Add Patient</button>
             <button id="removePatientBtn">Remove Patient</button>
 
             <button id="generateBtn">Generate Schedule</button>
+            <button id="resetBtn">Reset</button> <!-- New Reset Button -->
         </div>
         
         <div class="legend">
@@ -461,6 +456,14 @@
                 if (patientInputs.children.length > 0) {
                     patientInputs.removeChild(patientInputs.lastElementChild);
                 }
+            });
+
+            // Reset button functionality
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                const patientInputs = document.getElementById('patientInputs');
+                staffInputs.innerHTML = ''; // Clear all staff inputs
+                patientInputs.innerHTML = ''; // Clear all patient inputs
             });
         };
     </script>
