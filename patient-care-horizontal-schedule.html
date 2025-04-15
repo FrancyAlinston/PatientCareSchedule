@@ -257,8 +257,8 @@
                 box-shadow: none; /* Remove shadows for printing */
             }
 
-            .setup-section, .legend, .stats, .schedule-container:not(:first-child), button {
-                display: none; /* Hide all sections except the first schedule-container */
+            .setup-section, .legend, .schedule-container:nth-child(n+3), .stats, button {
+                display: none; /* Hide everything below the Patient Care Schedule table */
             }
 
             table {
