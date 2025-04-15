@@ -218,6 +218,22 @@
             </table>
         </div>
         
+        <div class="schedule-container">
+            <h2>Staff Break Hours</h2>
+            <table id="breakHoursTable">
+                <thead>
+                    <tr>
+                        <th>Staff</th>
+                        <th>30-min Break</th>
+                        <th>1-hour Lunch</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Break hours rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+        
         <div class="stats" id="stats">
             <!-- Statistics will be shown here -->
         </div>
@@ -441,6 +457,7 @@
 
             // Show statistics
             renderStats(staffStats, staff, patients);
+            renderBreakHoursTable(staffStats, staff);
         }
         
         // Render statistics
@@ -472,6 +489,33 @@
             statsHtml += `<p>Staff-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
             
             statsDiv.innerHTML = statsHtml;
+        }
+        
+        // Render break hours table
+        function renderBreakHoursTable(staffStats, staff) {
+            const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
+            breakHoursTableBody.innerHTML = ''; // Clear existing rows
+
+            staff.forEach(s => {
+                const row = document.createElement('tr');
+
+                // Staff name
+                const staffCell = document.createElement('td');
+                staffCell.textContent = s;
+                row.appendChild(staffCell);
+
+                // 30-min Break
+                const shortBreakCell = document.createElement('td');
+                shortBreakCell.textContent = staffStats[s].shortBreakTime || 'N/A';
+                row.appendChild(shortBreakCell);
+
+                // 1-hour Lunch
+                const lunchBreakCell = document.createElement('td');
+                lunchBreakCell.textContent = staffStats[s].lunchTime || 'N/A';
+                row.appendChild(lunchBreakCell);
+
+                breakHoursTableBody.appendChild(row);
+            });
         }
         
         // Helper function to shuffle an array (Fisher-Yates algorithm)
