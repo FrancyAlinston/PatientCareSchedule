@@ -59,12 +59,15 @@
             font-size: 1.8rem;
         }
         .container {
-            max-width: 1200px;
+            width: 100%; /* Ensure it takes full width */
+            max-width: 1200px; /* Limit the maximum width */
+            min-width: 800px; /* Ensure a minimum width for smaller content */
             margin: 0 auto;
             padding: 30px;
             background-color: var(--container-bg-color);
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow-x: auto; /* Allow horizontal scrolling for overflowing content */
             transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
         }
         .setup-section {
