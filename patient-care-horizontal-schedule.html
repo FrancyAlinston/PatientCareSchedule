@@ -276,13 +276,18 @@
             // Schedule 30-minute break for each staff member in allowed hours (not in the first 3 or last 2 hours)
             // and 1-hour lunch break in later hours
             staff.forEach((s, index) => {
-                const shortBreakHour = 3 + (index % (timeSlots.length - 5)); // Exclude first 3 and last 2 hours
+                // Schedule 30-minute break
+                const shortBreakHour = 3 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
                 const shortBreakTime = timeSlots[shortBreakHour];
                 schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
                 staffStats[s].shortBreakTime = shortBreakTime;
                 staffStats[s].breakTime += 0.5;
-        
-                const lunchHour = 4 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
+
+                // Schedule 1-hour lunch break, ensuring it is not adjacent to the 30-minute break
+                let lunchHour = shortBreakHour + 2; // Ensure at least one time slot gap
+                if (lunchHour >= timeSlots.length - 2) {
+                    lunchHour = timeSlots.length - 3; // Adjust to avoid the last 2 hours
+                }
                 const lunchTime = timeSlots[lunchHour];
                 schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
                 staffStats[s].lunchTime = lunchTime;
