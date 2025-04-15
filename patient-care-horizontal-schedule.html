@@ -465,6 +465,23 @@
             renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
         }
         
+        // Helper function to calculate text color based on background color brightness
+        function getContrastColor(hexColor) {
+            // Remove the hash if present
+            hexColor = hexColor.replace('#', '');
+
+            // Convert hex to RGB
+            const r = parseInt(hexColor.substring(0, 2), 16);
+            const g = parseInt(hexColor.substring(2, 4), 16);
+            const b = parseInt(hexColor.substring(4, 6), 16);
+
+            // Calculate brightness (YIQ formula)
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+            // Return white for dark backgrounds and black for light backgrounds
+            return brightness > 128 ? '#000000' : '#ffffff';
+        }
+
         // Generate a unique color for each staff member
         function generateStaffColors(staff) {
             const colors = {};
@@ -474,7 +491,9 @@
             ]; // Add more colors if needed
 
             staff.forEach((s, index) => {
-                colors[s] = colorPalette[index % colorPalette.length]; // Cycle through the palette
+                const bgColor = colorPalette[index % colorPalette.length]; // Cycle through the palette
+                const textColor = getContrastColor(bgColor); // Calculate contrast color
+                colors[s] = { bgColor, textColor }; // Store both background and text colors
             });
 
             return colors;
@@ -518,10 +537,12 @@
                     if (assignedStaff.length === 0) {
                         cell.textContent = "UNASSIGNED";
                         cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
+                        cell.style.color = "#000000"; // Black text for contrast
                     } else {
                         cell.textContent = assignedStaff.join(", ");
-                        cell.style.backgroundColor = staffColors[assignedStaff[0]]; // Use the first staff's color
-                        cell.style.color = "#ffffff"; // Ensure text is visible
+                        const { bgColor, textColor } = staffColors[assignedStaff[0]]; // Use the first staff's color
+                        cell.style.backgroundColor = bgColor;
+                        cell.style.color = textColor; // Set text color for contrast
                     }
                     
                     row.appendChild(cell);
@@ -545,8 +566,9 @@
                 const staffCell = document.createElement('td');
                 staffCell.textContent = s;
                 staffCell.className = 'row-header';
-                staffCell.style.backgroundColor = staffColors[s]; // Assign staff color
-                staffCell.style.color = "#ffffff"; // Ensure text is visible
+                const { bgColor, textColor } = staffColors[s];
+                staffCell.style.backgroundColor = bgColor; // Assign staff color
+                staffCell.style.color = textColor; // Ensure text is visible
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
@@ -565,8 +587,8 @@
                         for (const patient in schedule[time].patientAssignments) {
                             if (schedule[time].patientAssignments[patient].includes(s)) {
                                 cell.textContent = patient;
-                                cell.style.backgroundColor = staffColors[s]; // Assign staff color
-                                cell.style.color = "#ffffff"; // Ensure text is visible
+                                cell.style.backgroundColor = bgColor; // Assign staff color
+                                cell.style.color = textColor; // Ensure text is visible
                                 assigned = true;
                                 break;
                             }
