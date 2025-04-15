@@ -258,19 +258,12 @@
             }
 
             /* Hide unnecessary sections */
-            .setup-section ~ *, 
-            .legend ~ *, 
-            .schedule-container:nth-child(n+2), 
-            .stats, 
-            button {
-                display: none; /* Hide everything below the Patient Care Schedule table */
+            body > *:not(.schedule-container) {
+                display: none; /* Hide everything except the schedule-container */
             }
 
-            /* Ensure the Patient Care Schedule table and everything above it is visible */
-            .setup-section, 
-            .legend, 
-            .schedule-container:first-child {
-                display: block;
+            .schedule-container {
+                display: block; /* Ensure the schedule-container is visible */
             }
 
             table {
@@ -295,61 +288,63 @@
 </head>
 <body>
     <div class="container">
-        <h1>Day Shift Allocation</h1>
-        <div style="text-align: right; margin-bottom: 20px;">
-            <button id="toggleModeBtn" title="Toggle Mode"></button>
-        </div>
-        <div class="setup-section">
-            <h2>Security Staff</h2>
-            <div class="security-staff-inputs" id="securityStaffInputs"></div>
-            <button id="addSecurityStaffBtn">Add Security Staff</button>
-            <button id="removeSecurityStaffBtn">Remove Security Staff</button>
-        </div>
-        <div class="setup-section">
-            <h2>Health Care Worker (HCW)</h2>
-            <div class="staff-inputs" id="staffInputs">
-                <!-- Initially empty -->
-            </div>
-            <button id="addStaffBtn">Add Health Care Worker</button>
-            <button id="removeStaffBtn">Remove Health Care Worker</button>
-
-            <h2>Patient Names</h2>
-            <div class="patient-inputs" id="patientInputs">
-                <!-- Initially empty -->
-            </div>
-            <button id="addPatientBtn">Add Patient</button>
-            <button id="removePatientBtn">Remove Patient</button>
-
-            <button id="generateBtn">Generate Schedule</button>
-            <button id="resetBtn">Reset</button>
-            <button id="printBtn" style="display: none;">Print Schedule</button>
-        </div>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color legend-break"></div>
-                <div>30-min Break</div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color legend-lunch"></div>
-                <div>1-hour Lunch</div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color legend-unassigned"></div>
-                <div>Unassigned</div>
-            </div>
-        </div>
-        
         <div class="schedule-container">
-            <h2>Patient Care Schedule</h2>
-            <table id="scheduleTable">
-                <thead id="scheduleHeader">
-                    <!-- Time headers will be here -->
-                </thead>
-                <tbody id="scheduleBody">
-                    <!-- Patient rows will be here -->
-                </tbody>
-            </table>
+            <h1>Day Shift Allocation</h1>
+            <div style="text-align: right; margin-bottom: 20px;">
+                <button id="toggleModeBtn" title="Toggle Mode"></button>
+            </div>
+            <div class="setup-section">
+                <h2>Security Staff</h2>
+                <div class="security-staff-inputs" id="securityStaffInputs"></div>
+                <button id="addSecurityStaffBtn">Add Security Staff</button>
+                <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+            </div>
+            <div class="setup-section">
+                <h2>Health Care Worker (HCW)</h2>
+                <div class="staff-inputs" id="staffInputs">
+                    <!-- Initially empty -->
+                </div>
+                <button id="addStaffBtn">Add Health Care Worker</button>
+                <button id="removeStaffBtn">Remove Health Care Worker</button>
+
+                <h2>Patient Names</h2>
+                <div class="patient-inputs" id="patientInputs">
+                    <!-- Initially empty -->
+                </div>
+                <button id="addPatientBtn">Add Patient</button>
+                <button id="removePatientBtn">Remove Patient</button>
+
+                <button id="generateBtn">Generate Schedule</button>
+                <button id="resetBtn">Reset</button>
+                <button id="printBtn" style="display: none;">Print Schedule</button>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color legend-break"></div>
+                    <div>30-min Break</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-lunch"></div>
+                    <div>1-hour Lunch</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-unassigned"></div>
+                    <div>Unassigned</div>
+                </div>
+            </div>
+            
+            <div class="schedule-container">
+                <h2>Patient Care Schedule</h2>
+                <table id="scheduleTable">
+                    <thead id="scheduleHeader">
+                        <!-- Time headers will be here -->
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <!-- Patient rows will be here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <div class="schedule-container">
