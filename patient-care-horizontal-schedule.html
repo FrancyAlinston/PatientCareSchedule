@@ -192,7 +192,7 @@
         <h1>Day Shift Allocation</h1>
         
         <div style="text-align: right; margin-bottom: 20px;">
-            <button id="toggleModeBtn">Switch to Dark Mode</button>
+            <button id="toggleModeBtn" title="Toggle Mode"></button>
         </div>
         
         <div class="setup-section">
@@ -712,13 +712,16 @@
                 // Toggle the dark-mode class on the body
                 body.classList.toggle('dark-mode');
 
-                // Update the button text based on the current mode
+                // Update the button symbol based on the current mode
                 if (body.classList.contains('dark-mode')) {
-                    toggleButton.textContent = 'Switch to Light Mode';
+                    toggleButton.textContent = '🌙'; // Dark mode symbol
                 } else {
-                    toggleButton.textContent = 'Switch to Dark Mode';
+                    toggleButton.textContent = '☀️'; // Light mode symbol
                 }
             });
+
+            // Set the initial symbol
+            document.getElementById('toggleModeBtn').textContent = '🌙'; // Default to dark mode symbol
         };
     </script>
 </body>
