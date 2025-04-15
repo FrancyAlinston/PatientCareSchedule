@@ -200,49 +200,58 @@
         
         // Generate a schedule automatically
         function generateSchedule() {
-            const securityStaffInputs = document.querySelectorAll('.security-container');
+            const patientInputs = document.querySelectorAll('.patient-container');
             const staffInputs = document.querySelectorAll('.staff-container');
-            const patientInputs = document.querySelectorAll('#patientInputs input');
-        
+            const securityStaffInputs = document.querySelectorAll('.security-container');
+
             const staff = [];
             const excludedHours = {};
             const securityStaff = new Set();
-        
+            const patients = [];
+
             // Process security staff
             securityStaffInputs.forEach(container => {
                 const staffName = container.querySelector('.security-name').value.trim();
                 const excludeHours = parseInt(container.querySelector('.exclude-hours').value);
-        
+
                 if (staffName) {
                     staff.push(staffName);
                     excludedHours[staffName] = excludeHours;
                     securityStaff.add(staffName);
                 }
             });
-        
+
             // Process other staff
             staffInputs.forEach(container => {
                 const staffName = container.querySelector('.staff-name').value.trim();
-        
+
                 if (staffName) {
                     staff.push(staffName);
                     excludedHours[staffName] = 0; // No additional excluded hours for non-security staff
                 }
             });
-        
-            const patients = Array.from(patientInputs).map(input => input.value.trim()).filter(name => name !== "");
-        
+
+            // Process patients
+            patientInputs.forEach(container => {
+                const patientName = container.querySelector('.patient-name').value.trim();
+                const staffCount = parseInt(container.querySelector('.staff-count').value);
+
+                if (patientName) {
+                    patients.push({ name: patientName, staffCount });
+                }
+            });
+
             // Validate inputs
             if (staff.length === 0) {
                 alert("Please enter at least one staff name");
                 return;
             }
-        
+
             if (patients.length === 0) {
                 alert("Please enter at least one patient name");
                 return;
             }
-        
+
             // Initialize schedule data structure
             const schedule = {};
             timeSlots.forEach(time => {
@@ -250,18 +259,18 @@
                     patientAssignments: {},
                     staffBreaks: {}
                 };
-        
+
                 // Initialize each patient to have no staff assigned
                 patients.forEach(patient => {
-                    schedule[time].patientAssignments[patient] = "";
+                    schedule[time].patientAssignments[patient.name] = [];
                 });
-        
+
                 // Initialize each staff to not be on break
                 staff.forEach(s => {
                     schedule[time].staffBreaks[s] = "";
                 });
             });
-        
+
             // Track total work and break time for each staff
             const staffStats = {};
             staff.forEach(s => {
@@ -272,18 +281,15 @@
                     lunchTime: ""
                 };
             });
-        
-            // Schedule 30-minute break for each staff member in allowed hours (not in the first 3 or last 2 hours)
-            // and 1-hour lunch break in later hours
+
+            // Schedule 30-minute break and 1-hour lunch
             staff.forEach((s, index) => {
-                // Schedule 30-minute break
                 const shortBreakHour = 3 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
                 const shortBreakTime = timeSlots[shortBreakHour];
                 schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
                 staffStats[s].shortBreakTime = shortBreakTime;
                 staffStats[s].breakTime += 0.5;
 
-                // Schedule 1-hour lunch break, ensuring it is not adjacent to the 30-minute break
                 let lunchHour = shortBreakHour + 2; // Ensure at least one time slot gap
                 if (lunchHour >= timeSlots.length - 2) {
                     lunchHour = timeSlots.length - 3; // Adjust to avoid the last 2 hours
@@ -293,8 +299,8 @@
                 staffStats[s].lunchTime = lunchTime;
                 staffStats[s].breakTime += 1;
             });
-        
-            // For each time slot and each patient, assign available staff members
+
+            // Assign staff to patients
             timeSlots.forEach((time, timeIndex) => {
                 const availableStaff = staff.filter(s => {
                     const isOnBreak = schedule[time].staffBreaks[s] !== "";
@@ -303,24 +309,23 @@
                         (timeIndex < Math.ceil(3.3 * (timeSlots.length / 12))) || // First 3.3 hours
                         (timeIndex >= timeSlots.length - 2); // Last 2 hours
                     const hasAdditionalExclusion = timeIndex < excludedHours[s] || timeIndex >= timeSlots.length - excludedHours[s];
-        
+
                     return !isOnBreak && (!isSecurity || !isInRestrictedTime) && !hasAdditionalExclusion;
                 });
-        
+
                 availableStaff.sort((a, b) => staffStats[a].workHours - staffStats[b].workHours);
-        
-                patients.forEach((patient, index) => {
-                    if (index < availableStaff.length) {
-                        const assignedStaff = availableStaff[index];
-                        schedule[time].patientAssignments[patient] = assignedStaff;
-                        staffStats[assignedStaff].workHours += 1;
-                    } else {
-                        schedule[time].patientAssignments[patient] = "UNASSIGNED";
-                    }
+
+                patients.forEach(patient => {
+                    const assignedStaff = availableStaff.splice(0, Math.min(patient.staffCount, availableStaff.length));
+                    schedule[time].patientAssignments[patient.name] = assignedStaff;
+
+                    assignedStaff.forEach(s => {
+                        staffStats[s].workHours += 1;
+                    });
                 });
             });
-        
-            renderSchedule(schedule, staff, patients, staffStats);
+
+            renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
         }
         
         // Render the schedule to the HTML table with horizontal timeline
@@ -356,13 +361,11 @@
                     const cell = document.createElement('td');
                     const assignedStaff = schedule[time].patientAssignments[patient];
                     
-                    if (assignedStaff === "UNASSIGNED") {
+                    if (assignedStaff.length === 0) {
                         cell.textContent = "UNASSIGNED";
                         cell.style.backgroundColor = "#ffeaa7";
-                    } else if (assignedStaff) {
-                        cell.textContent = assignedStaff;
                     } else {
-                        cell.textContent = "-";
+                        cell.textContent = assignedStaff.join(", ");
                     }
                     
                     row.appendChild(cell);
@@ -403,7 +406,7 @@
                         // Find if this staff is assigned to any patient during this time
                         let assigned = false;
                         for (const patient in schedule[time].patientAssignments) {
-                            if (schedule[time].patientAssignments[patient] === s) {
+                            if (schedule[time].patientAssignments[patient].includes(s)) {
                                 cell.textContent = patient;
                                 assigned = true;
                                 break;
@@ -542,10 +545,32 @@
 
             document.getElementById('addPatientBtn').addEventListener('click', () => {
                 const patientInputs = document.getElementById('patientInputs');
+                const patientContainer = document.createElement('div');
+                patientContainer.className = 'patient-container';
+
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
-                patientInputs.appendChild(newInput);
+                newInput.className = 'patient-name';
+
+                const staffCountLabel = document.createElement('label');
+                staffCountLabel.textContent = 'Staff Count: ';
+
+                const staffCountSelect = document.createElement('select');
+                staffCountSelect.className = 'staff-count';
+                const option2 = document.createElement('option');
+                option2.value = 2;
+                option2.textContent = '2';
+                const option3 = document.createElement('option');
+                option3.value = 3;
+                option3.textContent = '3';
+                staffCountSelect.appendChild(option2);
+                staffCountSelect.appendChild(option3);
+
+                patientContainer.appendChild(newInput);
+                patientContainer.appendChild(staffCountLabel);
+                patientContainer.appendChild(staffCountSelect);
+                patientInputs.appendChild(patientContainer);
             });
 
             document.getElementById('removePatientBtn').addEventListener('click', () => {
