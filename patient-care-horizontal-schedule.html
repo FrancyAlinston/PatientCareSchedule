@@ -86,8 +86,10 @@
             border-radius: 5px;
             width: 150px; /* Shortened width */
             font-size: 14px;
-            background-color: #ffffff;
+            background-color: var(--container-bg-color); /* Use container background color */
+            color: var(--text-color); /* Use text color */
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease; /* Smooth transition */
         }
         input:focus, select:focus {
             outline: none;
