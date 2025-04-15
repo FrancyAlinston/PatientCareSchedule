@@ -220,6 +220,13 @@
         #toggleModeBtn:hover {
             color: #0284c7; /* Teal Blue on hover */
         }
+
+        .patient-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -696,15 +703,16 @@
                 const patientInputs = document.getElementById("patientInputs");
                 const patientContainer = document.createElement("div");
                 patientContainer.className = "patient-container";
+                patientContainer.style.display = "flex"; // Align items horizontally
+                patientContainer.style.gap = "10px"; // Add spacing between elements
 
+                // Create Patient Name Input
                 const newInput = document.createElement("input");
                 newInput.type = "text";
                 newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
                 newInput.className = "patient-name";
 
-                const staffCountLabel = document.createElement("label");
-                staffCountLabel.textContent = "Staff Level: ";
-
+                // Create Staff Level Dropdown
                 const staffCountSelect = document.createElement("select");
                 staffCountSelect.className = "staff-count";
 
@@ -725,8 +733,8 @@
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
 
+                // Append Input and Dropdown to the Container
                 patientContainer.appendChild(newInput);
-                patientContainer.appendChild(staffCountLabel);
                 patientContainer.appendChild(staffCountSelect);
                 patientInputs.appendChild(patientContainer);
             });
