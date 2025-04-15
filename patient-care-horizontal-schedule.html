@@ -5,12 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Care Schedule - Horizontal Layout</title>
     <style>
+        :root {
+            --background-color: #f4f6f9;
+            --text-color: #2c3e50;
+            --container-bg-color: #ffffff;
+            --button-bg-color: #4a69bd;
+            --button-hover-bg-color: #1e3799;
+            --table-header-bg-color: #4a69bd;
+            --table-header-text-color: #ffffff;
+            --break-bg-color: #fab1a0;
+            --lunch-bg-color: #55efc4;
+            --unassigned-bg-color: #ffeaa7;
+        }
+
+        body.dark-mode {
+            --background-color: #2c3e50;
+            --text-color: #f4f6f9;
+            --container-bg-color: #34495e;
+            --button-bg-color: #1e3799;
+            --button-hover-bg-color: #4a69bd;
+            --table-header-bg-color: #1e3799;
+            --table-header-text-color: #f4f6f9;
+            --break-bg-color: #e17055;
+            --lunch-bg-color: #00cec9;
+            --unassigned-bg-color: #fdcb6e;
+        }
+
         body {
             font-family: 'Roboto', Arial, sans-serif;
             margin: 20px;
             line-height: 1.6;
-            background-color: #f4f6f9;
-            color: #2c3e50;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
         h1, h2 {
             color: #34495e;
@@ -27,7 +53,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: var(--container-bg-color);
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -63,7 +89,7 @@
         }
         button {
             padding: 10px 15px;
-            background-color: #4a69bd;
+            background-color: var(--button-bg-color);
             color: white;
             border: none;
             border-radius: 5px;
@@ -72,7 +98,7 @@
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #1e3799;
+            background-color: var(--button-hover-bg-color);
         }
         button:disabled {
             background-color: #dcdde1;
@@ -94,8 +120,8 @@
             font-size: 14px;
         }
         th {
-            background-color: #4a69bd;
-            color: white;
+            background-color: var(--table-header-bg-color);
+            color: var(--table-header-text-color);
             font-weight: bold;
             position: sticky;
             top: 0;
@@ -106,10 +132,10 @@
             text-align: left;
         }
         .staff-break {
-            background-color: #fab1a0;
+            background-color: var(--break-bg-color);
         }
         .staff-lunch {
-            background-color: #55efc4;
+            background-color: var(--lunch-bg-color);
         }
         .schedule-container {
             overflow-x: auto;
@@ -139,19 +165,23 @@
             border-radius: 4px;
         }
         .legend-break {
-            background-color: #fab1a0;
+            background-color: var(--break-bg-color);
         }
         .legend-lunch {
-            background-color: #55efc4;
+            background-color: var(--lunch-bg-color);
         }
         .legend-unassigned {
-            background-color: #ffeaa7;
+            background-color: var(--unassigned-bg-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Patient Care Schedule - Horizontal Timeline</h1>
+        
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button id="toggleModeBtn">Switch to Dark Mode</button>
+        </div>
         
         <div class="setup-section">
             <h2>Security Staff</h2>
@@ -654,6 +684,21 @@
                 const patientInputs = document.getElementById('patientInputs');
                 staffInputs.innerHTML = ''; // Clear all staff inputs
                 patientInputs.innerHTML = ''; // Clear all patient inputs
+            });
+
+            document.getElementById('toggleModeBtn').addEventListener('click', () => {
+                const body = document.body;
+                const toggleButton = document.getElementById('toggleModeBtn');
+
+                // Toggle the dark-mode class on the body
+                body.classList.toggle('dark-mode');
+
+                // Update the button text based on the current mode
+                if (body.classList.contains('dark-mode')) {
+                    toggleButton.textContent = 'Switch to Light Mode';
+                } else {
+                    toggleButton.textContent = 'Switch to Dark Mode';
+                }
             });
         };
     </script>
