@@ -39,11 +39,11 @@
             font-family: 'Roboto', Arial, sans-serif;
             margin: 20px;
             line-height: 1.6;
-            background-color: var(--background-color);
-            color: var(--text-color);
+            background-color: var(--background-color); /* Use dark mode background */
+            color: var(--text-color); /* Use dark mode text color */
         }
         h1, h2 {
-            color: var(--text-color);
+            color: var(--text-color); /* Use dark mode text color */
             margin-bottom: 15px;
         }
         h1 {
@@ -62,7 +62,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .setup-section {
-            background-color: #f9fbfd;
+            background-color: var(--container-bg-color); /* Use dark mode container background */
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -92,8 +92,7 @@
             box-shadow: 0 0 5px rgba(74, 105, 189, 0.5);
         }
         button {
-            padding: 10px 15px;
-            background-color: var(--button-bg-color);
+            background-color: var(--button-bg-color); /* Use dark mode button color */
             color: white;
             border: none;
             border-radius: 5px;
@@ -102,7 +101,7 @@
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: var(--button-hover-bg-color);
+            background-color: var(--button-hover-bg-color); /* Use dark mode hover color */
         }
         button:disabled {
             background-color: #dcdde1;
@@ -112,7 +111,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background-color: var(--table-cell-bg-color);
+            background-color: var(--table-cell-bg-color); /* Use dark mode variable */
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -122,12 +121,12 @@
             padding: 10px;
             text-align: center;
             font-size: 14px;
-            background-color: var(--table-cell-bg-color);
-            color: var(--table-cell-text-color);
+            background-color: var(--table-cell-bg-color); /* Ensure table cells adapt to dark mode */
+            color: var(--table-cell-text-color); /* Ensure text color adapts to dark mode */
         }
         th {
-            background-color: var(--table-header-bg-color);
-            color: var(--table-header-text-color);
+            background-color: var(--table-header-bg-color); /* Ensure header adapts to dark mode */
+            color: var(--table-header-text-color); /* Ensure header text color adapts to dark mode */
             font-weight: bold;
             position: sticky;
             top: 0;
@@ -171,13 +170,13 @@
             border-radius: 4px;
         }
         .legend-break {
-            background-color: var(--break-bg-color);
+            background-color: var(--break-bg-color); /* Adapt to dark mode */
         }
         .legend-lunch {
-            background-color: var(--lunch-bg-color);
+            background-color: var(--lunch-bg-color); /* Adapt to dark mode */
         }
         .legend-unassigned {
-            background-color: var(--unassigned-bg-color);
+            background-color: var(--unassigned-bg-color); /* Adapt to dark mode */
         }
     </style>
 </head>
