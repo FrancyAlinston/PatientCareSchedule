@@ -604,12 +604,19 @@
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
             document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
                 const securityStaffInputs = document.getElementById('securityStaffInputs');
+                
+                // Check if a security staff input already exists
+                if (securityStaffInputs.children.length > 0) {
+                    alert("Only one security staff can be added.");
+                    return;
+                }
+
                 const securityContainer = document.createElement('div');
                 securityContainer.className = 'security-container';
 
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
-                newInput.placeholder = `Security Staff ${securityStaffInputs.children.length + 1}`;
+                newInput.placeholder = `Security Staff`;
                 newInput.className = 'security-name';
 
                 securityContainer.appendChild(newInput);
