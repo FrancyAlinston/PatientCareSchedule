@@ -201,6 +201,26 @@
         .legend-unassigned {
             background-color: var(--unassigned-bg-color);
         }
+
+        /* Ensure text color is visible for cells with white background in dark mode */
+        body.dark-mode td {
+            color: var(--text-color); /* Use the light text color defined for dark mode */
+        }
+
+        body.dark-mode tr:nth-child(even) td {
+            background-color: #374151; /* Dark gray for even rows in dark mode */
+            color: var(--table-cell-text-color); /* Ensure text color is visible */
+        }
+
+        body.dark-mode tr:nth-child(odd) td {
+            background-color: var(--table-cell-bg-color); /* Dark gray for odd rows in dark mode */
+            color: var(--table-cell-text-color); /* Ensure text color is visible */
+        }
+
+        /* Explicitly set text color for cells with white background */
+        body.dark-mode td[style*="background-color: #ffffff"] {
+            color: #333333; /* Dark text color for white background */
+        }
     </style>
 </head>
 <body>
