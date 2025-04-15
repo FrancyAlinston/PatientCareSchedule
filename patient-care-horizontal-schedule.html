@@ -471,9 +471,11 @@
                 excludeHoursInput.min = 0;
                 excludeHoursInput.max = 12;
                 excludeHoursInput.className = 'exclude-hours';
+                excludeHoursInput.disabled = true; // Initially disabled
 
                 const plusButton = document.createElement('button');
                 plusButton.textContent = '+';
+                plusButton.disabled = true; // Initially disabled
                 plusButton.addEventListener('click', () => {
                     if (excludeHoursInput.value < 12) {
                         excludeHoursInput.value = parseInt(excludeHoursInput.value) + 1;
@@ -482,10 +484,19 @@
 
                 const minusButton = document.createElement('button');
                 minusButton.textContent = '-';
+                minusButton.disabled = true; // Initially disabled
                 minusButton.addEventListener('click', () => {
                     if (excludeHoursInput.value > 0) {
                         excludeHoursInput.value = parseInt(excludeHoursInput.value) - 1;
                     }
+                });
+
+                // Enable exclude hours input and buttons only if "Security" is checked
+                securityCheckbox.addEventListener('change', () => {
+                    const isSecurity = securityCheckbox.checked;
+                    excludeHoursInput.disabled = !isSecurity;
+                    plusButton.disabled = !isSecurity;
+                    minusButton.disabled = !isSecurity;
                 });
 
                 staffContainer.appendChild(newInput);
