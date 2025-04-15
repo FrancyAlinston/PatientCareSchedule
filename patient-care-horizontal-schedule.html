@@ -331,6 +331,28 @@
                 };
             });
 
+            // Schedule 30-minute breaks for each staff member before 12 noon
+            staff.forEach((s, index) => {
+                const breakEndIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the last time slot before noon
+                let shortBreakHour = index % breakEndIndex; // Stagger breaks before noon
+
+                // Check if staff is short; if so, move the break to the last hour or skip it
+                if (staff.length < patients.length) {
+                    if (index % 2 === 0) {
+                        shortBreakHour = timeSlots.length - 1; // Assign break to the last hour
+                    } else {
+                        shortBreakHour = -1; // Skip the break
+                    }
+                }
+
+                if (shortBreakHour >= 0) {
+                    const shortBreakTime = timeSlots[shortBreakHour];
+                    schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                    staffStats[s].shortBreakTime = shortBreakTime;
+                    staffStats[s].breakTime += 0.5;
+                }
+            });
+
             // Schedule 1-hour lunch break for each staff member after 12 noon
             staff.forEach((s, index) => {
                 const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the first time slot after 12 noon
