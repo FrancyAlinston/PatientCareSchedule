@@ -315,24 +315,6 @@
                 };
             });
 
-            // Schedule 30-minute break and 1-hour lunch
-            staff.forEach((s, index) => {
-                const shortBreakHour = 3 + (index % (timeSlots.length - 6)); // Exclude first 3 and last 2 hours
-                const shortBreakTime = timeSlots[shortBreakHour];
-                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
-                staffStats[s].shortBreakTime = shortBreakTime;
-                staffStats[s].breakTime += 0.5;
-
-                let lunchHour = shortBreakHour + 2; // Ensure at least one time slot gap
-                if (lunchHour >= timeSlots.length - 2) {
-                    lunchHour = timeSlots.length - 3; // Adjust to avoid the last 2 hours
-                }
-                const lunchTime = timeSlots[lunchHour];
-                schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
-                staffStats[s].lunchTime = lunchTime;
-                staffStats[s].breakTime += 1;
-            });
-
             // Assign staff to patients
             timeSlots.forEach((time, timeIndex) => {
                 const availableStaff = staff.filter(s => {
@@ -587,23 +569,23 @@
                 newInput.className = 'patient-name';
 
                 const staffCountLabel = document.createElement('label');
-                staffCountLabel.textContent = 'Staff Count: ';
+                staffCountLabel.textContent = 'Staff Level: ';
 
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
 
                 const option1 = document.createElement('option');
                 option1.value = 1;
-                option1.textContent = '1';
-                option1.selected = true; // Set default to 1
+                option1.textContent = 'Level 1:1 (1 Staff)';
+                option1.selected = true; // Default to Level 1:1
 
                 const option2 = document.createElement('option');
                 option2.value = 2;
-                option2.textContent = '2';
+                option2.textContent = 'Level 2:1 (2 Staff)';
 
                 const option3 = document.createElement('option');
                 option3.value = 3;
-                option3.textContent = '3';
+                option3.textContent = 'Level 3:1 (3 Staff)';
 
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
