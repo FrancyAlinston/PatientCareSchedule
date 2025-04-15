@@ -736,14 +736,18 @@
                 const patientContainer = document.createElement('div');
                 patientContainer.className = 'patient-container';
 
+                // Create input for patient name
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
                 newInput.className = 'patient-name';
 
+                // Create label for staff level
                 const staffCountLabel = document.createElement('label');
                 staffCountLabel.textContent = 'Staff Level: ';
+                staffCountLabel.style.marginLeft = '10px'; // Add some spacing
 
+                // Create dropdown for staff level
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
 
@@ -764,9 +768,12 @@
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
 
+                // Append elements to the patient container
                 patientContainer.appendChild(newInput);
                 patientContainer.appendChild(staffCountLabel);
                 patientContainer.appendChild(staffCountSelect);
+
+                // Append the patient container to the patient inputs section
                 patientInputs.appendChild(patientContainer);
             });
 
