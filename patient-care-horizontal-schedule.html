@@ -240,6 +240,49 @@
             border-color: #4a69bd;
             box-shadow: 0 0 5px rgba(74, 105, 189, 0.5);
         }
+
+        @media print {
+            body {
+                background-color: #ffffff; /* Ensure white background for printing */
+                color: #000000; /* Ensure black text for printing */
+                font-size: 12px; /* Adjust font size for better fit */
+                line-height: 1.4;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%; /* Use full width for printing */
+                padding: 0;
+                margin: 0;
+                box-shadow: none; /* Remove shadows for printing */
+            }
+
+            .setup-section, .legend, .stats, .schedule-container {
+                page-break-inside: avoid; /* Prevent page breaks inside sections */
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 10px; /* Adjust font size for tables */
+            }
+
+            th, td {
+                border: 1px solid #000000; /* Ensure visible borders for printing */
+                padding: 5px;
+                text-align: center;
+            }
+
+            button {
+                display: none; /* Hide buttons during printing */
+            }
+
+            /* Ensure content fits within A4 dimensions */
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -271,6 +314,7 @@
 
             <button id="generateBtn">Generate Schedule</button>
             <button id="resetBtn">Reset</button>
+            <button id="printBtn">Print Schedule</button>
         </div>
         
         <div class="legend">
@@ -828,6 +872,10 @@
 
             // Set the initial symbol
             document.getElementById('toggleModeBtn').textContent = '🌙'; // Default to dark mode symbol
+
+            document.getElementById('printBtn').addEventListener('click', () => {
+                window.print();
+            });
         };
     </script>
 </body>
