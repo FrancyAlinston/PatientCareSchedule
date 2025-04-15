@@ -331,6 +331,15 @@
                 };
             });
 
+            // Schedule 1-hour lunch break for each staff member
+            staff.forEach((s, index) => {
+                const lunchHour = Math.floor(timeSlots.length / 2) + (index % 2); // Stagger lunch breaks
+                const lunchTime = timeSlots[lunchHour];
+                schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
+                staffStats[s].lunchTime = lunchTime;
+                staffStats[s].breakTime += 1;
+            });
+
             // Assign staff to patients
             timeSlots.forEach((time, timeIndex) => {
                 const availableStaff = staff.filter(s => {
