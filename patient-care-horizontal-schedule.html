@@ -261,12 +261,10 @@
             // Process security staff
             securityStaffInputs.forEach(container => {
                 const staffName = container.querySelector('.security-name').value.trim();
-                const excludeHours = parseInt(container.querySelector('.exclude-hours').value);
 
                 if (staffName) {
                     staff.push(staffName);
-                    excludedHours[staffName] = excludeHours;
-                    securityStaff.add(staffName);
+                    securityStaff.add(staffName); // Add to the set of security staff
                 }
             });
 
@@ -572,38 +570,7 @@
                 newInput.placeholder = `Security Staff ${securityStaffInputs.children.length + 1}`;
                 newInput.className = 'security-name';
 
-                const excludeHoursLabel = document.createElement('span');
-                excludeHoursLabel.textContent = 'Exclude Hours: ';
-
-                const excludeHoursInput = document.createElement('input');
-                excludeHoursInput.type = 'number';
-                excludeHoursInput.value = 0;
-                excludeHoursInput.min = 0;
-                excludeHoursInput.max = 12;
-                excludeHoursInput.className = 'exclude-hours';
-
-                const plusButton = document.createElement('button');
-                plusButton.textContent = '+';
-                plusButton.addEventListener('click', () => {
-                    if (excludeHoursInput.value < 12) {
-                        excludeHoursInput.value = parseInt(excludeHoursInput.value) + 1;
-                    }
-                });
-
-                const minusButton = document.createElement('button');
-                minusButton.textContent = '-';
-                minusButton.addEventListener('click', () => {
-                    if (excludeHoursInput.value > 0) {
-                        excludeHoursInput.value = parseInt(excludeHoursInput.value) - 1;
-                    }
-                });
-
                 securityContainer.appendChild(newInput);
-                securityContainer.appendChild(excludeHoursLabel);
-                securityContainer.appendChild(excludeHoursInput);
-                securityContainer.appendChild(plusButton);
-                securityContainer.appendChild(minusButton);
-
                 securityStaffInputs.appendChild(securityContainer);
             });
 
