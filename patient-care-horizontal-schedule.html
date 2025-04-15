@@ -670,12 +670,19 @@
             document.getElementById("toggleShiftBtn").addEventListener("click", toggleShift);
             document.getElementById("addSecurityStaffBtn").addEventListener("click", () => {
                 const securityStaffInputs = document.getElementById("securityStaffInputs");
+
+                // Check if there is already one security staff
+                if (securityStaffInputs.children.length > 0) {
+                    alert("Only one security staff is allowed.");
+                    return;
+                }
+
                 const securityContainer = document.createElement("div");
                 securityContainer.className = "security-container";
 
                 const newInput = document.createElement("input");
                 newInput.type = "text";
-                newInput.placeholder = `Security Staff ${securityStaffInputs.children.length + 1}`;
+                newInput.placeholder = "Security Staff";
                 newInput.className = "security-name";
 
                 securityContainer.appendChild(newInput);
