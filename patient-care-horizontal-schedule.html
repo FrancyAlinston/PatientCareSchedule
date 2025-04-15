@@ -6,18 +6,19 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <style>
         :root {
-            --background-color: #f0f4f8; /* Light Gray background */
-            --text-color: #1e293b; /* Dark text color */
+            --background-color: #f9f9f9; /* Light background */
+            --text-color: #333333; /* Dark text color */
             --container-bg-color: #ffffff; /* White container background */
-            --button-bg-color: #38bdf8; /* Light Blue button color */
-            --button-hover-bg-color: #0284c7; /* Teal Blue for hover */
-            --table-header-bg-color: #e0f2fe; /* Light Blue for table headers */
-            --table-header-text-color: #0f172a; /* Dark text for table headers */
+            --button-bg-color: #0077ff; /* Bright blue button color */
+            --button-hover-bg-color: #0056cc; /* Darker blue for hover */
+            --table-header-bg-color: #f3f4f6; /* Light gray for table headers */
+            --table-header-text-color: #333333; /* Dark text for table headers */
             --table-cell-bg-color: #ffffff; /* White table cell background */
-            --table-cell-text-color: #1e293b; /* Dark text color for table cells */
-            --break-bg-color: #bae6fd; /* Light Blue for breaks */
-            --lunch-bg-color: #99f6e4; /* Teal Blue for lunch */
-            --unassigned-bg-color: #fecaca; /* Light Red for unassigned */
+            --table-cell-text-color: #333333; /* Dark text color for table cells */
+            --break-bg-color: #ffefc1; /* Soft yellow for breaks */
+            --lunch-bg-color: #c1f0c1; /* Soft green for lunch */
+            --unassigned-bg-color: #ffc1c1; /* Soft red for unassigned */
+            --primary-font: 'Poppins', sans-serif; /* Modern font */
         }
 
         body.dark-mode {
@@ -36,32 +37,35 @@
         }
 
         body {
-            font-family: 'Inter', Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-            background-color: var(--background-color); /* Light Gray background */
-            color: var(--text-color); /* Dark text color */
-            transition: background-color 0.5s ease, color 0.5s ease; /* Smooth transition */
+            font-family: var(--primary-font);
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
         h1, h2 {
-            color: var(--text-color); /* Dark text color */
-            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 20px;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             text-align: center;
+            margin-top: 20px;
         }
         h2 {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: var(--container-bg-color); /* White container background */
+            padding: 30px;
+            background-color: var(--container-bg-color);
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease; /* Smooth transition */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
         }
         .setup-section {
             background-color: var(--container-bg-color); /* Use dark mode container background */
@@ -95,63 +99,66 @@
             box-shadow: 0 0 5px rgba(74, 105, 189, 0.5);
         }
         button {
-            background-color: var(--button-bg-color); /* Light Blue button color */
+            background-color: var(--button-bg-color);
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 10px 15px;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         button:hover {
-            background-color: var(--button-hover-bg-color); /* Teal Blue hover color */
+            background-color: var(--button-hover-bg-color);
+            transform: translateY(-2px);
         }
         button:disabled {
-            background-color: #dcdde1;
+            background-color: #cccccc;
             cursor: not-allowed;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background-color: var(--table-cell-bg-color); /* White table cell background */
-            border-radius: 8px;
+            background-color: var(--table-cell-bg-color);
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease; /* Smooth transition */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
         }
         th, td {
             border: 1px solid #e5e7eb;
-            padding: 10px;
+            padding: 15px;
             text-align: center;
             font-size: 14px;
-            background-color: var(--table-cell-bg-color); /* White table cell background */
-            color: var(--table-cell-text-color); /* Dark text color */
-            transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease; /* Smooth transition */
+            background-color: var(--table-cell-bg-color);
+            color: var(--table-cell-text-color);
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
         th {
-            background-color: var(--table-header-bg-color); /* Light Blue for table headers */
-            color: var(--table-header-text-color); /* Dark text for table headers */
-            font-weight: bold;
+            background-color: var(--table-header-bg-color);
+            color: var(--table-header-text-color);
+            font-weight: 600;
         }
         tr:nth-child(even) td {
-            background-color: var(--container-bg-color); /* Alternate row color for better readability */
+            background-color: #f9fafb;
         }
         tr:nth-child(odd) td {
-            background-color: var(--table-cell-bg-color); /* Default row color */
+            background-color: var(--table-cell-bg-color);
         }
         .row-header {
-            background-color: var(--table-header-bg-color); /* Light Blue for row headers */
-            color: var(--table-header-text-color); /* Dark text for row headers */
+            background-color: var(--table-header-bg-color);
+            color: var(--table-header-text-color);
             font-weight: bold;
             text-align: left;
         }
         .staff-break {
-            background-color: var(--break-bg-color); /* Light Blue for breaks */
+            background-color: var(--break-bg-color);
         }
         .staff-lunch {
-            background-color: var(--lunch-bg-color); /* Teal Blue for lunch */
+            background-color: var(--lunch-bg-color);
         }
         .schedule-container {
             overflow-x: auto;
@@ -169,46 +176,44 @@
         .legend {
             display: flex;
             gap: 20px;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            justify-content: center;
         }
         .legend-item {
             display: flex;
             align-items: center;
+            font-size: 14px;
         }
         .legend-color {
             width: 20px;
             height: 20px;
-            margin-right: 5px;
-            border-radius: 4px;
+            margin-right: 8px;
+            border-radius: 50%;
         }
         .legend-break {
-            background-color: var(--break-bg-color); /* Light Blue for breaks */
+            background-color: var(--break-bg-color);
         }
         .legend-lunch {
-            background-color: var(--lunch-bg-color); /* Teal Blue for lunch */
+            background-color: var(--lunch-bg-color);
         }
         .legend-unassigned {
-            background-color: var(--unassigned-bg-color); /* Light Red for unassigned */
+            background-color: var(--unassigned-bg-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Day Shift Allocation</h1>
-        
         <div style="text-align: right; margin-bottom: 20px;">
             <button id="toggleModeBtn" title="Toggle Mode"></button>
         </div>
-        
         <div class="setup-section">
             <h2>Security Staff</h2>
-            <div class="security-staff-inputs" id="securityStaffInputs">
-                <!-- Initially empty -->
-            </div>
+            <div class="security-staff-inputs" id="securityStaffInputs"></div>
             <button id="addSecurityStaffBtn">Add Security Staff</button>
             <button id="removeSecurityStaffBtn">Remove Security Staff</button>
-
+        </div>
+        <div class="setup-section">
             <h2>Health Care Worker (HCW)</h2>
             <div class="staff-inputs" id="staffInputs">
                 <!-- Initially empty -->
