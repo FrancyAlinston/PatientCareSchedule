@@ -257,8 +257,8 @@
                 box-shadow: none; /* Remove shadows for printing */
             }
 
-            .setup-section, .legend, .stats, .schedule-container {
-                page-break-inside: avoid; /* Prevent page breaks inside sections */
+            .setup-section, .legend, .stats, .schedule-container:not(:first-child), button {
+                display: none; /* Hide all sections except the first schedule-container */
             }
 
             table {
@@ -271,10 +271,6 @@
                 border: 1px solid #000000; /* Ensure visible borders for printing */
                 padding: 5px;
                 text-align: center;
-            }
-
-            button {
-                display: none; /* Hide buttons during printing */
             }
 
             /* Ensure content fits within A4 dimensions */
