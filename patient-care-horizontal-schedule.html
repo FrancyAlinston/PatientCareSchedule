@@ -13,6 +13,8 @@
             --button-hover-bg-color: #1e3799;
             --table-header-bg-color: #4a69bd;
             --table-header-text-color: #ffffff;
+            --table-cell-bg-color: #ffffff;
+            --table-cell-text-color: #2c3e50;
             --break-bg-color: #fab1a0;
             --lunch-bg-color: #55efc4;
             --unassigned-bg-color: #ffeaa7;
@@ -26,6 +28,8 @@
             --button-hover-bg-color: #4a69bd;
             --table-header-bg-color: #1e3799;
             --table-header-text-color: #f4f6f9;
+            --table-cell-bg-color: #3b3b3b;
+            --table-cell-text-color: #f4f6f9;
             --break-bg-color: #e17055;
             --lunch-bg-color: #00cec9;
             --unassigned-bg-color: #fdcb6e;
@@ -39,7 +43,7 @@
             color: var(--text-color);
         }
         h1, h2 {
-            color: #34495e;
+            color: var(--text-color);
             margin-bottom: 15px;
         }
         h1 {
@@ -108,7 +112,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background-color: #ffffff;
+            background-color: var(--table-cell-bg-color);
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -118,6 +122,8 @@
             padding: 10px;
             text-align: center;
             font-size: 14px;
+            background-color: var(--table-cell-bg-color);
+            color: var(--table-cell-text-color);
         }
         th {
             background-color: var(--table-header-bg-color);
