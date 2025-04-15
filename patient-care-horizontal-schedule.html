@@ -337,7 +337,7 @@
                 const breakEndIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the last time slot before noon
                 let shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
 
-                // Check if staff is short; if so, move the break to the last hour or skip it
+                // Check if staff is short; if so, allow shared patient care
                 if (staff.length < patients.length) {
                     if (index % 2 === 0) {
                         shortBreakHour = timeSlots.length - 1; // Assign break to the last hour
@@ -351,6 +351,14 @@
                     schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
                     staffStats[s].shortBreakTime = shortBreakTime;
                     staffStats[s].breakTime += 0.5;
+
+                    // Allow shared patient care during the break
+                    patients.forEach(patient => {
+                        const assignedStaff = schedule[shortBreakTime].patientAssignments[patient.name];
+                        if (assignedStaff.length < patient.staffCount) {
+                            assignedStaff.push(s); // Assign the staff member to the patient for shared care
+                        }
+                    });
                 }
             });
 
