@@ -736,16 +736,17 @@
                 const patientContainer = document.createElement('div');
                 patientContainer.className = 'patient-container';
 
+                // Create a wrapper for the input and dropdown
+                const inputWrapper = document.createElement('div');
+                inputWrapper.style.display = 'flex';
+                inputWrapper.style.alignItems = 'center';
+                inputWrapper.style.gap = '10px'; // Add spacing between input and dropdown
+
                 // Create input for patient name
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
                 newInput.className = 'patient-name';
-
-                // Create label for staff level
-                const staffCountLabel = document.createElement('label');
-                staffCountLabel.textContent = 'Staff Level: ';
-                staffCountLabel.style.marginLeft = '10px'; // Add some spacing
 
                 // Create dropdown for staff level
                 const staffCountSelect = document.createElement('select');
@@ -768,10 +769,12 @@
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
 
-                // Append elements to the patient container
-                patientContainer.appendChild(newInput);
-                patientContainer.appendChild(staffCountLabel);
-                patientContainer.appendChild(staffCountSelect);
+                // Append input and dropdown to the wrapper
+                inputWrapper.appendChild(newInput);
+                inputWrapper.appendChild(staffCountSelect);
+
+                // Append the wrapper to the patient container
+                patientContainer.appendChild(inputWrapper);
 
                 // Append the patient container to the patient inputs section
                 patientInputs.appendChild(patientContainer);
