@@ -293,12 +293,14 @@
             let headerHTML = '<tr><th>Patient</th>';
             
             timeSlots.forEach(time => {
-                headerHTML += `<th>${time}</th>`;
+                // Extract the ending hour from the time slot (e.g., "7:00-8:00" -> "8:00")
+                const endingHour = time.split('-')[1];
+                headerHTML += `<th>${endingHour}</th>`;
             });
             
             headerHTML += '</tr>';
             scheduleHeader.innerHTML = headerHTML;
-            
+
             // Setup patient schedule body (patient rows)
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
@@ -331,11 +333,11 @@
                 
                 scheduleBody.appendChild(row);
             });
-            
+
             // Setup staff schedule header (same as patient schedule)
             const staffHeader = document.getElementById('staffHeader');
             staffHeader.innerHTML = headerHTML;
-            
+
             // Setup staff schedule body (staff rows)
             const staffBody = document.getElementById('staffBody');
             staffBody.innerHTML = '';
@@ -381,7 +383,7 @@
                 
                 staffBody.appendChild(row);
             });
-            
+
             // Show statistics
             renderStats(staffStats, staff, patients);
         }
