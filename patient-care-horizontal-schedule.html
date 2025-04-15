@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Care Schedule - Horizontal Layout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .setup-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .staff-inputs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .patient-inputs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1e3799;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        th {
+            background-color: #4a69bd;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .row-header {
+            background-color: #f1f2f6;
+            font-weight: bold;
+            text-align: left;
+        }
+        .staff-break {
+            background-color: #fab1a0;
+        }
+        .staff-lunch {
+            background-color: #55efc4;
+        }
+        .schedule-container {
+            overflow-x: auto;
+        }
+        .stats {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+        .legend-break {
+            background-color: #fab1a0;
+        }
+        .legend-lunch {
+            background-color: #55efc4;
+        }
+        .legend-unassigned {
+            background-color: #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Patient Care Schedule - Horizontal Timeline</h1>
+        
+        <div class="setup-section">
+            <h2>Staff Names (8)</h2>
+            <div class="staff-inputs" id="staffInputs">
+                <input type="text" placeholder="Staff 1" value="1stAD">
+                <input type="text" placeholder="Staff 2" value="2ndFD">
+                <input type="text" placeholder="Staff 3" value="3rdAS">
+                <input type="text" placeholder="Staff 4" value="4thJB">
+                <input type="text" placeholder="Staff 5" value="5thSS">
+                <input type="text" placeholder="Staff 6" value="6thKK">
+                <input type="text" placeholder="Staff 7" value="7thJT">
+                <input type="text" placeholder="Staff 8" value="8thBB">
+            </div>
+            
+            <h2>Patient Names (4)</h2>
+            <div class="patient-inputs" id="patientInputs">
+                <input type="text" placeholder="Patient 1" value="Mary">
+                <input type="text" placeholder="Patient 2" value="Tiff">
+                <input type="text" placeholder="Patient 3" value="Cath">
+                <input type="text" placeholder="Patient 4" value="Mith">
+            </div>
+            
+            <button id="generateBtn">Generate Schedule</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-break"></div>
+                <div>30-min Break</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-lunch"></div>
+                <div>1-hour Lunch</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-unassigned"></div>
+                <div>Unassigned</div>
+            </div>
+        </div>
+        
+        <div class="schedule-container">
+            <h2>Patient Care Schedule</h2>
+            <table id="scheduleTable">
+                <thead id="scheduleHeader">
+                    <!-- Time headers will be here -->
+                </thead>
+                <tbody id="scheduleBody">
+                    <!-- Patient rows will be here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="schedule-container">
+            <h2>Staff Schedule</h2>
+            <table id="staffTable">
+                <thead id="staffHeader">
+                    <!-- Time headers will be here -->
+                </thead>
+                <tbody id="staffBody">
+                    <!-- Staff rows will be here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="stats" id="stats">
+            <!-- Statistics will be shown here -->
+        </div>
+    </div>
+
+    <script>
+        // Time slots for 12-hour shift
+        const timeSlots = [
+            "7:00-8:00", "8:00-9:00", "9:00-10:00", "10:00-11:00", 
+            "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", 
+            "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00"
+        ];
+        
+        // Generate a schedule automatically
+        function generateSchedule() {
+            // Get staff and patient names from inputs
+            const staffInputs = document.querySelectorAll('#staffInputs input');
+            const patientInputs = document.querySelectorAll('#patientInputs input');
+            
+            const staff = Array.from(staffInputs).map(input => input.value.trim()).filter(name => name !== "");
+            const patients = Array.from(patientInputs).map(input => input.value.trim()).filter(name => name !== "");
+            
+            // Validate inputs
+            if (staff.length === 0) {
+                alert("Please enter at least one staff name");
+                return;
+            }
+            
+            if (patients.length === 0) {
+                alert("Please enter at least one patient name");
+                return;
+            }
+            
+            // Initialize schedule data structure
+            const schedule = {};
+            timeSlots.forEach(time => {
+                schedule[time] = {
+                    patientAssignments: {},
+                    staffBreaks: {}
+                };
+                
+                // Initialize each patient to have no staff assigned
+                patients.forEach(patient => {
+                    schedule[time].patientAssignments[patient] = "";
+                });
+                
+                // Initialize each staff to not be on break
+                staff.forEach(s => {
+                    schedule[time].staffBreaks[s] = "";
+                });
+            });
+            
+            // Track total work and break time for each staff
+            const staffStats = {};
+            staff.forEach(s => {
+                staffStats[s] = {
+                    workHours: 0,
+                    breakTime: 0,
+                    shortBreakTime: "",
+                    lunchTime: ""
+                };
+            });
+            
+            // Schedule 30-minute break for each staff member in allowed hours (not in the first 2 or last 2 hours)
+            // and 1-hour lunch break in later hours
+            staff.forEach((s, index) => {
+                // Determine short break hour (in allowed hours: 3rd to 10th hour)
+                const shortBreakHour = 2 + (index % 6); // 2nd index ensures breaks start from the 3rd hour
+                const shortBreakTime = timeSlots[shortBreakHour];
+                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                staffStats[s].shortBreakTime = shortBreakTime;
+                staffStats[s].breakTime += 0.5;
+
+                // Determine lunch hour (in allowed hours: 5th to 10th hour)
+                const lunchHour = 4 + (index % 6); // 4th index ensures lunch starts from the 5th hour
+                const lunchTime = timeSlots[lunchHour];
+                schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
+                staffStats[s].lunchTime = lunchTime;
+                staffStats[s].breakTime += 1;
+            });
+            
+            // For each time slot and each patient, assign available staff members
+            timeSlots.forEach(time => {
+                // Create a list of available staff for this time slot
+                // (staff who are not on break during this time)
+                const availableStaff = staff.filter(s => schedule[time].staffBreaks[s] === "");
+                
+                // Shuffle available staff to distribute fairly
+                shuffleArray(availableStaff);
+                
+                // Assign staff to patients
+                patients.forEach((patient, index) => {
+                    // If we have enough available staff for all patients
+                    if (index < availableStaff.length) {
+                        const assignedStaff = availableStaff[index];
+                        schedule[time].patientAssignments[patient] = assignedStaff;
+                        staffStats[assignedStaff].workHours += 1;
+                    } else {
+                        // Not enough staff, leave unassigned
+                        schedule[time].patientAssignments[patient] = "UNASSIGNED";
+                    }
+                });
+            });
+            
+            // Render the schedule
+            renderSchedule(schedule, staff, patients, staffStats);
+        }
+        
+        // Render the schedule to the HTML table with horizontal timeline
+        function renderSchedule(schedule, staff, patients, staffStats) {
+            // Setup patient schedule header (time slots horizontally)
+            const scheduleHeader = document.getElementById('scheduleHeader');
+            let headerHTML = '<tr><th>Patient</th>';
+            
+            timeSlots.forEach(time => {
+                headerHTML += `<th>${time}</th>`;
+            });
+            
+            headerHTML += '</tr>';
+            scheduleHeader.innerHTML = headerHTML;
+            
+            // Setup patient schedule body (patient rows)
+            const scheduleBody = document.getElementById('scheduleBody');
+            scheduleBody.innerHTML = '';
+            
+            patients.forEach(patient => {
+                const row = document.createElement('tr');
+                
+                // Add patient name cell
+                const patientCell = document.createElement('td');
+                patientCell.textContent = patient;
+                patientCell.className = 'row-header';
+                row.appendChild(patientCell);
+                
+                // Add cells for each time slot
+                timeSlots.forEach(time => {
+                    const cell = document.createElement('td');
+                    const assignedStaff = schedule[time].patientAssignments[patient];
+                    
+                    if (assignedStaff === "UNASSIGNED") {
+                        cell.textContent = "UNASSIGNED";
+                        cell.style.backgroundColor = "#ffeaa7";
+                    } else if (assignedStaff) {
+                        cell.textContent = assignedStaff;
+                    } else {
+                        cell.textContent = "-";
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                scheduleBody.appendChild(row);
+            });
+            
+            // Setup staff schedule header (same as patient schedule)
+            const staffHeader = document.getElementById('staffHeader');
+            staffHeader.innerHTML = headerHTML;
+            
+            // Setup staff schedule body (staff rows)
+            const staffBody = document.getElementById('staffBody');
+            staffBody.innerHTML = '';
+            
+            staff.forEach(s => {
+                const row = document.createElement('tr');
+                
+                // Add staff name cell
+                const staffCell = document.createElement('td');
+                staffCell.textContent = s;
+                staffCell.className = 'row-header';
+                row.appendChild(staffCell);
+                
+                // Add cells for each time slot
+                timeSlots.forEach(time => {
+                    const cell = document.createElement('td');
+                    const breakStatus = schedule[time].staffBreaks[s];
+                    
+                    if (breakStatus === "30-MIN BREAK") {
+                        cell.textContent = "BREAK";
+                        cell.className = 'staff-break';
+                    } else if (breakStatus === "1-HOUR LUNCH") {
+                        cell.textContent = "LUNCH";
+                        cell.className = 'staff-lunch';
+                    } else {
+                        // Find if this staff is assigned to any patient during this time
+                        let assigned = false;
+                        for (const patient in schedule[time].patientAssignments) {
+                            if (schedule[time].patientAssignments[patient] === s) {
+                                cell.textContent = patient;
+                                assigned = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!assigned) {
+                            cell.textContent = "-";
+                        }
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                staffBody.appendChild(row);
+            });
+            
+            // Show statistics
+            renderStats(staffStats, staff, patients);
+        }
+        
+        // Render statistics
+        function renderStats(staffStats, staff, patients) {
+            const statsDiv = document.getElementById('stats');
+            let statsHtml = '<h2>Staff Work Summary</h2>';
+            statsHtml += '<table>';
+            statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
+            
+            staff.forEach(s => {
+                statsHtml += `<tr>
+                    <td>${s}</td>
+                    <td>${staffStats[s].workHours} hours</td>
+                    <td>${staffStats[s].breakTime} hours</td>
+                    <td>${staffStats[s].shortBreakTime}</td>
+                    <td>${staffStats[s].lunchTime}</td>
+                </tr>`;
+            });
+            
+            statsHtml += '</table>';
+            
+            // Add schedule coverage
+            statsHtml += '<h2>Schedule Coverage</h2>';
+            statsHtml += `<p>Total Staff: ${staff.length}</p>`;
+            statsHtml += `<p>Total Patients: ${patients.length}</p>`;
+            
+            // Calculate patient-to-staff ratio
+            const ratio = staff.length / patients.length;
+            statsHtml += `<p>Staff-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
+            
+            statsDiv.innerHTML = statsHtml;
+        }
+        
+        // Helper function to shuffle an array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Initialize the page
+        window.onload = function() {
+            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+        };
+    </script>
+</body>
+</html>
