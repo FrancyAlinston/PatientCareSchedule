@@ -331,9 +331,10 @@
                 };
             });
 
-            // Schedule 1-hour lunch break for each staff member
+            // Schedule 1-hour lunch break for each staff member after 12 noon
             staff.forEach((s, index) => {
-                const lunchHour = Math.floor(timeSlots.length / 2) + (index % 2); // Stagger lunch breaks
+                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the first time slot after 12 noon
+                const lunchHour = lunchStartIndex + (index % (timeSlots.length - lunchStartIndex)); // Stagger lunch breaks
                 const lunchTime = timeSlots[lunchHour];
                 schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
                 staffStats[s].lunchTime = lunchTime;
