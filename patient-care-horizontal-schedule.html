@@ -331,10 +331,11 @@
                 };
             });
 
-            // Schedule 30-minute breaks for each staff member before 12 noon
+            // Schedule 30-minute breaks for each staff member (not in the first 2 hours)
             staff.forEach((s, index) => {
+                const breakStartIndex = 2; // Breaks start after the first 2 hours
                 const breakEndIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the last time slot before noon
-                let shortBreakHour = index % breakEndIndex; // Stagger breaks before noon
+                let shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
 
                 // Check if staff is short; if so, move the break to the last hour or skip it
                 if (staff.length < patients.length) {
