@@ -121,26 +121,26 @@
         <h1>Patient Care Schedule - Horizontal Timeline</h1>
         
         <div class="setup-section">
-            <h2>Staff Names (8)</h2>
+            <h2>Staff Names</h2>
             <div class="staff-inputs" id="staffInputs">
                 <input type="text" placeholder="Staff 1" value="1stAD">
                 <input type="text" placeholder="Staff 2" value="2ndFD">
                 <input type="text" placeholder="Staff 3" value="3rdAS">
                 <input type="text" placeholder="Staff 4" value="4thJB">
-                <input type="text" placeholder="Staff 5" value="5thSS">
-                <input type="text" placeholder="Staff 6" value="6thKK">
-                <input type="text" placeholder="Staff 7" value="7thJT">
-                <input type="text" placeholder="Staff 8" value="8thBB">
             </div>
-            
-            <h2>Patient Names (4)</h2>
+            <button id="addStaffBtn">Add Staff</button>
+            <button id="removeStaffBtn">Remove Staff</button>
+
+            <h2>Patient Names</h2>
             <div class="patient-inputs" id="patientInputs">
                 <input type="text" placeholder="Patient 1" value="Mary">
                 <input type="text" placeholder="Patient 2" value="Tiff">
                 <input type="text" placeholder="Patient 3" value="Cath">
                 <input type="text" placeholder="Patient 4" value="Mith">
             </div>
-            
+            <button id="addPatientBtn">Add Patient</button>
+            <button id="removePatientBtn">Remove Patient</button>
+
             <button id="generateBtn">Generate Schedule</button>
         </div>
         
@@ -433,6 +433,35 @@
         // Initialize the page
         window.onload = function() {
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+            document.getElementById('addStaffBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Staff ${staffInputs.children.length + 1}`;
+                staffInputs.appendChild(newInput);
+            });
+
+            document.getElementById('removeStaffBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                if (staffInputs.children.length > 0) {
+                    staffInputs.removeChild(staffInputs.lastElementChild);
+                }
+            });
+
+            document.getElementById('addPatientBtn').addEventListener('click', () => {
+                const patientInputs = document.getElementById('patientInputs');
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
+                patientInputs.appendChild(newInput);
+            });
+
+            document.getElementById('removePatientBtn').addEventListener('click', () => {
+                const patientInputs = document.getElementById('patientInputs');
+                if (patientInputs.children.length > 0) {
+                    patientInputs.removeChild(patientInputs.lastElementChild);
+                }
+            });
         };
     </script>
 </body>
