@@ -393,9 +393,6 @@
                 };
             });
 
-            // Clear all inputs and schedules
-            clearAllData();
-
             // Regenerate the schedule header
             updateScheduleHeader();
         }
@@ -799,6 +796,13 @@
 
             // Add other event listeners here
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                // Clear all data and reset to default shift
+                clearAllData();
+                isDayShift = true; // Reset to Day Shift
+                updateShift(); // Reinitialize the schedule
+            });
+
             document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
                 const securityStaffInputs = document.getElementById('securityStaffInputs');
 
