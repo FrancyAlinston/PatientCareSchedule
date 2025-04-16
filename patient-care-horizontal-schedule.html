@@ -335,13 +335,74 @@
     </div>
 
     <script>
-        // Time slots for 12-hour shift
-        const timeSlots = [
-            "7:00-8:00", "8:00-9:00", "9:00-10:00", "10:00-11:00", 
-            "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", 
-            "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00"
+        // Variable to track the current shift (true = Day Shift, false = Night Shift)
+        let isDayShift = true;
+
+        // Time slots for day and night shifts
+        const dayShiftSlots = [
+            "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
+            "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00",
+            "16:00-17:00", "17:00-18:00", "18:00-19:00"
         ];
-        
+
+        const nightShiftSlots = [
+            "19:00-20:00", "20:00-21:00", "21:00-22:00", "22:00-23:00",
+            "23:00-00:00", "00:00-01:00", "01:00-02:00", "02:00-03:00",
+            "03:00-04:00", "04:00-05:00", "05:00-06:00", "06:00-07:00",
+            "07:00-08:00"
+        ];
+
+        // Current time slots (default to day shift)
+        let timeSlots = [...dayShiftSlots];
+
+        // Function to update the shift based on the current time or manual toggle
+        function updateShift(isManualToggle = false) {
+            const currentHour = new Date().getHours(); // Get the current hour (0-23)
+            const siteTitle = document.getElementById('siteTitle'); // Site heading
+            const toggleShiftBtn = document.getElementById('toggleShiftBtn'); // Toggle button
+
+            // Determine the shift
+            if (!isManualToggle) {
+                // Automatic shift based on time
+                isDayShift = currentHour >= 8 && currentHour < 19;
+            } else {
+                // Manual toggle
+                isDayShift = !isDayShift;
+            }
+
+            // Update the time slots and site title
+            if (isDayShift) {
+                timeSlots = [...dayShiftSlots];
+                siteTitle.textContent = "Day Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Night Shift";
+            } else {
+                timeSlots = [...nightShiftSlots];
+                siteTitle.textContent = "Night Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Day Shift";
+            }
+
+            // Regenerate the schedule header and clear the schedule
+            updateScheduleHeader();
+            clearSchedule();
+        }
+
+        // Function to update the schedule header based on the current time slots
+        function updateScheduleHeader() {
+            const scheduleHeader = document.getElementById('scheduleHeader');
+            let headerHTML = '<tr><th>Patient</th>';
+            timeSlots.forEach(time => {
+                headerHTML += `<th>${time}</th>`;
+            });
+            headerHTML += '</tr>';
+            scheduleHeader.innerHTML = headerHTML;
+        }
+
+        // Function to clear the schedule
+        function clearSchedule() {
+            document.getElementById('scheduleBody').innerHTML = ''; // Clear patient schedule
+            document.getElementById('staffBody').innerHTML = ''; // Clear staff schedule
+        }
+
         // Generate a schedule automatically
         function generateSchedule() {
             const patientInputs = document.querySelectorAll('.patient-container');
@@ -696,34 +757,6 @@
             }
         }
         
-        // Variable to track the current shift (true = Day Shift, false = Night Shift)
-        let isDayShift = true;
-
-        // Function to update the shift based on the current time or manual toggle
-        function updateShift(isManualToggle = false) {
-            const currentHour = new Date().getHours(); // Get the current hour (0-23)
-            const siteTitle = document.getElementById('siteTitle'); // Site heading
-            const toggleShiftBtn = document.getElementById('toggleShiftBtn'); // Toggle button
-
-            // Determine the shift
-            if (!isManualToggle) {
-                // Automatic shift based on time
-                isDayShift = currentHour >= 8 && currentHour < 19;
-            } else {
-                // Manual toggle
-                isDayShift = !isDayShift;
-            }
-
-            // Update the site title and button text
-            if (isDayShift) {
-                siteTitle.textContent = "Day Shift Allocation";
-                toggleShiftBtn.textContent = "Switch to Night Shift";
-            } else {
-                siteTitle.textContent = "Night Shift Allocation";
-                toggleShiftBtn.textContent = "Switch to Day Shift";
-            }
-        }
-
         // Call the function on page load to set the initial shift
         window.onload = function () {
             updateShift();
