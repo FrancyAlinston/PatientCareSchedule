@@ -393,9 +393,27 @@
                 };
             });
 
-            // Regenerate the schedule header and clear the schedule
+            // Clear all inputs and schedules
+            clearAllData();
+
+            // Regenerate the schedule header
             updateScheduleHeader();
-            clearSchedule();
+        }
+
+        // Function to clear all data (staff, patients, and schedules)
+        function clearAllData() {
+            // Clear staff and patient inputs
+            document.getElementById('staffInputs').innerHTML = '';
+            document.getElementById('patientInputs').innerHTML = '';
+            document.getElementById('securityStaffInputs').innerHTML = '';
+
+            // Clear schedule tables
+            document.getElementById('scheduleBody').innerHTML = '';
+            document.getElementById('staffBody').innerHTML = '';
+            document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
+
+            // Clear statistics
+            document.getElementById('stats').innerHTML = '';
         }
 
         // Function to update the schedule header based on the current time slots
