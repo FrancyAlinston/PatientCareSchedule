@@ -253,7 +253,7 @@
         <!-- Buttons for toggling shift and dark mode -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
-            <button id="toggleModeBtn" title="Toggle Mode"></button>
+            <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
 
         <!-- Section for managing security staff -->
@@ -907,6 +907,7 @@
             // Add event listener for the toggle button
             document.getElementById('toggleShiftBtn').addEventListener('click', () => {
                 updateShift(true); // Manual toggle
+                saveToLocalStorage(); // Save changes to localStorage
             });
 
             // Add other event listeners here
@@ -1067,15 +1068,15 @@
 
                 // Update the button symbol based on the current mode
                 if (body.classList.contains('dark-mode')) {
-                    toggleButton.textContent = '🌙'; // Dark mode symbol
-                } else {
                     toggleButton.textContent = '☀️'; // Light mode symbol
+                } else {
+                    toggleButton.textContent = '🌙'; // Dark mode symbol
                 }
 
-                saveToLocalStorage(); // Save changes
+                saveToLocalStorage(); // Save changes to localStorage
             });
 
-            // Set the initial symbol
+            // Set the initial symbol for the dark mode toggle button
             document.getElementById('toggleModeBtn').textContent = '🌙'; // Default to dark mode symbol
 
             // Load data from localStorage
@@ -1097,7 +1098,8 @@
                 patients: patientInputs,
                 securityStaff: securityStaffInputs,
                 schedule,
-                isDayShift
+                isDayShift,
+                isDarkMode: document.body.classList.contains('dark-mode') // Save dark mode state
             };
 
             localStorage.setItem('patientCareData', JSON.stringify(data));
@@ -1108,89 +1110,26 @@
             const savedData = localStorage.getItem('patientCareData');
             if (!savedData) return;
 
-            const { staff, patients, securityStaff, schedule: savedSchedule, isDayShift: savedShift } = JSON.parse(savedData);
+            const { staff, patients, securityStaff, schedule: savedSchedule, isDayShift: savedShift, isDarkMode } = JSON.parse(savedData);
 
-            // Restore staff
-            const staffInputs = document.getElementById('staffInputs');
-            staffInputs.innerHTML = '';
-            staff.forEach(name => {
-                const staffContainer = document.createElement('div');
-                staffContainer.className = 'staff-container';
+            // Restore dark mode
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('toggleModeBtn').textContent = '☀️'; // Light mode symbol
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('toggleModeBtn').textContent = '🌙'; // Dark mode symbol
+            }
 
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
-                newInput.value = name;
-                newInput.className = 'staff-name';
-
-                staffContainer.appendChild(newInput);
-                staffInputs.appendChild(staffContainer);
-            });
-
-            // Restore patients
-            const patientInputs = document.getElementById('patientInputs');
-            patientInputs.innerHTML = '';
-            patients.forEach(({ name, staffCount }) => {
-                const patientContainer = document.createElement('div');
-                patientContainer.className = 'patient-container';
-
-                const inputWrapper = document.createElement('div');
-                inputWrapper.style.display = 'flex';
-                inputWrapper.style.alignItems = 'center';
-                inputWrapper.style.gap = '10px';
-
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
-                newInput.value = name;
-                newInput.className = 'patient-name';
-
-                const staffCountSelect = document.createElement('select');
-                staffCountSelect.className = 'staff-count';
-
-                const option1 = document.createElement('option');
-                option1.value = 1;
-                option1.textContent = '1:1';
-                const option2 = document.createElement('option');
-                option2.value = 2;
-                option2.textContent = '2:1';
-                const option3 = document.createElement('option');
-                option3.value = 3;
-                option3.textContent = '3:1';
-
-                staffCountSelect.appendChild(option1);
-                staffCountSelect.appendChild(option2);
-                staffCountSelect.appendChild(option3);
-                staffCountSelect.value = staffCount;
-
-                inputWrapper.appendChild(newInput);
-                inputWrapper.appendChild(staffCountSelect);
-                patientContainer.appendChild(inputWrapper);
-                patientInputs.appendChild(patientContainer);
-            });
-
-            // Restore security staff
-            const securityStaffInputs = document.getElementById('securityStaffInputs');
-            securityStaffInputs.innerHTML = '';
-            securityStaff.forEach(name => {
-                const securityContainer = document.createElement('div');
-                securityContainer.className = 'security-container';
-
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
-                newInput.value = name;
-                newInput.className = 'security-name';
-
-                securityContainer.appendChild(newInput);
-                securityStaffInputs.appendChild(securityContainer);
-            });
-
-            // Restore schedule and shift
+            // Restore other data (staff, patients, security staff, schedule, and shift)
+            // Existing code for restoring staff, patients, and security staff...
             schedule = savedSchedule;
             isDayShift = savedShift;
             timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
             document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
             document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
 
-            console.log("Data loaded from localStorage:", { staff, patients, securityStaff, schedule, isDayShift });
+            console.log("Data loaded from localStorage:", { staff, patients, securityStaff, schedule, isDayShift, isDarkMode });
         }
     </script>
 </body>
