@@ -279,6 +279,8 @@
             <!-- Buttons for generating and resetting the schedule -->
             <button id="generateBtn">Generate Schedule</button>
             <button id="resetBtn">Reset</button>
+            <!-- Debugging Button -->
+            <button id="debugFillBtn" style="background-color: #ff5722; color: white; margin-top: 10px;">Debug: Fill Random Names</button>
         </div>
 
         <!-- Legend for schedule colors -->
@@ -821,6 +823,37 @@
             }
         }
         
+        // Function to generate random 2-letter names
+        function generateRandomName() {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return letters.charAt(Math.floor(Math.random() * letters.length)) +
+                   letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+
+        // Function to fill all input fields with random names
+        function fillRandomNames() {
+            // Fill security staff input
+            const securityStaffInputs = document.querySelectorAll('.security-name');
+            securityStaffInputs.forEach(input => {
+                input.value = generateRandomName();
+            });
+
+            // Fill staff inputs
+            const staffInputs = document.querySelectorAll('.staff-name');
+            staffInputs.forEach(input => {
+                input.value = generateRandomName();
+            });
+
+            // Fill patient inputs
+            const patientInputs = document.querySelectorAll('.patient-name');
+            patientInputs.forEach(input => {
+                input.value = generateRandomName();
+            });
+        }
+
+        // Add event listener to the debugging button
+        document.getElementById('debugFillBtn').addEventListener('click', fillRandomNames);
+
         // Call the function on page load to set the initial shift
         window.onload = function () {
             // Initialize the shift and schedule on page load
