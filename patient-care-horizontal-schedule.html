@@ -393,9 +393,6 @@
                 };
             });
 
-            // Clear all inputs and schedules
-            clearAllData();
-
             // Regenerate the schedule header
             updateScheduleHeader();
         }
@@ -486,7 +483,7 @@
             }
 
             // Initialize schedule data structure
-            const schedule = {};
+            schedule = {}; // Reset the schedule object
             timeSlots.forEach(time => {
                 schedule[time] = {
                     patientAssignments: {},
@@ -519,8 +516,8 @@
             staff.forEach((s, index) => {
                 let totalBreakTime = 0; // Track total break time for each staff member
 
-                // Schedule 1-hour lunch break after 12 noon
-                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the first time slot starting at 12 noon
+                // Schedule 1-hour lunch break after 12 noon (or equivalent for night shift)
+                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00") || slot.startsWith("00:00"));
                 const lunchHour = lunchStartIndex + (index % (timeSlots.length - lunchStartIndex)); // Stagger lunch breaks
                 const lunchTime = timeSlots[lunchHour];
 
@@ -789,7 +786,8 @@
         
         // Call the function on page load to set the initial shift
         window.onload = function () {
-            updateShift();
+            // Initialize the shift and schedule on page load
+            updateShift(); // Ensure the schedule object is initialized
 
             // Add event listener for the toggle button
             document.getElementById('toggleShiftBtn').addEventListener('click', () => {
@@ -798,6 +796,13 @@
 
             // Add other event listeners here
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                // Clear all data and reset to default shift
+                clearAllData();
+                isDayShift = true; // Reset to Day Shift
+                updateShift(); // Reinitialize the schedule
+            });
+
             document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
                 const securityStaffInputs = document.getElementById('securityStaffInputs');
 
