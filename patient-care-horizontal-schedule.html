@@ -499,6 +499,16 @@
                 });
             });
 
+            // Assign supper time for security staff during the night shift
+            if (!isDayShift) {
+                const supperTimeIndex = timeSlots.findIndex(slot => slot.startsWith("22:00"));
+                if (supperTimeIndex !== -1) {
+                    securityStaff.forEach(s => {
+                        schedule[timeSlots[supperTimeIndex]].staffBreaks[s] = "SUPPER";
+                    });
+                }
+            }
+
             // Track total work and break time for each staff
             const staffStats = {};
             staff.forEach(s => {
@@ -548,9 +558,12 @@
                 const availableStaff = staff.filter(s => {
                     const isOnBreak = schedule[time].staffBreaks[s] !== "";
                     const isSecurity = securityStaff.has(s);
+
+                    // Restrict security staff from 08:00-09:59 (Day Shift) or 19:00-20:59 (Night Shift)
                     const isInRestrictedTime =
-                        (timeIndex < Math.ceil(3.3 * (timeSlots.length / 12))) || // First 3.3 hours
-                        (timeIndex >= timeSlots.length - 2); // Last 2 hours
+                        (isDayShift && timeIndex < 2) || // First 2 hours of Day Shift
+                        (!isDayShift && timeIndex < 2); // First 2 hours of Night Shift
+
                     const hasAdditionalExclusion = timeIndex < excludedHours[s] || timeIndex >= timeSlots.length - excludedHours[s];
 
                     return !isOnBreak && (!isSecurity || !isInRestrictedTime) && !hasAdditionalExclusion;
