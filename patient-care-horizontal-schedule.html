@@ -335,6 +335,9 @@
     </div>
 
     <script>
+        // Global variable to store the schedule
+        let schedule = {};
+
         // Variable to track the current shift (true = Day Shift, false = Night Shift)
         let isDayShift = true;
 
@@ -380,6 +383,15 @@
                 siteTitle.textContent = "Night Shift Allocation";
                 toggleShiftBtn.textContent = "Switch to Day Shift";
             }
+
+            // Re-initialize the schedule object
+            schedule = {};
+            timeSlots.forEach(time => {
+                schedule[time] = {
+                    patientAssignments: {},
+                    staffBreaks: {}
+                };
+            });
 
             // Regenerate the schedule header and clear the schedule
             updateScheduleHeader();
