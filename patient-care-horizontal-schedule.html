@@ -280,6 +280,7 @@
             <button id="generateBtn">Generate Schedule</button>
             <button id="resetBtn">Reset</button>
             <!-- Debugging Button -->
+            <!-- This button is for debugging purposes only. Remove this button and its functionality before final deployment. -->
             <button id="debugFillBtn" style="background-color: #ff5722; color: white; margin-top: 10px;">Debug: Fill Random Names</button>
         </div>
 
@@ -824,6 +825,7 @@
         }
         
         // Function to generate random 2-letter names
+        // This function is used for debugging purposes to populate input fields with random names.
         function generateRandomName() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             return letters.charAt(Math.floor(Math.random() * letters.length)) +
@@ -831,6 +833,7 @@
         }
 
         // Function to fill all input fields with random names
+        // This function is for debugging purposes only. Remove this function before final deployment.
         function fillRandomNames() {
             // Fill security staff input
             const securityStaffInputs = document.querySelectorAll('.security-name');
@@ -852,6 +855,7 @@
         }
 
         // Add event listener to the debugging button
+        // This event listener is for debugging purposes only. Remove this listener and the button before final deployment.
         document.getElementById('debugFillBtn').addEventListener('click', fillRandomNames);
 
         // Call the function on page load to set the initial shift
