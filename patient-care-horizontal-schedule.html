@@ -483,7 +483,7 @@
             }
 
             // Initialize schedule data structure
-            const schedule = {};
+            schedule = {}; // Reset the schedule object
             timeSlots.forEach(time => {
                 schedule[time] = {
                     patientAssignments: {},
@@ -516,8 +516,8 @@
             staff.forEach((s, index) => {
                 let totalBreakTime = 0; // Track total break time for each staff member
 
-                // Schedule 1-hour lunch break after 12 noon
-                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00")); // Find the first time slot starting at 12 noon
+                // Schedule 1-hour lunch break after 12 noon (or equivalent for night shift)
+                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00") || slot.startsWith("00:00"));
                 const lunchHour = lunchStartIndex + (index % (timeSlots.length - lunchStartIndex)); // Stagger lunch breaks
                 const lunchTime = timeSlots[lunchHour];
 
