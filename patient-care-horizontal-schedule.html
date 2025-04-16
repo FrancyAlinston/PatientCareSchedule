@@ -464,12 +464,6 @@
                 }
             });
 
-            // Validate inputs
-            if (staff.length === 0) {
-                alert("Please enter at least one staff name");
-                return;
-            }
-
             // Process patients
             patientInputs.forEach(container => {
                 const patientName = container.querySelector('.patient-name').value.trim();
@@ -479,6 +473,12 @@
                     patients.push({ name: patientName, staffCount });
                 }
             });
+
+            // Validate inputs
+            if (staff.length === 0) {
+                alert("Please enter at least one staff name");
+                return;
+            }
 
             if (patients.length === 0) {
                 alert("Please enter at least one patient name");
@@ -787,43 +787,135 @@
             }
         }
         
-        // Save state to localStorage
-        function saveState(key, value) {
-            localStorage.setItem(key, JSON.stringify(value));
-        }
-
-        // Load state from localStorage
-        function loadState(key, defaultValue) {
-            const savedValue = localStorage.getItem(key);
-            return savedValue ? JSON.parse(savedValue) : defaultValue;
-        }
-
-        // Initialize the page state
+        // Call the function on page load to set the initial shift
         window.onload = function () {
-            // Load saved states
-            isDayShift = loadState('isDayShift', true);
-            const isDarkMode = loadState('isDarkMode', false);
-
-            // Apply dark mode if saved
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                document.getElementById('toggleModeBtn').textContent = '🌙';
-            } else {
-                document.getElementById('toggleModeBtn').textContent = '☀️';
-            }
-
-            // Set the initial shift
             updateShift();
 
-            // Add event listeners
-            setupEventListeners();
-        };
-
-        // Setup all event listeners
-        function setupEventListeners() {
+            // Add event listener for the toggle button
             document.getElementById('toggleShiftBtn').addEventListener('click', () => {
                 updateShift(true); // Manual toggle
-                saveState('isDayShift', isDayShift);
+            });
+
+            // Add other event listeners here
+            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+            document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
+                const securityStaffInputs = document.getElementById('securityStaffInputs');
+
+                // Check if a security staff input already exists
+                if (securityStaffInputs.children.length > 0) {
+                    alert("Only one security staff can be added.");
+                    return;
+                }
+
+                const securityContainer = document.createElement('div');
+                securityContainer.className = 'security-container';
+
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Security Staff`;
+                newInput.className = 'security-name';
+
+                securityContainer.appendChild(newInput);
+                securityStaffInputs.appendChild(securityContainer);
+            });
+
+            document.getElementById('removeSecurityStaffBtn').addEventListener('click', () => {
+                const securityStaffInputs = document.getElementById('securityStaffInputs');
+                if (securityStaffInputs.children.length > 0) {
+                    securityStaffInputs.removeChild(securityStaffInputs.lastElementChild);
+                }
+            });
+
+            document.getElementById('addStaffBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                const staffContainer = document.createElement('div');
+                staffContainer.className = 'staff-container';
+
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Health Care Worker ${staffInputs.children.length + 1}`;
+                newInput.className = 'staff-name';
+
+                staffContainer.appendChild(newInput);
+                staffInputs.appendChild(staffContainer);
+            });
+
+            document.getElementById('removeStaffBtn').addEventListener('click', () => {
+                const staffInputs = document.getElementById('staffInputs');
+                if (staffInputs.children.length > 0) {
+                    staffInputs.removeChild(staffInputs.lastElementChild);
+                }
+            });
+
+            document.getElementById('addPatientBtn').addEventListener('click', () => {
+                const patientInputs = document.getElementById('patientInputs');
+                const patientContainer = document.createElement('div');
+                patientContainer.className = 'patient-container';
+
+                // Create a wrapper for the input and dropdown
+                const inputWrapper = document.createElement('div');
+                inputWrapper.style.display = 'flex';
+                inputWrapper.style.alignItems = 'center';
+                inputWrapper.style.gap = '10px'; // Add spacing between input and dropdown
+
+                // Create input for patient name
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
+                newInput.className = 'patient-name';
+
+                // Create dropdown for staff level
+                const staffCountSelect = document.createElement('select');
+                staffCountSelect.className = 'staff-count';
+
+                const option1 = document.createElement('option');
+                option1.value = 1;
+                option1.textContent = '1:1'; // Simplified label
+                option1.selected = true; // Default to Level 1:1
+
+                const option2 = document.createElement('option');
+                option2.value = 2;
+                option2.textContent = '2:1'; // Simplified label
+
+                const option3 = document.createElement('option');
+                option3.value = 3;
+                option3.textContent = '3:1'; // Simplified label
+
+                staffCountSelect.appendChild(option1);
+                staffCountSelect.appendChild(option2);
+                staffCountSelect.appendChild(option3);
+
+                // Append input and dropdown to the wrapper
+                inputWrapper.appendChild(newInput);
+                inputWrapper.appendChild(staffCountSelect);
+
+                // Append the wrapper to the patient container
+                patientContainer.appendChild(inputWrapper);
+
+                // Append the patient container to the patient inputs section
+                patientInputs.appendChild(patientContainer);
+            });
+
+            document.getElementById('removePatientBtn').addEventListener('click', () => {
+                const patientInputs = document.getElementById('patientInputs');
+                if (patientInputs.children.length > 0) {
+                    patientInputs.removeChild(patientInputs.lastElementChild);
+                }
+            });
+
+            // Reset button functionality
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                // Clear all data
+                clearAllData();
+
+                // Optionally, reset the shift to the default (e.g., Day Shift)
+                isDayShift = true;
+                timeSlots = [...dayShiftSlots];
+                document.getElementById('siteTitle').textContent = "Day Shift Allocation";
+                document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
+
+                // Regenerate the schedule header
+                updateScheduleHeader();
             });
 
             document.getElementById('toggleModeBtn').addEventListener('click', () => {
@@ -836,125 +928,16 @@
                 // Update the button symbol based on the current mode
                 if (body.classList.contains('dark-mode')) {
                     toggleButton.textContent = '🌙'; // Dark mode symbol
-                    saveState('isDarkMode', true);
                 } else {
                     toggleButton.textContent = '☀️'; // Light mode symbol
-                    saveState('isDarkMode', false);
                 }
             });
 
-            document.getElementById('resetBtn').addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset all data?')) {
-                    clearAllData();
-                    isDayShift = true;
-                    timeSlots = [...dayShiftSlots];
-                    document.getElementById('siteTitle').textContent = "Day Shift Allocation";
-                    document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
-                    updateScheduleHeader();
-                    saveState('isDayShift', isDayShift);
-                }
-            });
-
-            // Use event delegation for dynamically added elements
-            document.getElementById('staffInputs').addEventListener('click', handleStaffActions);
-            document.getElementById('patientInputs').addEventListener('click', handlePatientActions);
-
-            document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
-                addInput('securityStaffInputs', 'Security Staff', 'security-name', 1);
-            });
-
-            document.getElementById('removeSecurityStaffBtn').addEventListener('click', () => {
-                removeLastInput('securityStaffInputs');
-            });
-
-            document.getElementById('addStaffBtn').addEventListener('click', () => {
-                addInput('staffInputs', `Health Care Worker ${document.getElementById('staffInputs').children.length + 1}`, 'staff-name');
-            });
-
-            document.getElementById('removeStaffBtn').addEventListener('click', () => {
-                removeLastInput('staffInputs');
-            });
-
-            document.getElementById('addPatientBtn').addEventListener('click', () => {
-                addPatientInput();
-            });
-
-            document.getElementById('removePatientBtn').addEventListener('click', () => {
-                removeLastInput('patientInputs');
-            });
-
-            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-        }
-
-        // Add a new input field
-        function addInput(containerId, placeholder, className, maxCount = Infinity) {
-            const container = document.getElementById(containerId);
-            if (container.children.length >= maxCount) {
-                alert(`You can only add up to ${maxCount} ${placeholder}(s).`);
-                return;
-            }
-
-            const inputContainer = document.createElement('div');
-            inputContainer.className = `${className}-container`;
-
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.placeholder = placeholder;
-            newInput.className = className;
-
-            inputContainer.appendChild(newInput);
-            container.appendChild(inputContainer);
-        }
-
-        // Remove the last input field
-        function removeLastInput(containerId) {
-            const container = document.getElementById(containerId);
-            if (container.children.length > 0) {
-                container.removeChild(container.lastElementChild);
-            }
-        }
-
-        // Add a new patient input field
-        function addPatientInput() {
-            const patientInputs = document.getElementById('patientInputs');
-            const patientContainer = document.createElement('div');
-            patientContainer.className = 'patient-container';
-
-            const inputWrapper = document.createElement('div');
-            inputWrapper.style.display = 'flex';
-            inputWrapper.style.alignItems = 'center';
-            inputWrapper.style.gap = '10px';
-
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.placeholder = `Patient ${patientInputs.children.length + 1}`;
-            newInput.className = 'patient-name';
-
-            const staffCountSelect = document.createElement('select');
-            staffCountSelect.className = 'staff-count';
-
-            [1, 2, 3].forEach(count => {
-                const option = document.createElement('option');
-                option.value = count;
-                option.textContent = `${count}:1`;
-                staffCountSelect.appendChild(option);
-            });
-
-            inputWrapper.appendChild(newInput);
-            inputWrapper.appendChild(staffCountSelect);
-            patientContainer.appendChild(inputWrapper);
-            patientInputs.appendChild(patientContainer);
-        }
-
-        // Handle staff actions (event delegation)
-        function handleStaffActions(event) {
-            // Add custom logic for staff actions if needed
-        }
-
-        // Handle patient actions (event delegation)
-        function handlePatientActions(event) {
-            // Add custom logic for patient actions if needed
-        }
+            // Set the initial symbol
+            document.getElementById('toggleModeBtn').textContent = '🌙'; // Default to dark mode symbol
+        };
     </script>
 </body>
 </html>
+
+<!-- MY PROJECT GOAL THAT IS MAKING SITE RUNS ON SINGLE HTML FILE -->
