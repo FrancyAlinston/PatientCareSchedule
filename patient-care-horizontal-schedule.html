@@ -244,8 +244,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Day Shift Allocation</h1>
-        <div style="text-align: right; margin-bottom: 20px;">
+        <h1 id="siteTitle">Day Shift Allocation</h1> <!-- Default title -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
             <button id="toggleModeBtn" title="Toggle Mode"></button>
         </div>
         <div class="setup-section">
@@ -695,8 +696,28 @@
             }
         }
         
-        // Initialize the page
-        window.onload = function() {
+        // Function to determine the current shift based on the time
+        function updateShiftBasedOnTime() {
+            const currentHour = new Date().getHours(); // Get the current hour (0-23)
+            const siteTitle = document.getElementById('siteTitle'); // Site heading
+            const toggleShiftBtn = document.getElementById('toggleShiftBtn'); // Optional toggle button
+
+            if (currentHour >= 8 && currentHour < 19) {
+                // Day Shift: 08:00 to 19:00
+                siteTitle.textContent = "Day Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Night Shift"; // Optional button text
+            } else {
+                // Night Shift: 19:00 to 08:00
+                siteTitle.textContent = "Night Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Day Shift"; // Optional button text
+            }
+        }
+
+        // Call the function on page load
+        window.onload = function () {
+            updateShiftBasedOnTime();
+
+            // Add other event listeners here
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
             document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
                 const securityStaffInputs = document.getElementById('securityStaffInputs');
