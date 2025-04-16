@@ -393,27 +393,9 @@
                 };
             });
 
-            // Clear all inputs and schedules
-            clearAllData();
-
-            // Regenerate the schedule header
+            // Regenerate the schedule header and clear the schedule
             updateScheduleHeader();
-        }
-
-        // Function to clear all data (staff, patients, and schedules)
-        function clearAllData() {
-            // Clear staff and patient inputs
-            document.getElementById('staffInputs').innerHTML = '';
-            document.getElementById('patientInputs').innerHTML = '';
-            document.getElementById('securityStaffInputs').innerHTML = '';
-
-            // Clear schedule tables
-            document.getElementById('scheduleBody').innerHTML = '';
-            document.getElementById('staffBody').innerHTML = '';
-            document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
-
-            // Clear statistics
-            document.getElementById('stats').innerHTML = '';
+            clearSchedule();
         }
 
         // Function to update the schedule header based on the current time slots
@@ -905,17 +887,10 @@
 
             // Reset button functionality
             document.getElementById('resetBtn').addEventListener('click', () => {
-                // Clear all data
-                clearAllData();
-
-                // Optionally, reset the shift to the default (e.g., Day Shift)
-                isDayShift = true;
-                timeSlots = [...dayShiftSlots];
-                document.getElementById('siteTitle').textContent = "Day Shift Allocation";
-                document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
-
-                // Regenerate the schedule header
-                updateScheduleHeader();
+                const staffInputs = document.getElementById('staffInputs');
+                const patientInputs = document.getElementById('patientInputs');
+                staffInputs.innerHTML = ''; // Clear all staff inputs
+                patientInputs.innerHTML = ''; // Clear all patient inputs
             });
 
             document.getElementById('toggleModeBtn').addEventListener('click', () => {
@@ -939,3 +914,5 @@
     </script>
 </body>
 </html>
+
+<!-- MY PROJECT GOAL THAT IS MAKING SITE RUNS ON SINGLE HTML FILE -->
