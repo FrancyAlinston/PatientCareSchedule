@@ -464,6 +464,12 @@
                 }
             });
 
+            // Validate inputs
+            if (staff.length === 0) {
+                alert("Please enter at least one staff name");
+                return;
+            }
+
             // Process patients
             patientInputs.forEach(container => {
                 const patientName = container.querySelector('.patient-name').value.trim();
@@ -473,12 +479,6 @@
                     patients.push({ name: patientName, staffCount });
                 }
             });
-
-            // Validate inputs
-            if (staff.length === 0) {
-                alert("Please enter at least one staff name");
-                return;
-            }
 
             if (patients.length === 0) {
                 alert("Please enter at least one patient name");
