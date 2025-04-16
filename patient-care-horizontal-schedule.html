@@ -469,6 +469,11 @@
                 }
             });
 
+            // Log inputs for debugging
+            console.log("Staff:", staff);
+            console.log("Security Staff:", Array.from(securityStaff));
+            console.log("Patients:", patients);
+
             // Validate inputs
             if (staff.length === 0) {
                 alert("Please enter at least one staff name");
@@ -498,6 +503,9 @@
                     schedule[time].staffBreaks[s] = "";
                 });
             });
+
+            // Log initialized schedule for debugging
+            console.log("Initialized Schedule:", schedule);
 
             // Track total work and break time for each staff
             const staffStats = {};
@@ -540,6 +548,9 @@
                     console.warn(`Staff ${s} has exceeded the allowed break time of 1.5 hours.`);
                 }
             });
+
+            // Log staff stats after assigning breaks
+            console.log("Staff Stats After Break Assignment:", staffStats);
 
             // Assign staff to patients
             const lastAssigned = {}; // Track the last time a staff member was assigned to a patient
@@ -591,6 +602,10 @@
                     schedule[time].patientAssignments[patient.name] = assignedStaff;
                 });
             });
+
+            // Log final schedule and staff stats
+            console.log("Final Schedule:", schedule);
+            console.log("Final Staff Stats:", staffStats);
 
             renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
         }
