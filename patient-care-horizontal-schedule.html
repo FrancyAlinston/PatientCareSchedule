@@ -696,32 +696,48 @@
             }
         }
         
-        // Function to determine the current shift based on the time
-        function updateShiftBasedOnTime() {
+        // Variable to track the current shift (true = Day Shift, false = Night Shift)
+        let isDayShift = true;
+
+        // Function to update the shift based on the current time or manual toggle
+        function updateShift(isManualToggle = false) {
             const currentHour = new Date().getHours(); // Get the current hour (0-23)
             const siteTitle = document.getElementById('siteTitle'); // Site heading
-            const toggleShiftBtn = document.getElementById('toggleShiftBtn'); // Optional toggle button
+            const toggleShiftBtn = document.getElementById('toggleShiftBtn'); // Toggle button
 
-            if (currentHour >= 8 && currentHour < 19) {
-                // Day Shift: 08:00 to 19:00
-                siteTitle.textContent = "Day Shift Allocation";
-                toggleShiftBtn.textContent = "Switch to Night Shift"; // Optional button text
+            // Determine the shift
+            if (!isManualToggle) {
+                // Automatic shift based on time
+                isDayShift = currentHour >= 8 && currentHour < 19;
             } else {
-                // Night Shift: 19:00 to 08:00
+                // Manual toggle
+                isDayShift = !isDayShift;
+            }
+
+            // Update the site title and button text
+            if (isDayShift) {
+                siteTitle.textContent = "Day Shift Allocation";
+                toggleShiftBtn.textContent = "Switch to Night Shift";
+            } else {
                 siteTitle.textContent = "Night Shift Allocation";
-                toggleShiftBtn.textContent = "Switch to Day Shift"; // Optional button text
+                toggleShiftBtn.textContent = "Switch to Day Shift";
             }
         }
 
-        // Call the function on page load
+        // Call the function on page load to set the initial shift
         window.onload = function () {
-            updateShiftBasedOnTime();
+            updateShift();
+
+            // Add event listener for the toggle button
+            document.getElementById('toggleShiftBtn').addEventListener('click', () => {
+                updateShift(true); // Manual toggle
+            });
 
             // Add other event listeners here
             document.getElementById('generateBtn').addEventListener('click', generateSchedule);
             document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
                 const securityStaffInputs = document.getElementById('securityStaffInputs');
-                
+
                 // Check if a security staff input already exists
                 if (securityStaffInputs.children.length > 0) {
                     alert("Only one security staff can be added.");
