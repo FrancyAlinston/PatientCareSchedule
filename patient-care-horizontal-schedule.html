@@ -905,10 +905,17 @@
 
             // Reset button functionality
             document.getElementById('resetBtn').addEventListener('click', () => {
-                const staffInputs = document.getElementById('staffInputs');
-                const patientInputs = document.getElementById('patientInputs');
-                staffInputs.innerHTML = ''; // Clear all staff inputs
-                patientInputs.innerHTML = ''; // Clear all patient inputs
+                // Clear all data
+                clearAllData();
+
+                // Optionally, reset the shift to the default (e.g., Day Shift)
+                isDayShift = true;
+                timeSlots = [...dayShiftSlots];
+                document.getElementById('siteTitle').textContent = "Day Shift Allocation";
+                document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
+
+                // Regenerate the schedule header
+                updateScheduleHeader();
             });
 
             document.getElementById('toggleModeBtn').addEventListener('click', () => {
