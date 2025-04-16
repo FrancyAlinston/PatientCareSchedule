@@ -832,25 +832,37 @@
                    letters.charAt(Math.floor(Math.random() * letters.length));
         }
 
-        // Function to fill all input fields with random names
+        // Predefined list of actual names for debugging purposes
+        const predefinedNames = [
+            "John Doe", "Mary Poppins", "Jane Smith", "Robert Brown", 
+            "Emily Davis", "Michael Johnson", "Sarah Wilson", "David Lee", 
+            "Laura Martinez", "James Anderson", "Sophia Taylor", "Daniel Thomas"
+        ];
+
+        // Function to randomly select a name from the predefined list
+        function getRandomName() {
+            return predefinedNames[Math.floor(Math.random() * predefinedNames.length)];
+        }
+
+        // Function to fill all input fields with random names from the predefined list
         // This function is for debugging purposes only. Remove this function before final deployment.
         function fillRandomNames() {
             // Fill security staff input
             const securityStaffInputs = document.querySelectorAll('.security-name');
             securityStaffInputs.forEach(input => {
-                input.value = generateRandomName();
+                input.value = getRandomName();
             });
 
             // Fill staff inputs
             const staffInputs = document.querySelectorAll('.staff-name');
             staffInputs.forEach(input => {
-                input.value = generateRandomName();
+                input.value = getRandomName();
             });
 
             // Fill patient inputs
             const patientInputs = document.querySelectorAll('.patient-name');
             patientInputs.forEach(input => {
-                input.value = generateRandomName();
+                input.value = getRandomName();
             });
         }
 
