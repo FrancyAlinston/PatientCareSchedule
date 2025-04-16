@@ -510,6 +510,37 @@
                 };
             });
 
+            // Assign breaks for each staff member
+            staff.forEach((s, index) => {
+                let totalBreakTime = 0;
+
+                // Assign 1-hour lunch break
+                const lunchStartIndex = timeSlots.findIndex(slot => slot.startsWith("12:00") || slot.startsWith("00:00"));
+                const lunchHour = lunchStartIndex + (index % (timeSlots.length - lunchStartIndex)); // Stagger lunch breaks
+                const lunchTime = timeSlots[lunchHour];
+
+                schedule[lunchTime].staffBreaks[s] = "1-HOUR LUNCH";
+                staffStats[s].lunchTime = lunchTime;
+                staffStats[s].breakTime += 1;
+                totalBreakTime += 1;
+
+                // Assign 30-minute break
+                const breakStartIndex = 2; // Breaks start after the first 2 hours
+                const breakEndIndex = lunchStartIndex; // Breaks end before lunch
+                const shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
+                const shortBreakTime = timeSlots[shortBreakHour];
+
+                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                staffStats[s].shortBreakTime = shortBreakTime;
+                staffStats[s].breakTime += 0.5;
+                totalBreakTime += 0.5;
+
+                // Ensure total break time does not exceed 1.5 hours
+                if (totalBreakTime > 1.5) {
+                    console.warn(`Staff ${s} has exceeded the allowed break time of 1.5 hours.`);
+                }
+            });
+
             // Assign staff to patients
             const lastAssigned = {}; // Track the last time a staff member was assigned to a patient
 
