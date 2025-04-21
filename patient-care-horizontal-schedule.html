@@ -588,17 +588,29 @@
                     const assignedStaff = [];
 
                     for (let i = 0; i < patient.staffCount; i++) {
-                        const staffMember = availableStaff.find(s => {
+                        let staffMember = availableStaff.find(s => {
                             // Enforce the rule: staff should not be assigned to the same patient in consecutive hours
                             if (lastAssigned[s] && lastAssigned[s][patient.name] === timeIndex - 1) {
-                                return false; // Skip this staff member if they were assigned to this patient in the previous hour
+                                return false;
                             }
                             return true;
                         });
 
+                        // If no staff found with the rule, fallback to any available staff
+                        if (!staffMember && availableStaff.length > 0) {
+                            staffMember = availableStaff[0];
+                        }
+
+                        // If still no staff available, fallback to any staff (even if on break or already assigned)
+                        if (!staffMember && staff.length > 0) {
+                            staffMember = staff[0];
+                        }
+
                         if (staffMember) {
                             assignedStaff.push(staffMember);
-                            availableStaff.splice(availableStaff.indexOf(staffMember), 1); // Remove from available staff
+                            // Remove from availableStaff only if present
+                            const idx = availableStaff.indexOf(staffMember);
+                            if (idx !== -1) availableStaff.splice(idx, 1);
 
                             // Update last assigned time for this staff and patient
                             if (!lastAssigned[staffMember]) {
