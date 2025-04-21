@@ -818,13 +818,17 @@
             statsHtml += '<table>';
             statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>2nd Break</th></tr>';
 
-            statsHtml += `<tr${rowStyle}>
-                <td>${s}${isSecurity ? ' <span style="color:#d84315;">(Security)</span>' : ''}</td>
-                <td>${staffStats[s].workHours} hours</td>
-                <td>${staffStats[s].breakTime} hours</td>
-                <td>${staffStats[s].shortBreakTime}</td>
-                <td>${staffStats[s].secondBreakTime}</td>
-            </tr>`;
+            staff.forEach(s => {
+                const isSecurity = securityStaff.includes(s);
+                const rowStyle = isSecurity ? ' style="background-color:#ffe082;font-weight:bold;"' : '';
+                statsHtml += `<tr${rowStyle}>
+                    <td>${s}${isSecurity ? ' <span style="color:#d84315;">(Security)</span>' : ''}</td>
+                    <td>${staffStats[s].workHours} hours</td>
+                    <td>${staffStats[s].breakTime} hours</td>
+                    <td>${staffStats[s].shortBreakTime}</td>
+                    <td>${staffStats[s].secondBreakTime}</td>
+                </tr>`;
+            });
 
             statsHtml += '</table>';
 
@@ -862,6 +866,8 @@
                 const secondBreakCell = document.createElement('td');
                 secondBreakCell.textContent = staffStats[s].secondBreakTime || 'N/A';
                 row.appendChild(secondBreakCell);
+
+                breakHoursTableBody.appendChild(row); // Only inside the loop!
             });
         }
         
@@ -1179,3 +1185,4 @@
     </script>
 </body>
 </html>
+`
