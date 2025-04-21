@@ -770,31 +770,41 @@
         // Render statistics
         function renderStats(staffStats, staff, patients) {
             const statsDiv = document.getElementById('stats');
+            // Get security staff from localStorage or global variable
+            let securityStaff = [];
+            try {
+                const savedData = JSON.parse(localStorage.getItem('patientCareData'));
+                securityStaff = savedData && savedData.securityStaff ? savedData.securityStaff : [];
+            } catch (e) {}
+
             let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
             statsHtml += '<table>';
             statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
-            
+
             staff.forEach(s => {
-                statsHtml += `<tr>
-                    <td>${s}</td>
+                // Highlight if security staff
+                const isSecurity = securityStaff.includes(s);
+                const rowStyle = isSecurity ? ' style="background-color:#ffe082;font-weight:bold;"' : '';
+                statsHtml += `<tr${rowStyle}>
+                    <td>${s}${isSecurity ? ' <span style="color:#d84315;">(Security)</span>' : ''}</td>
                     <td>${staffStats[s].workHours} hours</td>
                     <td>${staffStats[s].breakTime} hours</td>
                     <td>${staffStats[s].shortBreakTime}</td>
                     <td>${staffStats[s].lunchTime}</td>
                 </tr>`;
             });
-            
+
             statsHtml += '</table>';
-            
+
             // Add schedule coverage
             statsHtml += '<h2>Schedule Coverage</h2>';
             statsHtml += `<p>Total HCWs: ${staff.length}</p>`;
             statsHtml += `<p>Total Patients: ${patients.length}</p>`;
-            
+
             // Calculate patient-to-HCW ratio
             const ratio = staff.length / patients.length;
             statsHtml += `<p>HCW-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
-            
+
             statsDiv.innerHTML = statsHtml;
         }
         
@@ -1139,4 +1149,3 @@
     </script>
 </body>
 </html>
-``` 
