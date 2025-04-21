@@ -256,12 +256,22 @@
             <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
 
-        <!-- Section for managing security staff -->
-        <div class="setup-section">
-            <h2>Security Staff</h2>
-            <div class="security-staff-inputs" id="securityStaffInputs"></div>
-            <button id="addSecurityStaffBtn">Add Security Staff</button>
-            <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+        <!-- Replace the Security Staff and Nurse in Charge sections with this flex container -->
+        <div class="setup-section" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 40px; align-items: flex-start;">
+                <!-- Security Staff Section -->
+                <div>
+                    <h2>Security Staff</h2>
+                    <div class="security-staff-inputs" id="securityStaffInputs"></div>
+                    <button id="addSecurityStaffBtn">Add Security Staff</button>
+                    <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+                </div>
+                <!-- Nurse in Charge Section -->
+                <div>
+                    <h2>Nurse in Charge</h2>
+                    <input type="text" id="nurseInChargeInput" placeholder="Enter Nurse in Charge Name" style="width: 250px; margin-bottom: 15px;">
+                </div>
+            </div>
         </div>
 
         <!-- Section for managing health care workers and patients -->
@@ -346,14 +356,13 @@
         const dayShiftSlots = [
             "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
             "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00",
-            "16:00-17:00", "17:00-18:00", "18:00-19:00"
+            "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"
         ];
 
         const nightShiftSlots = [
-            "19:00-20:00", "20:00-21:00", "21:00-22:00", "22:00-23:00",
-            "23:00-00:00", "00:00-01:00", "01:00-02:00", "02:00-03:00",
-            "03:00-04:00", "04:00-05:00", "05:00-06:00", "06:00-07:00",
-            "07:00-08:00"
+            "20:00-21:00", "21:00-22:00", "22:00-23:00", "23:00-00:00",
+            "00:00-01:00", "01:00-02:00", "02:00-03:00", "03:00-04:00",
+            "04:00-05:00", "05:00-06:00", "06:00-07:00", "07:00-08:00"
         ];
 
         // Current time slots (default to day shift)
@@ -1092,14 +1101,16 @@
                 };
             });
             const securityStaffInputs = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+            const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
 
             const data = {
                 staff: staffInputs,
                 patients: patientInputs,
                 securityStaff: securityStaffInputs,
+                nurseInCharge, // Save nurse in charge
                 schedule,
                 isDayShift,
-                isDarkMode: document.body.classList.contains('dark-mode') // Save dark mode state
+                isDarkMode: document.body.classList.contains('dark-mode')
             };
 
             localStorage.setItem('patientCareData', JSON.stringify(data));
@@ -1110,16 +1121,10 @@
             const savedData = localStorage.getItem('patientCareData');
             if (!savedData) return;
 
-            const { staff, patients, securityStaff, schedule: savedSchedule, isDayShift: savedShift, isDarkMode } = JSON.parse(savedData);
+            const { staff, patients, securityStaff, nurseInCharge, schedule: savedSchedule, isDayShift: savedShift, isDarkMode } = JSON.parse(savedData);
 
-            // Restore dark mode
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                document.getElementById('toggleModeBtn').textContent = '☀️'; // Light mode symbol
-            } else {
-                document.body.classList.remove('dark-mode');
-                document.getElementById('toggleModeBtn').textContent = '🌙'; // Dark mode symbol
-            }
+            // Restore nurse in charge
+            document.getElementById('nurseInChargeInput').value = nurseInCharge || "";
 
             // Restore other data (staff, patients, security staff, schedule, and shift)
             // Existing code for restoring staff, patients, and security staff...
@@ -1129,8 +1134,9 @@
             document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
             document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
 
-            console.log("Data loaded from localStorage:", { staff, patients, securityStaff, schedule, isDayShift, isDarkMode });
+            console.log("Data loaded from localStorage:", { staff, patients, securityStaff, nurseInCharge, schedule, isDayShift, isDarkMode });
         }
     </script>
 </body>
 </html>
+``` 
