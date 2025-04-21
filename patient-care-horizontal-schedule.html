@@ -545,9 +545,10 @@
                 totalBreakTime += 1;
 
                 // Assign 30-minute break
-                const breakStartIndex = 2; // Breaks start after the first 2 hours
+                const breakStartIndex = 1; // Breaks can start from the second hour (index 1)
                 const breakEndIndex = lunchStartIndex; // Breaks end before lunch
-                const shortBreakHour = breakStartIndex + (index % (breakEndIndex - breakStartIndex)); // Stagger breaks
+                const breakSlotCount = breakEndIndex - breakStartIndex;
+                const shortBreakHour = breakStartIndex + (index % breakSlotCount); // Stagger breaks
                 const shortBreakTime = timeSlots[shortBreakHour];
 
                 schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
