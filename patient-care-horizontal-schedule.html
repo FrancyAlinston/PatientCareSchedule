@@ -1247,6 +1247,18 @@ function showError(message) {
     document.body.appendChild(errorDiv);
     setTimeout(() => errorDiv.remove(), 5000);
 }
+
+// Use modern features with fallbacks
+const storage = {
+    save: function(key, data) {
+        if (window.localStorage) {
+            localStorage.setItem(key, JSON.stringify(data));
+        } else {
+            // Fallback (could use cookies)
+            console.warn("localStorage not available");
+        }
+    }
+};
     </script>
 </body>
 </html>
