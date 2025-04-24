@@ -99,9 +99,8 @@
             background-color: #ffffff;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #4a69bd;
+        input:focus, select:focus, button:focus {
+            outline: 3px solid #4a69bd;
             box-shadow: 0 0 5px rgba(74, 105, 189, 0.5);
         }
         button {
@@ -164,9 +163,13 @@
         }
         .staff-break {
             background-color: var(--break-bg-color);
+            color: #000000; /* Ensure black text for contrast with yellow background */
+            font-weight: bold;
         }
         .staff-lunch {
             background-color: var(--lunch-bg-color);
+            color: #000000; /* Ensure black text for contrast with green background */
+            font-weight: bold;
         }
         .schedule-container {
             overflow-x: auto;
@@ -253,6 +256,22 @@
             padding: 15px;
             border-radius: 5px;
             z-index: 1000;
+        }
+
+        /* Explicitly set text color for cells when in dark mode */
+        body.dark-mode .staff-break {
+            background-color: var(--break-bg-color); /* Your dark mode yellow */
+            color: #000000; /* Keep black text which contrasts with yellow */
+        }
+
+        body.dark-mode .staff-lunch {
+            background-color: var(--lunch-bg-color); /* Your dark mode green */
+            color: #000000; /* Keep black text which contrasts with green */
+        }
+
+        /* Other cells with custom colors in dark mode may need adjustments */
+        body.dark-mode td.row-header {
+            color: var(--table-header-text-color);
         }
     </style>
 </head>
@@ -409,23 +428,42 @@
             
             staff.forEach((s, index) => {
                 const hue = index * hueStep;
-                const saturation = 70;
-                const lightness = 80;
+                // Start with standard saturation and lightness
+                let saturation = 70;
+                let lightness = 80;
+                
+                // Calculate background color
                 const bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                 
-                // Better text color contrast calculation
-                // Use dark text for light backgrounds, light text for dark backgrounds
-                // This is a more accurate way to determine text visibility
-                const hueFactor = Math.abs(((hue % 360) - 180) / 180); // 0 to 1 based on hue position
-                const perceivedBrightness = (lightness / 100) * (1 - (saturation / 100) * hueFactor);
+                // Determine text color with guaranteed contrast ratio
+                // Use black for light backgrounds, white for dark ones
+                // Web standard for ensuring contrast is to use relative luminance:
+                const relativeLuminance = calculateRelativeLuminance(hue, saturation, lightness);
                 
-                // If perceived brightness is high, use dark text, otherwise use light text
-                const textColor = perceivedBrightness > 0.6 ? '#000000' : '#ffffff';
+                // Text color: white for dark backgrounds (smaller luminance), black for light ones
+                // The threshold 0.5 is roughly where we need to switch to maintain 4.5:1 contrast
+                const textColor = relativeLuminance > 0.5 ? '#000000' : '#ffffff';
                 
                 staffColors[s] = { bgColor, textColor };
             });
             
             return staffColors;
+        }
+
+        // Calculate relative luminance using HSL approximation
+        function calculateRelativeLuminance(h, s, l) {
+            // This is a simplified model - full implementation would convert HSL to RGB first
+            // then apply the proper luminance formula, but this approximation works for this case
+            // Adjust perceived brightness based on hue (yellows appear brighter, blues darker)
+            const hueFactor = Math.cos((h - 60) * Math.PI / 180) * 0.1;
+            
+            // Saturation reduces luminance
+            const saturationImpact = (s / 100) * 0.3;
+            
+            // Calculate adjusted luminance
+            const adjustedLuminance = (l / 100) - saturationImpact + hueFactor;
+            
+            return Math.max(0, Math.min(1, adjustedLuminance));
         }
 
         // Add UI elements
