@@ -1192,6 +1192,21 @@ function getInputValues(selector) {
 function getElement(id) {
   return document.getElementById(id);
 }
+
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+const debouncedSave = debounce(saveToLocalStorage, 300);
+
+// Use this for input event handlers
+document.querySelectorAll('input, select').forEach(input =>
+  input.addEventListener('input', debouncedSave)
+);
     </script>
 </body>
 </html>
