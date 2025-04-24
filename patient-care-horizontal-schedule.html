@@ -409,10 +409,18 @@
             
             staff.forEach((s, index) => {
                 const hue = index * hueStep;
-                const bgColor = `hsl(${hue}, 70%, 80%)`;
+                const saturation = 70;
+                const lightness = 80;
+                const bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                 
-                // Determine if text should be dark or light based on background brightness
-                const textColor = (hue > 40 && hue < 200) ? '#000000' : '#ffffff';
+                // Better text color contrast calculation
+                // Use dark text for light backgrounds, light text for dark backgrounds
+                // This is a more accurate way to determine text visibility
+                const hueFactor = Math.abs(((hue % 360) - 180) / 180); // 0 to 1 based on hue position
+                const perceivedBrightness = (lightness / 100) * (1 - (saturation / 100) * hueFactor);
+                
+                // If perceived brightness is high, use dark text, otherwise use light text
+                const textColor = perceivedBrightness > 0.6 ? '#000000' : '#ffffff';
                 
                 staffColors[s] = { bgColor, textColor };
             });
@@ -748,6 +756,7 @@
                         if (!assigned) {
                             cell.textContent = "FREE";
                             cell.style.backgroundColor = "#e0f7fa"; // Light blue for free time
+                            cell.style.color = "#000000"; // Explicitly set text color to black for better visibility
                         }
                     }
                     
