@@ -1182,7 +1182,16 @@
 
             console.log("Data loaded from localStorage:", { staff, patients, securityStaff, nurseInCharge, schedule, isDayShift, isDarkMode });
         }
+
+        // Add this helper function to keep code DRY
+function getInputValues(selector) {
+  return Array.from(document.querySelectorAll(selector)).map(input => input.value.trim());
+}
+
+// Replace repetitive DOM selection code with this helper function
+function getElement(id) {
+  return document.getElementById(id);
+}
     </script>
 </body>
 </html>
-`
