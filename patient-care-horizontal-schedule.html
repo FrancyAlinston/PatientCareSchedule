@@ -243,6 +243,17 @@
             border-color: #4a69bd;
             box-shadow: 0 0 5px rgba(74, 105, 189, 0.5);
         }
+
+        .error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -1220,6 +1231,22 @@ const debouncedSave = debounce(saveToLocalStorage, 300);
 document.querySelectorAll('input, select').forEach(input =>
   input.addEventListener('input', debouncedSave)
 );
+
+try {
+    // Risky code like localStorage operations
+} catch (error) {
+    console.error("Error:", error);
+    // Show user-friendly message
+    showError("Something went wrong. Please try again.");
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 5000);
+}
     </script>
 </body>
 </html>
