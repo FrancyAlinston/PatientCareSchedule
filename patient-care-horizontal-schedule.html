@@ -346,6 +346,19 @@
     </div>
 
     <script>
+        // Immediately Invoked Function Expression (IIFE) to avoid global variables
+(function() {
+    // All your application code goes here
+    const PatientCareApp = {
+        // Your app object
+    };
+    
+    // Initialize on window load
+    window.onload = function() {
+        PatientCareApp.init();
+    };
+})();
+
         // Global variable to store the schedule
         let schedule = {};
 
