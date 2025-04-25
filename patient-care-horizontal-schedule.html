@@ -1026,13 +1026,16 @@
         }
 
         function clearAllData() {
+            // Clear all input containers
             document.getElementById('staffInputs').innerHTML = '';
             document.getElementById('patientInputs').innerHTML = '';
             document.getElementById('securityStaffInputs').innerHTML = '';
             document.getElementById('nurseInChargeInput').value = '';
             
-            // Clear schedule
+            // Clear all display areas
+            document.getElementById('scheduleHeader').innerHTML = '';
             document.getElementById('scheduleBody').innerHTML = '';
+            document.getElementById('staffHeader').innerHTML = '';
             document.getElementById('staffBody').innerHTML = '';
             document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
             document.getElementById('stats').innerHTML = '';
@@ -1091,15 +1094,39 @@
                 document.getElementById('generateBtn').addEventListener('click', generateSchedule);
                 
                 document.getElementById('resetBtn').addEventListener('click', () => {
+                    // Call the improved clearAllData function
                     clearAllData();
+                    
+                    // Clear localStorage
                     localStorage.removeItem('patientCareData');
+                    
+                    // Reset UI elements
                     addStaffInput();
                     addPatientInput();
+                    
+                    // Reset dark mode
                     document.body.classList.remove('dark-mode');
                     document.getElementById('toggleModeBtn').textContent = '🌙';
+                    
+                    // Reset shift
+                    isDayShift = true;
+                    timeSlots = [...dayShiftSlots];
                     document.getElementById('siteTitle').textContent = "Day Shift Allocation";
                     document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
-                    console.log("Data cleared");
+                    
+                    // Reset table headers
+                    document.getElementById('scheduleHeader').innerHTML = '';
+                    document.getElementById('staffHeader').innerHTML = '';
+                    
+                    console.log("Data cleared and reset complete");
+                    
+                    // Show confirmation to user
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.style.backgroundColor = '#4CAF50'; // Green for success
+                    errorDiv.textContent = "Reset complete. All data has been cleared.";
+                    document.body.appendChild(errorDiv);
+                    setTimeout(() => errorDiv.remove(), 3000);
                 });
                 
                 document.getElementById('toggleShiftBtn').addEventListener('click', () => {
@@ -1137,6 +1164,7 @@
                             const staffNames = staffData.results.map(person => 
                                 `${person.name.first} ${person.name.last.charAt(0)}`);
                             
+
                             // Fetch random patient names (5 names)
                             return fetch('https://randomuser.me/api/?results=5&inc=name&nat=us')
                                 .then(response => response.json())
