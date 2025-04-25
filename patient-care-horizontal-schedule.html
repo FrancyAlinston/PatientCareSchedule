@@ -732,6 +732,43 @@
             // Generate colors for staff
             const staffColors = generateStaffColors(staff);
             
+            // Reset work hours in staffStats
+            staff.forEach(s => {
+                staffStats[s].workHours = 0;
+                staffStats[s].breakTime = 0;
+            });
+            
+            // Calculate work hours for each staff member
+            timeSlots.forEach(time => {
+                staff.forEach(s => {
+                    // Skip if on break
+                    if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
+                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
+                            staffStats[s].breakTime += 0.5;
+                            staffStats[s].shortBreakTime = time;
+                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
+                            staffStats[s].breakTime += 1;
+                            staffStats[s].secondBreakTime = time;
+                        }
+                        return;
+                    }
+                    
+                    // Check if staff is working this hour
+                    let working = false;
+                    for (const patient in schedule[time].patientAssignments) {
+                        if (schedule[time].patientAssignments[patient].includes(s)) {
+                            working = true;
+                            break;
+                        }
+                    }
+                    
+                    // Update work hours if working
+                    if (working) {
+                        staffStats[s].workHours += 1;
+                    }
+                });
+            });
+            
             // Setup patient schedule header (time slots horizontally)
             const scheduleHeader = document.getElementById('scheduleHeader');
             let headerHTML = '<tr><th>Patient</th>';
