@@ -617,29 +617,51 @@
             // Keep track of the last time a staff was assigned to a patient to avoid consecutive hours
             const lastAssigned = {};
 
-            // Generate schedule for each time slot
+            // Add work hour tracking
+            const staffWorkHours = {};
+            staff.forEach(s => {
+                staffWorkHours[s] = 0;
+            });
+            
+            // Add a map to track consecutive work hours
+            const consecutiveWorkHours = {};
+            staff.forEach(s => { consecutiveWorkHours[s] = 0; });
+
             timeSlots.forEach((time, timeIndex) => {
+                // Reset consecutive hours at start of new 4-hour block
+                if (timeIndex % 4 === 0) {
+                    staff.forEach(s => { consecutiveWorkHours[s] = 0; });
+                }
+                
                 // Make a copy of staff for this time slot, excluding those on break
-                let availableStaff = [...staff];
-
-                // For each patient, assign required staff
-                patients.forEach(patient => {
+                let availableStaff = [...staff]; // <-- ADD THIS LINE to initialize availableStaff
+                
+                // Create a priority queue of patients based on care requirements
+                const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
+                
+                // Process patients in order of highest care needs first
+                sortedPatients.forEach(patient => {
                     const assignedStaff = [];
-
+                    
                     for (let i = 0; i < patient.staffCount; i++) {
-                        let staffMember = availableStaff.find(s => {
-                            // Enforce the rule: staff should not be assigned to the same patient in consecutive hours
-                            if (lastAssigned[s] && lastAssigned[s][patient.name] === timeIndex - 1) {
-                                return false;
-                            }
-                            return true;
+                        // Sort available staff by workload and consecutive assignments
+                        availableStaff.sort((a, b) => {
+                            // Primary sort: avoid consecutive assignments to same patient
+                            const aConsecutive = lastAssigned[a] && lastAssigned[a][patient.name] === timeIndex - 1;
+                            const bConsecutive = lastAssigned[b] && lastAssigned[b][patient.name] === timeIndex - 1;
+                            if (aConsecutive !== bConsecutive) return aConsecutive ? 1 : -1;
+                            
+                            // Secondary sort: total work hours for this shift
+                            return staffWorkHours[a] - staffWorkHours[b];
                         });
-
-                        // If no staff found with the rule, fallback to any available staff
+                        
+                        let staffMember = availableStaff.length > 0 ? availableStaff[0] : null;
+                        
+                        // If no staff found with the rule, fallback to any available staff with least hours
                         if (!staffMember && availableStaff.length > 0) {
                             staffMember = availableStaff[0];
                         }
-
+                        
                         // If still no staff available, fallback to any staff (even if on break or already assigned)
                         if (!staffMember && staff.length > 0) {
                             staffMember = staff[0];
@@ -657,42 +679,46 @@
                             }
                             lastAssigned[staffMember][patient.name] = timeIndex;
 
-                            // Update staff stats
-                            staffStats[staffMember].workHours += 1;
+                            // Track work hours for balancing
+                            staffWorkHours[staffMember]++;
                         }
                     }
 
                     schedule[time].patientAssignments[patient.name] = assignedStaff;
                 });
-            });
 
-            // Assign breaks for each staff
-            staff.forEach((s, index) => {
-                let totalBreakTime = 0;
-
-                // Assign 30-minute break
-                const breakStartIndex = 1; // Breaks start from second hour
-                const breakEndIndex = timeSlots.length - 2; // No breaks in last hour of night shift
-                const breakSlotCount = breakEndIndex - breakStartIndex;
-                const shortBreakHour = breakStartIndex + (index % breakSlotCount); // Stagger breaks
-                const shortBreakTime = timeSlots[shortBreakHour];
-
-                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
-                staffStats[s].shortBreakTime = shortBreakTime;
-                staffStats[s].breakTime += 0.5;
-                totalBreakTime += 0.5;
-
-                // Assign 2nd break
-                const secondBreakStartIndex = Math.floor(timeSlots.length / 2); // Start in middle of shift
-                const secondBreakHour = secondBreakStartIndex + (index % (timeSlots.length - secondBreakStartIndex - 1)); // Stagger breaks
-                const secondBreakTime = timeSlots[secondBreakHour];
-
-                if (shortBreakTime !== secondBreakTime) {
-                    schedule[secondBreakTime].staffBreaks[s] = "2ND BREAK";
-                    staffStats[s].secondBreakTime = secondBreakTime;
-                    staffStats[s].breakTime += 1;
-                    totalBreakTime += 1;
-                }
+                // After assignments, update consecutive work hours
+                staff.forEach(s => {
+                    let isWorking = false;
+                    
+                    // Check if staff is assigned to any patient this hour
+                    for (const patient in schedule[time].patientAssignments) {
+                        if (schedule[time].patientAssignments[patient].includes(s)) {
+                            isWorking = true;
+                            break;
+                        }
+                    }
+                    
+                    // Update consecutive hours
+                    if (isWorking) {
+                        consecutiveWorkHours[s]++;
+                        
+                        // Force a break if more than 3 consecutive hours
+                        if (consecutiveWorkHours[s] >= 3 && timeIndex < timeSlots.length - 1) {
+                            const nextHour = timeSlots[timeIndex + 1];
+                            // Only if they don't already have a break planned
+                            if (schedule[nextHour] && !schedule[nextHour].staffBreaks[s]) {
+                                schedule[nextHour].staffBreaks[s] = "30-MIN BREAK";
+                                staffStats[s].shortBreakTime = nextHour;
+                                staffStats[s].breakTime += 0.5;
+                                consecutiveWorkHours[s] = 0;
+                            }
+                        }
+                    } else if (schedule[time].staffBreaks[s]) {
+                        // Reset consecutive work hours after a break
+                        consecutiveWorkHours[s] = 0;
+                    }
+                });
             });
 
             // Render the schedule
@@ -844,6 +870,19 @@
             // Calculate patient-to-HCW ratio
             const ratio = staff.length / patients.length;
             statsHtml += `<p>HCW-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
+            
+            // Calculate workload balance metrics
+            const workHours = staff.map(s => staffStats[s].workHours);
+            const maxHours = Math.max(...workHours);
+            const minHours = Math.min(...workHours);
+            const avgHours = workHours.reduce((sum, hours) => sum + hours, 0) / staff.length;
+            const balanceScore = maxHours - minHours; // Lower is better
+            
+            statsHtml += '<h3>Work Balance Metrics</h3>';
+            statsHtml += `<p>Maximum Work Hours: ${maxHours}</p>`;
+            statsHtml += `<p>Minimum Work Hours: ${minHours}</p>`;
+            statsHtml += `<p>Average Work Hours: ${avgHours.toFixed(1)}</p>`;
+            statsHtml += `<p>Balance Score: ${balanceScore} (lower is better)</p>`;
             
             statsDiv.innerHTML = statsHtml;
         }
