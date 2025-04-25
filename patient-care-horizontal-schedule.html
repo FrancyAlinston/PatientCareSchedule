@@ -332,7 +332,7 @@
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-lunch"></div>
-                <div>1-hour Lunch</div>
+                <div>1-hour 2nd Break</div> <!-- Changed from "1-hour Lunch" -->
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-unassigned"></div>
@@ -364,7 +364,7 @@
                     <tr>
                         <th>Staff</th>
                         <th>30-min Break</th>
-                        <th>1-hour Lunch</th> <!-- Updated label -->
+                        <th>1-hour 2nd Break</th> <!-- Updated label -->
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -766,14 +766,14 @@
                 
                 // Assign lunch break (ensure it's not the same as short break)
                 if (lunchBreakTime !== shortBreakTime) {
-                    schedule[lunchBreakTime].staffBreaks[s] = "LUNCH BREAK";
+                    schedule[lunchBreakTime].staffBreaks[s] = "2ND BREAK"; // Changed from "LUNCH BREAK" to "2ND BREAK"
                     staffStats[s].secondBreakTime = lunchBreakTime;
                     staffStats[s].breakTime += 1.0; // Add 1 hour for lunch
                 } else {
                     // Find alternative time if they overlap (unlikely but just in case)
                     const altLunchHour = Math.min(lunchBreakHour + 1, shiftLength - 2);
                     const altLunchTime = timeSlots[altLunchHour];
-                    schedule[altLunchTime].staffBreaks[s] = "LUNCH BREAK";
+                    schedule[altLunchTime].staffBreaks[s] = "2ND BREAK"; // Changed from "LUNCH BREAK" to "2ND BREAK"
                     staffStats[s].secondBreakTime = altLunchTime;
                     staffStats[s].breakTime += 1.0;
                 }
@@ -804,8 +804,8 @@
                         if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
                             staffStats[s].breakTime = 0.5; // 30 min break
                             staffStats[s].shortBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "LUNCH BREAK") {
-                            staffStats[s].breakTime += 1; // 1 hour lunch
+                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") { // Changed from "LUNCH BREAK" to "2ND BREAK"
+                            staffStats[s].breakTime += 1; // 1 hour 2nd break
                             staffStats[s].secondBreakTime = time;
                         }
                         return;
@@ -897,8 +897,8 @@
                     if (breakStatus === "30-MIN BREAK") {
                         cell.textContent = "BREAK";
                         cell.className = 'staff-break';
-                    } else if (breakStatus === "LUNCH BREAK") {
-                        cell.textContent = "LUNCH";
+                    } else if (breakStatus === "2ND BREAK") { // Changed from "LUNCH BREAK" to "2ND BREAK"
+                        cell.textContent = "2ND BREAK"; // Changed from "LUNCH" to "2ND BREAK"
                         cell.className = 'staff-lunch';
                     } else {
                         let assigned = false;
@@ -931,11 +931,9 @@
         }
 
         function renderStats(staffStats, staff, patients) {
-            // ... existing code
-            
             let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
             statsHtml += '<table>';
-            statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
+            statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour 2nd Break</th></tr>';
             
             // Get security staff from localStorage or global variable
             let securityStaff = [];
