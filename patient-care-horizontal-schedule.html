@@ -721,6 +721,38 @@
                 });
             });
 
+            // Assign breaks for each staff
+            staff.forEach((s, index) => {
+                let totalBreakTime = 0;
+
+                // For day shift: short break in first half, lunch in second half
+                // For night shift: similar pattern but adjusted timing
+                const shiftLength = timeSlots.length; // 12 hours
+                const midPoint = Math.floor(shiftLength / 2);
+
+                // 30-minute break - in first half of shift, staggered
+                const shortBreakOffset = index % 3; // Stagger by staff index
+                const shortBreakHour = 2 + shortBreakOffset; // Start after 2nd hour, staggered
+                
+                if (shortBreakHour < midPoint) {
+                    const shortBreakTime = timeSlots[shortBreakHour];
+                    schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                    staffStats[s].shortBreakTime = shortBreakTime;
+                    staffStats[s].breakTime += 0.5;
+                }
+
+                // 1-hour lunch break - in second half of shift, staggered
+                const lunchBreakOffset = index % 3;
+                const lunchBreakHour = midPoint + 1 + lunchBreakOffset; // Middle of shift + offset
+                
+                if (lunchBreakHour < shiftLength - 1) { // Not in last hour
+                    const secondBreakTime = timeSlots[lunchBreakHour];
+                    schedule[secondBreakTime].staffBreaks[s] = "2ND BREAK";
+                    staffStats[s].secondBreakTime = secondBreakTime;
+                    staffStats[s].breakTime += 1;
+                }
+            });
+
             // Render the schedule
             renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
             
@@ -873,17 +905,16 @@
         }
 
         function renderStats(staffStats, staff, patients) {
-            const statsDiv = document.getElementById('stats');
+            let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
+            statsHtml += '<table>';
+            statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour Lunch</th></tr>';
+            
             // Get security staff from localStorage or global variable
             let securityStaff = [];
             try {
                 const savedData = JSON.parse(localStorage.getItem('patientCareData'));
                 securityStaff = savedData && savedData.securityStaff ? savedData.securityStaff : [];
             } catch (e) {}
-            
-            let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
-            statsHtml += '<table>';
-            statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>2nd Break</th></tr>';
             
             staff.forEach(s => {
                 const isSecurity = securityStaff.includes(s);
@@ -921,6 +952,7 @@
             statsHtml += `<p>Average Work Hours: ${avgHours.toFixed(1)}</p>`;
             statsHtml += `<p>Balance Score: ${balanceScore} (lower is better)</p>`;
             
+            const statsDiv = document.getElementById('stats');
             statsDiv.innerHTML = statsHtml;
         }
 
