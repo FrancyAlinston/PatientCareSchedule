@@ -276,6 +276,25 @@
         body.dark-mode td.row-header {
             color: var(--table-header-text-color);
         }
+
+        .rotation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .rotation-table th, .rotation-table td {
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .rotation-table th {
+            background-color: var(--table-header-bg-color);
+            color: var(--table-header-text-color);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -380,6 +399,11 @@
 
         <!-- Statistics section -->
         <div class="stats" id="stats"></div>
+
+        <!-- Staff-Patient Rotation section -->
+        <div class="stats" id="rotationStats"></div>
+
+        <button id="resetRotationBtn" class="action-button">Reset Rotation History</button>
     </div>
 
     <script>
@@ -387,6 +411,7 @@
         let schedule = {};
         let isDayShift = true;
         let securityStaff = []; // Add this new global variable
+        let staffPatientHistory = {}; // Tracks which staff has worked with which patients
 
         // Time slots for day and night shifts
         const dayShiftSlots = [
@@ -643,6 +668,25 @@
             const consecutiveWorkHours = {};
             staff.forEach(s => { consecutiveWorkHours[s] = 0; });
 
+            // Initialize staffPatientHistory if it doesn't exist
+            if (!staffPatientHistory) {
+                staffPatientHistory = {};
+            }
+
+            // Initialize history for each staff member
+            staff.forEach(s => {
+                if (!staffPatientHistory[s]) {
+                    staffPatientHistory[s] = {};
+                }
+                
+                // Initialize counter for each patient
+                patients.forEach(patient => {
+                    if (!staffPatientHistory[s][patient.name]) {
+                        staffPatientHistory[s][patient.name] = 0;
+                    }
+                });
+            });
+
             timeSlots.forEach((time, timeIndex) => {
                 // Reset consecutive hours at start of new 4-hour block
                 if (timeIndex % 4 === 0) {
@@ -665,47 +709,44 @@
                 sortedPatients.forEach(patient => {
                     const assignedStaff = [];
                     
-                    for (let i = 0; i < patient.staffCount; i++) {
-                        // Sort available staff by workload and consecutive assignments
-                        availableStaff.sort((a, b) => {
-                            // Primary sort: avoid consecutive assignments to same patient
-                            const aConsecutive = lastAssigned[a] && lastAssigned[a][patient.name] === timeIndex - 1;
-                            const bConsecutive = lastAssigned[b] && lastAssigned[b][patient.name] === timeIndex - 1;
-                            if (aConsecutive !== bConsecutive) return aConsecutive ? 1 : -1;
-                            
-                            // Secondary sort: total work hours for this shift
-                            return staffWorkHours[a] - staffWorkHours[b];
-                        });
-                        
-                        let staffMember = availableStaff.length > 0 ? availableStaff[0] : null;
-                        
-                        // If no staff found with the rule, fallback to any available staff with least hours
-                        if (!staffMember && availableStaff.length > 0) {
-                            staffMember = availableStaff[0];
+                    // Create a priority list of staff for this patient
+                    // Staff who have worked less with this patient get higher priority
+                    const prioritizedStaff = [...availableStaff].sort((a, b) => {
+                        // Primary sort: staff who worked less with this patient get priority
+                        if (staffPatientHistory[a][patient.name] !== staffPatientHistory[b][patient.name]) {
+                            return staffPatientHistory[a][patient.name] - staffPatientHistory[b][patient.name];
                         }
                         
-                        // If still no staff available, fallback to any staff (even if on break or already assigned)
-                        if (!staffMember && staff.length > 0) {
-                            staffMember = staff[0];
+                        // Secondary sort: avoid consecutive assignments to same patient
+                        const aConsecutive = lastAssigned[a] && lastAssigned[a][patient.name] === timeIndex - 1;
+                        const bConsecutive = lastAssigned[b] && lastAssigned[b][patient.name] === timeIndex - 1;
+                        if (aConsecutive !== bConsecutive) return aConsecutive ? 1 : -1;
+                        
+                        // Tertiary sort: total work hours for this shift
+                        return staffWorkHours[a] - staffWorkHours[b];
+                    });
+                    
+                    // Assign staff to this patient
+                    for (let i = 0; i < patient.staffCount && prioritizedStaff.length > 0; i++) {
+                        const staffMember = prioritizedStaff.shift(); // Take the highest priority staff
+                        
+                        assignedStaff.push(staffMember);
+                        availableStaff = availableStaff.filter(s => s !== staffMember);
+                        
+                        // Update work hours and consecutive work tracking
+                        staffWorkHours[staffMember]++;
+                        consecutiveWorkHours[staffMember]++;
+                        
+                        // Update last assigned time for this staff/patient
+                        if (!lastAssigned[staffMember]) {
+                            lastAssigned[staffMember] = {};
                         }
-
-                        if (staffMember) {
-                            assignedStaff.push(staffMember);
-                            // Remove from availableStaff only if present
-                            const idx = availableStaff.indexOf(staffMember);
-                            if (idx !== -1) availableStaff.splice(idx, 1);
-
-                            // Update last assigned time for this staff and patient
-                            if (!lastAssigned[staffMember]) {
-                                lastAssigned[staffMember] = {};
-                            }
-                            lastAssigned[staffMember][patient.name] = timeIndex;
-
-                            // Track work hours for balancing
-                            staffWorkHours[staffMember]++;
-                        }
+                        lastAssigned[staffMember][patient.name] = timeIndex;
+                        
+                        // Update history counter for this staff/patient pair
+                        staffPatientHistory[staffMember][patient.name]++;
                     }
-
+                    
                     schedule[time].patientAssignments[patient.name] = assignedStaff;
                 });
 
@@ -1022,6 +1063,7 @@
             // Show statistics
             renderStats(staffStats, staff, patients);
             renderBreakHoursTable(staffStats, staff);
+            renderStaffRotationStats();
         }
 
         function renderStats(staffStats, staff, patients) {
@@ -1102,6 +1144,41 @@
             });
         }
 
+        function renderStaffRotationStats() {
+            let rotationHtml = '<h3>Staff-Patient Rotation Summary</h3>';
+            rotationHtml += '<table class="rotation-table">';
+            
+            // Header row with patient names
+            rotationHtml += '<tr><th>Staff</th>';
+            patients.forEach(patient => {
+                rotationHtml += `<th>${patient.name}</th>`;
+            });
+            rotationHtml += '</tr>';
+            
+            // Rows for each staff member
+            staff.forEach(s => {
+                rotationHtml += `<tr><td>${s}</td>`;
+                
+                patients.forEach(patient => {
+                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient.name] 
+                        ? staffPatientHistory[s][patient.name] : 0;
+                    
+                    // Color scale: darker green means more time spent with this patient
+                    const intensity = Math.min(count * 20, 255);
+                    const bgColor = `rgba(76, 175, 80, ${intensity/255})`;
+                    
+                    rotationHtml += `<td style="background-color: ${bgColor};">${count}</td>`;
+                });
+                
+                rotationHtml += '</tr>';
+            });
+            
+            rotationHtml += '</table>';
+            
+            // Add rotation visualization to stats
+            document.getElementById('rotationStats').innerHTML = rotationHtml;
+        }
+
         function saveToLocalStorage() {
             const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
             const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
@@ -1122,7 +1199,8 @@
                 nurseInCharge,
                 schedule,
                 isDayShift,
-                isDarkMode: document.body.classList.contains('dark-mode')
+                isDarkMode: document.body.classList.contains('dark-mode'),
+                staffPatientHistory,
             };
             
             localStorage.setItem('patientCareData', JSON.stringify(data));
@@ -1480,6 +1558,34 @@
                 showError("Something went wrong. Please try again.");
             }
         };
+
+        document.getElementById('resetRotationBtn').addEventListener('click', () => {
+            // Reset staffPatientHistory
+            staffPatientHistory = {};
+            
+            // Initialize for current staff and patients
+            staff.forEach(s => {
+                staffPatientHistory[s] = {};
+                patients.forEach(patient => {
+                    staffPatientHistory[s][patient.name] = 0;
+                });
+            });
+            
+            // Save to localStorage
+            saveToLocalStorage();
+            
+            // Show confirmation
+            const confirmationDiv = document.createElement('div');
+            confirmationDiv.className = 'success-message';
+            confirmationDiv.textContent = "Staff rotation history has been reset.";
+            document.body.appendChild(confirmationDiv);
+            setTimeout(() => confirmationDiv.remove(), 3000);
+            
+            // Regenerate schedule if exists
+            if (Object.keys(schedule).length > 0) {
+                generateSchedule();
+            }
+        });
     </script>
 </body>
 </html>
