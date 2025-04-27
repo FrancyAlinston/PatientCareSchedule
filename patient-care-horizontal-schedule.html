@@ -383,10 +383,11 @@
     </div>
 
     <script>
-        // Global variables (same as you had before)
+        // Global variables
         let schedule = {};
         let isDayShift = true;
-        
+        let securityStaff = []; // Add this new global variable
+
         // Time slots for day and night shifts
         const dayShiftSlots = [
             "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
@@ -553,7 +554,6 @@
 
             const staff = [];
             const excludedHours = {};
-            const securityStaff = new Set();
             const patients = [];
 
             // Process security staff
@@ -562,7 +562,10 @@
 
                 if (staffName) {
                     staff.push(staffName);
-                    securityStaff.add(staffName); // Add to the set of security staff
+                    // Instead of using a Set, add to the global array
+                    if (!securityStaff.includes(staffName)) {
+                        securityStaff.push(staffName);
+                    }
                 }
             });
 
@@ -1049,7 +1052,7 @@
             const data = {
                 staff: staffInputs,
                 patients: patientInputs,
-                securityStaff: securityStaffInputs,
+                securityStaff: securityStaffInputs.map(input => input.value.trim()), // Ensure security staff are saved properly
                 nurseInCharge,
                 schedule,
                 isDayShift,
@@ -1152,6 +1155,11 @@
             // Restore security staff
             const securityStaffInputs = document.getElementById('securityStaffInputs');
             securityStaffInputs.innerHTML = '';
+            securityStaff = []; // Reset the global array
+            securityStaff = securityStaff || []; // Ensure it's not undefined
+            // Add loaded security staff to global variable
+            securityStaff = [...savedData.securityStaff];
+
             securityStaff.forEach(name => {
                 const securityContainer = document.createElement('div');
                 securityContainer.className = 'security-container';
