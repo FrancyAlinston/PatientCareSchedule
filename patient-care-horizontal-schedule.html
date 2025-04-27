@@ -1075,7 +1075,12 @@
                 return;
             }
             
-            const { staff, patients, securityStaff, nurseInCharge, schedule: savedSchedule, isDayShift: savedShift, isDarkMode } = JSON.parse(savedData);
+            // Fix: Don't destructure isDayShift as savedShift, use a different variable name
+            const parsedData = JSON.parse(savedData);
+            const { staff, patients, securityStaff: savedSecurityStaff, nurseInCharge, schedule: savedSchedule, isDarkMode } = parsedData;
+            
+            // Now assign the saved shift value to the global variable
+            isDayShift = parsedData.isDayShift;
             
             // Restore dark mode
             if (isDarkMode) {
@@ -1157,10 +1162,15 @@
             // Restore security staff
             const securityStaffInputs = document.getElementById('securityStaffInputs');
             securityStaffInputs.innerHTML = '';
-            securityStaff = []; // Reset the global array
-            securityStaff = securityStaff || []; // Ensure it's not undefined
+
+            // Reset the global array
+            securityStaff = []; // Clear the existing array
             // Add loaded security staff to global variable
-            securityStaff = [...savedData.securityStaff];
+            savedSecurityStaff.forEach(name => {
+                if (!securityStaff.includes(name)) {
+                    securityStaff.push(name);
+                }
+            });
 
             securityStaff.forEach(name => {
                 const securityContainer = document.createElement('div');
@@ -1409,6 +1419,7 @@
                             console.error("Failed to fetch random names:", error);
                             showError("Failed to fetch random names. Using default names instead.");
                             
+
                             // Use fallback names if API fails
                             const staffNames = ['John', 'Mary', 'Robert', 'Lisa', 'Michael', 'Sarah', 'David', 'Emma'];
                             const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D', 'Patient E'];
