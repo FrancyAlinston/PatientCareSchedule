@@ -210,6 +210,9 @@
         .legend-unassigned {
             background-color: var(--unassigned-bg-color);
         }
+        .legend-security {
+            background-color: #ffccbc;
+        }
 
         /* Ensure text color is visible for cells with white background in dark mode */
         body.dark-mode td {
@@ -338,6 +341,10 @@
                 <div class="legend-color legend-unassigned"></div>
                 <div>Unassigned</div>
             </div>
+            <div class="legend-item">
+                <div class="legend-color legend-security"></div>
+                <div>Security Duty</div>
+            </div>
         </div>
 
         <!-- Schedule tables -->
@@ -464,6 +471,12 @@
             const adjustedLuminance = (l / 100) - saturationImpact + hueFactor;
             
             return Math.max(0, Math.min(1, adjustedLuminance));
+        }
+
+        // Add this function right after the calculateRelativeLuminance function
+        function isSecurityRestrictedHour(timeIndex, totalHours) {
+            // First 2 hours or last 2 hours
+            return timeIndex < 2 || timeIndex >= totalHours - 2;
         }
 
         // Add UI elements
@@ -633,8 +646,14 @@
                     staff.forEach(s => { consecutiveWorkHours[s] = 0; });
                 }
                 
-                // Make a copy of staff for this time slot, excluding those on break
-                let availableStaff = [...staff]; // <-- ADD THIS LINE to initialize availableStaff
+                // Make a copy of staff for this time slot, excluding security staff during restricted hours
+                let availableStaff = [...staff].filter(s => {
+                    // If this is security staff and it's a restricted hour, exclude them
+                    if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                        return false;
+                    }
+                    return true;
+                });
                 
                 // Create a priority queue of patients based on care requirements
                 const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
@@ -797,17 +816,17 @@
             });
             
             // Calculate work hours for each staff member
-            timeSlots.forEach(time => {
+            timeSlots.forEach((time, timeIndex) => {
                 staff.forEach(s => {
+                    // If security staff on security duty, count as working
+                    if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                        staffStats[s].workHours += 1;
+                        return; // Skip further checks for this time slot
+                    }
+                    
                     // Skip if on break
                     if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
-                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
-                            staffStats[s].breakTime = 0.5; // 30 min break
-                            staffStats[s].shortBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") { // Changed from "LUNCH BREAK" to "2ND BREAK"
-                            staffStats[s].breakTime += 1; // 1 hour 2nd break
-                            staffStats[s].secondBreakTime = time;
-                        }
+                        // Existing break handling code
                         return;
                     }
                     
@@ -890,17 +909,25 @@
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
-                timeSlots.forEach(time => {
+                timeSlots.forEach((time, timeIndex) => {
                     const cell = document.createElement('td');
                     const breakStatus = schedule[time].staffBreaks[s];
                     
-                    if (breakStatus === "30-MIN BREAK") {
+                    // Check if security staff on security duty (first 2 or last 2 hours)
+                    if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                        cell.textContent = "SECURITY";
+                        cell.style.backgroundColor = "#ffccbc"; // Light orange for security duty
+                        cell.style.color = "#000000"; // Black text for contrast
+                        cell.style.fontWeight = "bold";
+                    }
+                    else if (breakStatus === "30-MIN BREAK") {
                         cell.textContent = "BREAK";
                         cell.className = 'staff-break';
-                    } else if (breakStatus === "2ND BREAK") { // Changed from "LUNCH BREAK" to "2ND BREAK"
-                        cell.textContent = "2ND BREAK"; // Changed from "LUNCH" to "2ND BREAK"
+                    } else if (breakStatus === "2ND BREAK") {
+                        cell.textContent = "2ND BREAK";
                         cell.className = 'staff-lunch';
                     } else {
+                        // Rest of code for normal cell rendering
                         let assigned = false;
                         for (const patient in schedule[time].patientAssignments) {
                             if (schedule[time].patientAssignments[patient].includes(s)) {
