@@ -236,7 +236,7 @@
             border: 1px solid #dfe4ea;
             border-radius: 5px;
             width: 80px; /* Adjust width to save space */
-            font-size: 12px; /* Reduce font size */
+            font-size: 12
             background-color: #ffffff;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
@@ -627,6 +627,12 @@
             const consecutiveWorkHours = {};
             staff.forEach(s => { consecutiveWorkHours[s] = 0; });
 
+            // Add this function to check if a time slot is restricted for security
+            function isSecurityRestrictedHour(timeIndex, totalHours) {
+                // First 2 hours or last 2 hours
+                return timeIndex < 2 || timeIndex >= totalHours - 2;
+            }
+
             timeSlots.forEach((time, timeIndex) => {
                 // Reset consecutive hours at start of new 4-hour block
                 if (timeIndex % 4 === 0) {
@@ -634,7 +640,14 @@
                 }
                 
                 // Make a copy of staff for this time slot, excluding those on break
-                let availableStaff = [...staff]; // <-- ADD THIS LINE to initialize availableStaff
+                // AND excluding security staff during their restricted hours
+                let availableStaff = [...staff].filter(s => {
+                    // If this is security staff and it's a restricted hour, exclude them
+                    if (securityStaff.has(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                        return false;
+                    }
+                    return true;
+                });
                 
                 // Create a priority queue of patients based on care requirements
                 const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
