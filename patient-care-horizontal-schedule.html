@@ -1046,13 +1046,15 @@
                     staffCount: container.querySelector('.staff-count').value
                 };
             });
-            const securityStaffInputs = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+            
+            // Fix this line to properly get security staff values
+            const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
             const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
             
             const data = {
                 staff: staffInputs,
                 patients: patientInputs,
-                securityStaff: securityStaffInputs.map(input => input.value.trim()), // Ensure security staff are saved properly
+                securityStaff: securityStaffValues, // Use the correctly extracted values
                 nurseInCharge,
                 schedule,
                 isDayShift,
@@ -1343,6 +1345,7 @@
                             const staffNames = staffData.results.map(person => 
                                 `${person.name.first} ${person.name.last.charAt(0)}`);
                             
+
                             // Fetch random patient names
                             return fetch(`https://randomuser.me/api/?results=${patientCount}&inc=name&nat=us`)
                                 .then(response => response.json())
@@ -1357,6 +1360,7 @@
                                             const securityNames = securityData.results.map(person => 
                                                 `Security ${person.name.last}`);
                                             
+
                                             // Fill staff inputs with names
                                             currentStaffInputs.forEach((input, index) => {
                                                 if (index < staffNames.length) {
