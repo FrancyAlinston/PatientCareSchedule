@@ -210,6 +210,9 @@
         .legend-unassigned {
             background-color: var(--unassigned-bg-color);
         }
+        .legend-security {
+            background-color: #ffccbc;
+        }
 
         /* Ensure text color is visible for cells with white background in dark mode */
         body.dark-mode td {
@@ -337,6 +340,10 @@
             <div class="legend-item">
                 <div class="legend-color legend-unassigned"></div>
                 <div>Unassigned</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-security"></div>
+                <div>Security Duty</div>
             </div>
         </div>
 
@@ -903,15 +910,22 @@
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
-                timeSlots.forEach(time => {
+                timeSlots.forEach((time, timeIndex) => {
                     const cell = document.createElement('td');
                     const breakStatus = schedule[time].staffBreaks[s];
                     
-                    if (breakStatus === "30-MIN BREAK") {
+                    // Check if security staff on security duty (first 2 or last 2 hours)
+                    if (securityStaff.has(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                        cell.textContent = "SECURITY";
+                        cell.style.backgroundColor = "#ffccbc"; // Light orange for security duty
+                        cell.style.color = "#000000"; // Black text for contrast
+                        cell.style.fontWeight = "bold";
+                    }
+                    else if (breakStatus === "30-MIN BREAK") {
                         cell.textContent = "BREAK";
                         cell.className = 'staff-break';
-                    } else if (breakStatus === "2ND BREAK") { // Changed from "LUNCH BREAK" to "2ND BREAK"
-                        cell.textContent = "2ND BREAK"; // Changed from "LUNCH" to "2ND BREAK"
+                    } else if (breakStatus === "2ND BREAK") {
+                        cell.textContent = "2ND BREAK";
                         cell.className = 'staff-lunch';
                     } else {
                         let assigned = false;
