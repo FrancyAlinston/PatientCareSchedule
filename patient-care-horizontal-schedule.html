@@ -818,6 +818,46 @@
                 staffStats[s].breakTime = 0;
             });
             
+            // Make sure timeSlots is properly initialized based on current shift
+            if (!timeSlots || timeSlots.length === 0) {
+                timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+            }
+            
+            // Ensure schedule is properly initialized for all time slots
+            timeSlots.forEach(time => {
+                if (!schedule[time]) {
+                    schedule[time] = {
+                        patientAssignments: {},
+                        staffBreaks: {}
+                    };
+                }
+                
+                // Make sure patientAssignments exists
+                if (!schedule[time].patientAssignments) {
+                    schedule[time].patientAssignments = {};
+                }
+                
+                // Initialize patient assignments if missing
+                patients.forEach(patient => {
+                    if (!schedule[time].patientAssignments[patient]) {
+                        schedule[time].patientAssignments[patient] = [];
+                    }
+                });
+                
+                // Make sure staffBreaks exists
+                if (!schedule[time].staffBreaks) {
+                    schedule[time].staffBreaks = {};
+                }
+                
+                // Initialize staff breaks if missing
+                staff.forEach(s => {
+                    if (!schedule[time].staffBreaks[s]) {
+                        schedule[time].staffBreaks[s] = "";
+                    }
+                });
+            });
+            
+            // Continue with the rest of the function...
             // Calculate work hours for each staff member
             timeSlots.forEach((time, timeIndex) => {
                 staff.forEach(s => {
@@ -1097,7 +1137,7 @@
             }
             
             // Restore shift
-            isDayShift = savedShift;
+            isDayShift = parsedData.isDayShift;
             timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
             document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
             document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
@@ -1185,22 +1225,45 @@
                 securityStaffInputs.appendChild(securityContainer);
             });
             
-            // Restore schedule
-            schedule = savedSchedule || {}; // Ensure schedule is initialized
-            
-            // Regenerate the schedule
-            if (Object.keys(schedule).length > 0) {
-                const staffStats = {};
-                staff.forEach(s => {
-                    staffStats[s] = {
-                        workHours: 0,
-                        breakTime: 0,
-                        shortBreakTime: "",
-                        secondBreakTime: ""
-                    };
-                });
+            // Restore schedule with better error handling
+            try {
+                schedule = savedSchedule || {}; // Ensure schedule is initialized
                 
-                renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
+                // Validate schedule structure and recreate if needed
+                const isValidSchedule = timeSlots.every(time => 
+                    schedule[time] && 
+                    schedule[time].patientAssignments && 
+                    schedule[time].staffBreaks
+                );
+                
+                if (!isValidSchedule) {
+                    // If schedule is invalid, regenerate it from scratch
+                    console.warn("Saved schedule format is invalid, regenerating...");
+                    generateSchedule();
+                    return;
+                }
+                
+                // Regenerate the schedule
+                if (Object.keys(schedule).length > 0) {
+                    const staffStats = {};
+                    staff.forEach(s => {
+                        staffStats[s] = {
+                            workHours: 0,
+                            breakTime: 0,
+                            shortBreakTime: "",
+                            secondBreakTime: ""
+                        };
+                    });
+                    
+                    renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
+                }
+            } catch (error) {
+                console.error("Error restoring schedule:", error);
+                // Reset to empty schedule
+                schedule = {};
+                // Add default data
+                addStaffInput();
+                addPatientInput();
             }
             
             console.log("Data loaded from localStorage:", { staff, patients, securityStaff, schedule, isDayShift, isDarkMode });
