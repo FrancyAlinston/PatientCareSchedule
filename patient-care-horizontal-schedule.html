@@ -1063,7 +1063,7 @@
             // Show statistics
             renderStats(staffStats, staff, patients);
             renderBreakHoursTable(staffStats, staff);
-            renderStaffRotationStats(patients);
+            renderStaffRotationStats(patients, staff);
         }
 
         function renderStats(staffStats, staff, patients) {
@@ -1144,7 +1144,7 @@
             });
         }
 
-        function renderStaffRotationStats(patients) {
+        function renderStaffRotationStats(patients, staff) {
             // Check if we have patients and staff to render
             if (!patients || !patients.length || !staff || !staff.length) {
                 document.getElementById('rotationStats').innerHTML = '<h3>Staff-Patient Rotation Summary</h3><p>No data available.</p>';
@@ -1168,8 +1168,12 @@
                 
                 patients.forEach(patient => {
                     const patientName = typeof patient === 'object' ? patient.name : patient;
-                    const count = staffPatientHistory[s] && staffPatientHistory[s][patientName] 
-                        ? staffPatientHistory[s][patientName] : 0;
+                    // Check if staffPatientHistory exists and has data for this staff/patient
+                    const count = (staffPatientHistory && 
+                                  staffPatientHistory[s] && 
+                                  staffPatientHistory[s][patientName]) 
+                        ? staffPatientHistory[s][patientName] 
+                        : 0;
                     
                     // Color scale: darker green means more time spent with this patient
                     const intensity = Math.min(count * 20, 255);
@@ -1602,7 +1606,7 @@
                 generateSchedule();
             }
 
-            renderStaffRotationStats(currentPatients);
+            renderStaffRotationStats(currentPatients, staff);
         });
     </script>
 </body>
