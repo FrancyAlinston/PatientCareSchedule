@@ -1063,7 +1063,7 @@
             // Show statistics
             renderStats(staffStats, staff, patients);
             renderBreakHoursTable(staffStats, staff);
-            renderStaffRotationStats();
+            renderStaffRotationStats(patients);
         }
 
         function renderStats(staffStats, staff, patients) {
@@ -1144,14 +1144,21 @@
             });
         }
 
-        function renderStaffRotationStats() {
+        function renderStaffRotationStats(patients) {
+            // Check if we have patients and staff to render
+            if (!patients || !patients.length || !staff || !staff.length) {
+                document.getElementById('rotationStats').innerHTML = '<h3>Staff-Patient Rotation Summary</h3><p>No data available.</p>';
+                return;
+            }
+
             let rotationHtml = '<h3>Staff-Patient Rotation Summary</h3>';
             rotationHtml += '<table class="rotation-table">';
             
             // Header row with patient names
             rotationHtml += '<tr><th>Staff</th>';
             patients.forEach(patient => {
-                rotationHtml += `<th>${patient.name}</th>`;
+                const patientName = typeof patient === 'object' ? patient.name : patient;
+                rotationHtml += `<th>${patientName}</th>`;
             });
             rotationHtml += '</tr>';
             
@@ -1160,8 +1167,9 @@
                 rotationHtml += `<tr><td>${s}</td>`;
                 
                 patients.forEach(patient => {
-                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient.name] 
-                        ? staffPatientHistory[s][patient.name] : 0;
+                    const patientName = typeof patient === 'object' ? patient.name : patient;
+                    const count = staffPatientHistory[s] && staffPatientHistory[s][patientName] 
+                        ? staffPatientHistory[s][patientName] : 0;
                     
                     // Color scale: darker green means more time spent with this patient
                     const intensity = Math.min(count * 20, 255);
@@ -1570,7 +1578,15 @@
                     staffPatientHistory[s][patient.name] = 0;
                 });
             });
-            
+
+            // Get current patients from inputs
+            const currentPatients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+                return {
+                    name: container.querySelector('.patient-name').value.trim(),
+                    staffCount: parseInt(container.querySelector('.staff-count').value)
+                };
+            });
+
             // Save to localStorage
             saveToLocalStorage();
             
@@ -1585,6 +1601,8 @@
             if (Object.keys(schedule).length > 0) {
                 generateSchedule();
             }
+
+            renderStaffRotationStats(currentPatients);
         });
     </script>
 </body>
