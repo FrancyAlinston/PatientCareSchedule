@@ -1572,31 +1572,45 @@
         };
 
         document.getElementById('resetRotationBtn').addEventListener('click', () => {
-            // Reset staffPatientHistory
-            staffPatientHistory = {};
+            // Get current staff and patients from inputs
+            const currentStaff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
             
-            // Initialize for current staff and patients
-            staff.forEach(s => {
-                staffPatientHistory[s] = {};
-                patients.forEach(patient => {
-                    staffPatientHistory[s][patient.name] = 0;
-                });
-            });
-
-            // Get current patients from inputs
+            // Get security staff too
+            const currentSecurityStaff = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+            
+            // Combine regular and security staff
+            const allStaff = [...currentStaff, ...currentSecurityStaff];
+            
+            // Get current patients
             const currentPatients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
                 return {
                     name: container.querySelector('.patient-name').value.trim(),
                     staffCount: parseInt(container.querySelector('.staff-count').value)
                 };
             });
-
+            
+            // Reset staffPatientHistory
+            staffPatientHistory = {};
+            
+            // Initialize for current staff and patients
+            allStaff.forEach(s => {
+                if (s) { // Only process non-empty staff names
+                    staffPatientHistory[s] = {};
+                    currentPatients.forEach(patient => {
+                        if (patient.name) { // Only process non-empty patient names
+                            staffPatientHistory[s][patient.name] = 0;
+                        }
+                    });
+                }
+            });
+            
             // Save to localStorage
             saveToLocalStorage();
             
             // Show confirmation
             const confirmationDiv = document.createElement('div');
-            confirmationDiv.className = 'success-message';
+            confirmationDiv.className = 'error-message'; // Using the existing error-message class
+            confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
             confirmationDiv.textContent = "Staff rotation history has been reset.";
             document.body.appendChild(confirmationDiv);
             setTimeout(() => confirmationDiv.remove(), 3000);
@@ -1604,9 +1618,13 @@
             // Regenerate schedule if exists
             if (Object.keys(schedule).length > 0) {
                 generateSchedule();
+            } else {
+                // If no schedule, just update the rotation stats display
+                renderStaffRotationStats(
+                    currentPatients.map(p => p.name), 
+                    allStaff.filter(s => s) // Filter out empty strings
+                );
             }
-
-            renderStaffRotationStats(currentPatients, staff);
         });
     </script>
 </body>
