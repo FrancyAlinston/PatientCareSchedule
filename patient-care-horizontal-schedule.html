@@ -921,9 +921,17 @@
                         cell.style.color = "#000000"; // Black text for contrast
                     } else {
                         cell.textContent = assignedStaff.join(", ");
-                        const { bgColor, textColor } = staffColors[assignedStaff[0]]; // Use the first staff's color
-                        cell.style.backgroundColor = bgColor;
-                        cell.style.color = textColor; // Set text color for contrast
+                        
+                        // Add a check to ensure assignedStaff[0] exists and is in staffColors
+                        if (assignedStaff.length > 0 && staffColors[assignedStaff[0]]) {
+                            const { bgColor, textColor } = staffColors[assignedStaff[0]]; // Use the first staff's color
+                            cell.style.backgroundColor = bgColor;
+                            cell.style.color = textColor; // Set text color for contrast
+                        } else {
+                            // Fallback colors if no valid staff color is found
+                            cell.style.backgroundColor = "#f8f9fa"; // Light gray background
+                            cell.style.color = "#000000"; // Black text for contrast
+                        }
                     }
                     
                     row.appendChild(cell);
@@ -946,9 +954,17 @@
                 const staffCell = document.createElement('td');
                 staffCell.textContent = s;
                 staffCell.className = 'row-header';
-                const { bgColor, textColor } = staffColors[s];
-                staffCell.style.backgroundColor = bgColor; // Assign staff color
-                staffCell.style.color = textColor; // Ensure text is visible
+
+                // Add safety check before accessing staffColors
+                if (staffColors[s]) {
+                    const { bgColor, textColor } = staffColors[s];
+                    staffCell.style.backgroundColor = bgColor; // Assign staff color
+                    staffCell.style.color = textColor; // Ensure text is visible
+                } else {
+                    // Fallback colors
+                    staffCell.style.backgroundColor = "#f8f9fa"; // Light gray background
+                    staffCell.style.color = "#000000"; // Black text for contrast
+                }
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
@@ -975,8 +991,16 @@
                         for (const patient in schedule[time].patientAssignments) {
                             if (schedule[time].patientAssignments[patient].includes(s)) {
                                 cell.textContent = patient;
-                                cell.style.backgroundColor = bgColor; // Assign staff color
-                                cell.style.color = textColor; // Ensure text is visible
+                                
+                                // Add safety check for staff colors
+                                if (staffColors[s]) {
+                                    cell.style.backgroundColor = staffColors[s].bgColor;
+                                    cell.style.color = staffColors[s].textColor;
+                                } else {
+                                    cell.style.backgroundColor = "#f8f9fa"; // Fallback light gray
+                                    cell.style.color = "#000000"; // Black text
+                                }
+                                
                                 assigned = true;
                                 break;
                             }
