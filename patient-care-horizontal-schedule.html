@@ -1248,8 +1248,11 @@ function updateNurseInputs(count) {
             });
             
             const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
-            const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
-            const nurseCount = document.getElementById('nurseCountSelect').value;
+            const nurseInCharge = document.getElementById('nurseInChargeInput')?.value.trim() || '';
+            
+            // Check if the nurseCountSelect exists before trying to access its value
+            const nurseCountSelect = document.getElementById('nurseCountSelect');
+            const nurseCount = nurseCountSelect ? nurseCountSelect.value : "2"; // Default to 2 if not found
             
             const data = {
                 staff: staffInputs,
