@@ -321,10 +321,23 @@
                     <button id="addSecurityStaffBtn">Add Security Staff</button>
                     <button id="removeSecurityStaffBtn">Remove Security Staff</button>
                 </div>
-                <!-- Nurse in Charge Section -->
+                
+                <!-- Combined Nurses Section -->
                 <div>
-                    <h2>Nurse in Charge</h2>
-                    <input type="text" id="nurseInChargeInput" placeholder="Enter Nurse in Charge Name" style="width: 250px; margin-bottom: 15px;">
+                    <h2>Nursing Staff</h2>
+                    <div style="margin-bottom: 15px;">
+                        <label for="nurseInChargeInput"><strong>Nurse in Charge:</strong></label>
+                        <input type="text" id="nurseInChargeInput" placeholder="Enter Nurse in Charge Name" style="width: 250px; margin-bottom: 15px;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="nurseCountSelect">Number of Floor Nurses:</label>
+                        <select id="nurseCountSelect" style="width: 60px;">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                        </select>
+                    </div>
+                    <div class="nurse-inputs" id="nurseInputs"></div>
                 </div>
             </div>
         </div>
