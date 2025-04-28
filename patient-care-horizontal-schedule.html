@@ -329,45 +329,18 @@
                         <label for="nurseInChargeInput"><strong>Nurse in Charge:</strong></label>
                         <input type="text" id="nurseInChargeInput" placeholder="Enter Nurse in Charge Name" style="width: 250px; margin-bottom: 15px;">
                     </div>
-                    <div style="margin-bottom: 10px;">
-                        <label for="nurseCountSelect">Number of Floor Nurses:</label>
-                        <select id="nurseCountSelect" style="width: 60px;">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2" selected>2</option>
-                        </select>
-                    </div>
                     <div class="nurse-inputs" id="nurseInputs"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Add this after the security staff section -->
-        <div class="setup-section" style="margin-bottom: 20px;">
-            <div style="display: flex; gap: 40px; align-items: flex-start;">
-                <!-- Nurses Section -->
-                <div>
-                    <h2>Nurses</h2>
-                    <div style="margin-bottom: 10px;">
-                        <label for="nurseCountSelect">Number of Nurses:</label>
-                        <select id="nurseCountSelect" style="width: 60px;">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2" selected>2</option>
-                        </select>
-                    </div>
-                    <div class="nurse-inputs" id="nurseInputs"></div>
-                </div>
-                
-                <!-- Health Care Workers Section -->
-                <div>
-                    <h2>Health Care Workers</h2>
-                    <div class="staff-inputs" id="staffInputs"></div>
-                    <button id="addStaffBtn">Add Health Care Worker</button>
-                    <button id="removeStaffBtn">Remove Health Care Worker</button>
-                </div>
-            </div>
-        </div>
+        <!-- Add this new section for Health Care Workers only -->
+<div class="setup-section" style="margin-bottom: 20px;">
+    <h2>Health Care Workers</h2>
+    <div class="staff-inputs" id="staffInputs"></div>
+    <button id="addStaffBtn">Add Health Care Worker</button>
+    <button id="removeStaffBtn">Remove Health Care Worker</button>
+</div>
 
         <!-- Section for managing health care workers and patients -->
         <div class="setup-section">
