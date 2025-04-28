@@ -1423,12 +1423,6 @@
 function addStaffInput() {
     const staffInputs = document.getElementById('staffInputs');
     
-    // Check if we've reached the 2-nurse limit
-    if (staffInputs.children.length >= 2) {
-        showError("Maximum of 2 nurses allowed");
-        return;
-    }
-    
     const staffContainer = document.createElement('div');
     staffContainer.className = 'staff-container';
     
