@@ -1413,7 +1413,15 @@
                 }
                 
                 // Add event listeners
-                document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+                document.getElementById('addStaffBtn').addEventListener('click', () => {
+                    const staffInputs = document.getElementById('staffInputs');
+                    if (staffInputs.children.length < 2) {
+                        addStaffInput();
+                    } else {
+                        showError("Maximum of 2 nurses allowed");
+                    }
+                });
+
                 document.getElementById('removeStaffBtn').addEventListener('click', () => {
                     const staffInputs = document.getElementById('staffInputs');
                     if (staffInputs.children.length > 0) {
@@ -1422,7 +1430,15 @@
                     }
                 });
                 
-                document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+                document.getElementById('addSecurityStaffBtn').addEventListener('click', () => {
+                    const securityStaffInputs = document.getElementById('securityStaffInputs');
+                    if (securityStaffInputs.children.length < 1) {
+                        addSecurityStaffInput();
+                    } else {
+                        showError("Maximum of 1 security staff allowed");
+                    }
+                });
+
                 document.getElementById('removeSecurityStaffBtn').addEventListener('click', () => {
                     const securityStaffInputs = document.getElementById('securityStaffInputs');
                     if (securityStaffInputs.children.length > 0) {
