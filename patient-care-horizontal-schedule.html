@@ -1397,6 +1397,113 @@
             timeSlots = [...dayShiftSlots];
         }
 
+        // Function to add staff input
+function addStaffInput() {
+    const staffInputs = document.getElementById('staffInputs');
+    
+    // Check if we've reached the 2-nurse limit
+    if (staffInputs.children.length >= 2) {
+        showError("Maximum of 2 nurses allowed");
+        return;
+    }
+    
+    const staffContainer = document.createElement('div');
+    staffContainer.className = 'staff-container';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter HCW Name';
+    newInput.className = 'staff-name';
+    
+    staffContainer.appendChild(newInput);
+    staffInputs.appendChild(staffContainer);
+    
+    // Add event listener to the new input
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to add patient input
+function addPatientInput() {
+    const patientInputs = document.getElementById('patientInputs');
+    
+    const patientContainer = document.createElement('div');
+    patientContainer.className = 'patient-container';
+    
+    const inputWrapper = document.createElement('div');
+    inputWrapper.style.display = 'flex';
+    inputWrapper.style.alignItems = 'center';
+    inputWrapper.style.gap = '10px';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter Patient Name';
+    newInput.className = 'patient-name';
+    
+    const staffCountSelect = document.createElement('select');
+    staffCountSelect.className = 'staff-count';
+    
+    const option1 = document.createElement('option');
+    option1.value = 1;
+    option1.textContent = '1:1';
+    const option2 = document.createElement('option');
+    option2.value = 2;
+    option2.textContent = '2:1';
+    const option3 = document.createElement('option');
+    option3.value = 3;
+    option3.textContent = '3:1';
+    
+    staffCountSelect.appendChild(option1);
+    staffCountSelect.appendChild(option2);
+    staffCountSelect.appendChild(option3);
+    staffCountSelect.value = 1; // Default to 1:1
+    
+    inputWrapper.appendChild(newInput);
+    inputWrapper.appendChild(staffCountSelect);
+    patientContainer.appendChild(inputWrapper);
+    patientInputs.appendChild(patientContainer);
+    
+    // Add event listeners to the new elements
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to add security staff input
+function addSecurityStaffInput() {
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    
+    // Check if we've reached the 1 security staff limit
+    if (securityStaffInputs.children.length >= 1) {
+        showError("Maximum of 1 security staff allowed");
+        return;
+    }
+    
+    const securityContainer = document.createElement('div');
+    securityContainer.className = 'security-container';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter Security Staff Name';
+    newInput.className = 'security-name';
+    
+    securityContainer.appendChild(newInput);
+    securityStaffInputs.appendChild(securityContainer);
+    
+    // Add event listener to the new input
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to check if time is restricted for security
+function isSecurityRestrictedHour(timeIndex, totalHours) {
+    // First 2 hours or last 2 hours
+    return timeIndex < 2 || timeIndex >= totalHours - 2;
+}
+
         // Initialize on window load
         window.onload = function() {
             // Set moon emoji for dark mode button
