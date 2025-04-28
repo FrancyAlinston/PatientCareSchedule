@@ -784,10 +784,8 @@
                 });
             });
 
-            // Assign breaks for each staff - ensure total break time is exactly 1.5 hours per shift (30 min + 1 hour)
+            // Assign breaks for each staff
             staff.forEach((s, index) => {
-                // For day shift: short break in first half, lunch in second half
-                // For night shift: similar pattern but adjusted timing
                 const shiftLength = timeSlots.length; // 12 hours
                 const midPoint = Math.floor(shiftLength / 2);
                 
@@ -801,44 +799,63 @@
                 staffStats[s].shortBreakTime = "";
                 staffStats[s].secondBreakTime = "";
                 
-                // 30-minute break - in first half of shift, staggered
-                // Place it between hours 2-5 to ensure it's not too early or too late
-                const shortBreakOffset = index % 3; // Stagger by staff index
-                const shortBreakHour = Math.min(2 + shortBreakOffset, 5);
-                const shortBreakTime = timeSlots[shortBreakHour];
-                
-                // Assign 30-min break
-                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
-                staffStats[s].shortBreakTime = shortBreakTime;
-                staffStats[s].breakTime = 0.5; // Start with 0.5 hours
-                
-                // 1-hour lunch break - in second half of shift, staggered
-                // Ensure at least 2 hours between breaks
-                const lunchBreakOffset = index % 3;
-                let lunchBreakHour = midPoint + lunchBreakOffset; // Place around middle + offset
-                
-                // Ensure lunch break is at least 2 hours after the short break
-                if (lunchBreakHour - shortBreakHour < 2) {
-                    lunchBreakHour = shortBreakHour + 2;
-                }
-                
-                // Make sure lunch break isn't in the last hour
-                lunchBreakHour = Math.min(lunchBreakHour, shiftLength - 2);
-                
-                const lunchBreakTime = timeSlots[lunchBreakHour];
-                
-                // Assign lunch break (ensure it's not the same as short break)
-                if (lunchBreakTime !== shortBreakTime) {
-                    schedule[lunchBreakTime].staffBreaks[s] = "2ND BREAK"; // Changed from "LUNCH BREAK" to "2ND BREAK"
-                    staffStats[s].secondBreakTime = lunchBreakTime;
-                    staffStats[s].breakTime += 1.0; // Add 1 hour for lunch
+                if (isDayShift) {
+                    // DAY SHIFT: 30-minute break + 1-hour second break
+                    // 30-minute break - in first half of shift, staggered
+                    const shortBreakOffset = index % 2; // Stagger by staff index (only 2 nurses)
+                    const shortBreakHour = Math.min(2 + shortBreakOffset, 5);
+                    const shortBreakTime = timeSlots[shortBreakHour];
+                    
+                    // Assign 30-min break
+                    schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                    staffStats[s].shortBreakTime = shortBreakTime;
+                    staffStats[s].breakTime = 0.5;
+                    
+                    // 1-hour second break - in second half of shift, staggered
+                    const secondBreakOffset = index % 2;
+                    let secondBreakHour = midPoint + 1 + secondBreakOffset;
+                    
+                    // Ensure second break is at least 2 hours after the short break
+                    if (secondBreakHour - shortBreakHour < 2) {
+                        secondBreakHour = shortBreakHour + 2;
+                    }
+                    
+                    // Make sure second break isn't in the last hour
+                    secondBreakHour = Math.min(secondBreakHour, shiftLength - 2);
+                    
+                    const secondBreakTime = timeSlots[secondBreakHour];
+                    
+                    // Assign second break
+                    if (secondBreakTime !== shortBreakTime) {
+                        schedule[secondBreakTime].staffBreaks[s] = "2ND BREAK";
+                        staffStats[s].secondBreakTime = secondBreakTime;
+                        staffStats[s].breakTime += 1.0;
+                    } else {
+                        // Find alternative time if needed
+                        const altBreakHour = Math.min(secondBreakHour + 1, shiftLength - 2);
+                        const altBreakTime = timeSlots[altBreakHour];
+                        schedule[altBreakTime].staffBreaks[s] = "2ND BREAK";
+                        staffStats[s].secondBreakTime = altBreakTime;
+                        staffStats[s].breakTime += 1.0;
+                    }
                 } else {
-                    // Find alternative time if they overlap (unlikely but just in case)
-                    const altLunchHour = Math.min(lunchBreakHour + 1, shiftLength - 2);
-                    const altLunchTime = timeSlots[altLunchHour];
-                    schedule[altLunchTime].staffBreaks[s] = "2ND BREAK"; // Changed from "LUNCH BREAK" to "2ND BREAK"
-                    staffStats[s].secondBreakTime = altLunchTime;
-                    staffStats[s].breakTime += 1.0;
+                    // NIGHT SHIFT: Single 2-hour break
+                    // Place break in the middle of the shift, staggered between the two nurses
+                    const breakStartOffset = index % 2; // Stagger between the 2 nurses
+                    const breakStartHour = Math.min(4 + breakStartOffset, 5); // Around middle of shift
+                    
+                    // Assign first hour of break
+                    const firstBreakTime = timeSlots[breakStartHour];
+                    schedule[firstBreakTime].staffBreaks[s] = "NIGHT BREAK";
+                    staffStats[s].shortBreakTime = firstBreakTime;
+                    
+                    // Assign second hour of break (consecutive)
+                    const secondBreakTime = timeSlots[breakStartHour + 1];
+                    schedule[secondBreakTime].staffBreaks[s] = "NIGHT BREAK";
+                    staffStats[s].secondBreakTime = secondBreakTime;
+                    
+                    // Total break time is 2 hours
+                    staffStats[s].breakTime = 2.0;
                 }
             });
 
