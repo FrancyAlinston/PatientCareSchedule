@@ -1544,30 +1544,9 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
     return timeIndex < 2 || timeIndex >= totalHours - 2;
 }
 
-// Add this new function for nurse input management
-function updateNurseInputs(count) {
-    const nurseInputs = document.getElementById('nurseInputs');
-    nurseInputs.innerHTML = '';
-    
-    for (let i = 0; i < count; i++) {
-        const nurseContainer = document.createElement('div');
-        nurseContainer.className = 'nurse-container';
-        nurseContainer.style.marginBottom = '10px';
-        
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.placeholder = `Enter Nurse ${i+1} Name`;
-        newInput.className = 'nurse-name';
-        
-        nurseContainer.appendChild(newInput);
-        nurseInputs.appendChild(nurseContainer);
-        
-        // Add event listener to the new input
-        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    }
-    
-    saveToLocalStorage();
-}
+// Add this to the window.onload function
+// Initialize nurse inputs
+updateNurseInputs(2); // Default to 2 nurses
 
         // Initialize on window load
         window.onload = function() {
