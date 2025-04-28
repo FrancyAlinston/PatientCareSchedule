@@ -213,6 +213,9 @@
         .legend-security {
             background-color: #ffccbc;
         }
+        .legend-night-break {
+            background-color: #673ab7;
+        }
 
         /* Ensure text color is visible for cells with white background in dark mode */
         body.dark-mode td {
@@ -363,6 +366,10 @@
             <div class="legend-item">
                 <div class="legend-color legend-security"></div>
                 <div>Security Duty</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-night-break"></div>
+                <div>Night Break</div>
             </div>
         </div>
 
@@ -1001,8 +1008,7 @@
                         cell.className = 'staff-lunch';
                     } else if (breakStatus === "NIGHT BREAK") {
                         cell.textContent = "BREAK";
-                        cell.style.backgroundColor = "#673ab7"; // Purple for night break
-                        cell.style.color = "#ffffff"; // White text
+                        cell.className = 'staff-night-break';
                     } else {
                         // Rest of code for normal cell rendering
                         let assigned = false;
