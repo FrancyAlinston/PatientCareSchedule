@@ -357,7 +357,7 @@
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-lunch"></div>
-                <div>1-hour 2nd Break</div> <!-- Changed from "1-hour Lunch" -->
+                <div>1-hour 2nd Break</div>
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-unassigned"></div>
@@ -366,10 +366,6 @@
             <div class="legend-item">
                 <div class="legend-color legend-security"></div>
                 <div>Security Duty</div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color legend-night-break"></div>
-                <div>Night Break</div>
             </div>
         </div>
 
@@ -397,7 +393,7 @@
                     <tr>
                         <th>Staff</th>
                         <th>30-min Break</th>
-                        <th>1-hour 2nd Break</th> <!-- Updated label -->
+                        <th>1-hour 2nd Break</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -1505,6 +1501,44 @@
                     timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
                     document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
                     document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+                    
+                    // Update legend for night/day shift
+                    const legendDiv = document.querySelector('.legend');
+                    if (isDayShift) {
+                        legendDiv.innerHTML = `
+                            <div class="legend-item">
+                                <div class="legend-color legend-break"></div>
+                                <div>30-min Break</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-lunch"></div>
+                                <div>1-hour 2nd Break</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-unassigned"></div>
+                                <div>Unassigned</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-security"></div>
+                                <div>Security Duty</div>
+                            </div>
+                        `;
+                    } else {
+                        legendDiv.innerHTML = `
+                            <div class="legend-item">
+                                <div class="legend-color legend-night-break"></div>
+                                <div>2-hour Break</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-unassigned"></div>
+                                <div>Unassigned</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-security"></div>
+                                <div>Security Duty</div>
+                            </div>
+                        `;
+                    }
                     
                     // Regenerate schedule if exists
                     if (Object.keys(schedule).length > 0) {
