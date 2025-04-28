@@ -549,16 +549,13 @@
 
         // Update the generateSchedule function to validate first (around line 577)
         function generateSchedule() {
-            // Validate staff requirements first
-            if (!validateStaffRequirements()) {
-                return;
-            }
-            
             const patientInputs = document.querySelectorAll('.patient-container');
             const staffInputs = document.querySelectorAll('.staff-container');
+            const nurseInputs = document.querySelectorAll('.nurse-container');
             const securityStaffInputs = document.querySelectorAll('.security-container');
 
             const staff = [];
+            const nurses = [];
             const excludedHours = {};
             const patients = [];
 
@@ -574,6 +571,15 @@
                     }
                 }
             });
+            
+            // Process nurses
+            nurseInputs.forEach(container => {
+                const nurseName = container.querySelector('.nurse-name').value.trim();
+                if (nurseName) {
+                    staff.push(nurseName);
+                    nurses.push(nurseName);
+                }
+            });
 
             // Process other staff
             staffInputs.forEach(container => {
@@ -581,9 +587,14 @@
 
                 if (staffName) {
                     staff.push(staffName);
-                    excludedHours[staffName] = 0; // No additional excluded hours for non-security staff
                 }
             });
+
+            // Validate security staff limit
+            if (securityStaffInputs.length > 1) {
+                showError("Maximum of 1 security staff allowed");
+                return;
+            }
 
             // Process patients
             patientInputs.forEach(container => {
