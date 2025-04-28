@@ -1137,8 +1137,25 @@
         }
 
         function renderBreakHoursTable(staffStats, staff) {
+            const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
             const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
-            breakHoursTableBody.innerHTML = '';
+            
+            // Update table headers based on shift
+            if (isDayShift) {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>30-min Break</th>
+                    <th>1-hour 2nd Break</th>
+                </tr>`;
+            } else {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>Break Start</th>
+                    <th>Break End</th>
+                </tr>`;
+            }
             
             staff.forEach(s => {
                 const row = document.createElement('tr');
