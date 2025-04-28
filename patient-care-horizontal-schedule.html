@@ -1030,11 +1030,11 @@
                     const cell = document.createElement('td');
                     const breakStatus = schedule[time].staffBreaks[s];
                     
-                    // Check if security staff on security duty (first 2 or last 2 hours)
+                    // Check if security staff on security duty
                     if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
                         cell.textContent = "SECURITY";
-                        cell.style.backgroundColor = "#ffccbc"; // Light orange for security duty
-                        cell.style.color = "#000000"; // Black text for contrast
+                        cell.style.backgroundColor = "#ffccbc";
+                        cell.style.color = "#000000";
                         cell.style.fontWeight = "bold";
                     }
                     else if (breakStatus === "30-MIN BREAK") {
@@ -1043,6 +1043,10 @@
                     } else if (breakStatus === "2ND BREAK") {
                         cell.textContent = "2ND BREAK";
                         cell.className = 'staff-lunch';
+                    } else if (breakStatus === "NIGHT BREAK") {
+                        cell.textContent = "BREAK";
+                        cell.style.backgroundColor = "#673ab7"; // Purple for night break
+                        cell.style.color = "#ffffff"; // White text
                     } else {
                         // Rest of code for normal cell rendering
                         let assigned = false;
