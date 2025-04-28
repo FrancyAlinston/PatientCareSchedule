@@ -499,80 +499,36 @@
             return Math.max(0, Math.min(1, adjustedLuminance));
         }
 
-        // Add this function right after the calculateRelativeLuminance function
-        function isSecurityRestrictedHour(timeIndex, totalHours) {
-            // First 2 hours or last 2 hours
-            return timeIndex < 2 || timeIndex >= totalHours - 2;
+        // Add this function above generateSchedule (around line 565)
+        function validateStaffRequirements() {
+            const nurseCount = document.querySelectorAll('.staff-container').length;
+            const securityCount = document.querySelectorAll('.security-container').length;
+            
+            let errorMessage = "";
+            
+            if (nurseCount !== 2) {
+                errorMessage += `You must have exactly 2 nurses. You currently have ${nurseCount}.\n`;
+            }
+            
+            if (securityCount > 1) {
+                errorMessage += `You can have at most 1 security staff. You currently have ${securityCount}.\n`;
+            }
+            
+            if (errorMessage) {
+                showError(errorMessage);
+                return false;
+            }
+            
+            return true;
         }
 
-        // Add UI elements
-        function addStaffInput() {
-            const staffInputs = document.getElementById('staffInputs');
-            const staffContainer = document.createElement('div');
-            staffContainer.className = 'staff-container';
-            
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.className = 'staff-name';
-            newInput.placeholder = 'Enter HCW name';
-            
-            staffContainer.appendChild(newInput);
-            staffInputs.appendChild(staffContainer);
-        }
-
-        function addSecurityStaffInput() {
-            const securityStaffInputs = document.getElementById('securityStaffInputs');
-            const securityContainer = document.createElement('div');
-            securityContainer.className = 'security-container';
-            
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.className = 'security-name';
-            newInput.placeholder = 'Enter security staff name';
-            
-            securityContainer.appendChild(newInput);
-            securityStaffInputs.appendChild(securityContainer);
-        }
-
-        function addPatientInput() {
-            const patientInputs = document.getElementById('patientInputs');
-            const patientContainer = document.createElement('div');
-            patientContainer.className = 'patient-container';
-            
-            const inputWrapper = document.createElement('div');
-            inputWrapper.style.display = 'flex';
-            inputWrapper.style.alignItems = 'center';
-            inputWrapper.style.gap = '10px';
-            
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.className = 'patient-name';
-            newInput.placeholder = 'Enter patient name';
-            
-            const staffCountSelect = document.createElement('select');
-            staffCountSelect.className = 'staff-count';
-            
-            const option1 = document.createElement('option');
-            option1.value = 1;
-            option1.textContent = '1:1';
-            const option2 = document.createElement('option');
-            option2.value = 2;
-            option2.textContent = '2:1';
-            const option3 = document.createElement('option');
-            option3.value = 3;
-            option3.textContent = '3:1';
-            
-            staffCountSelect.appendChild(option1);
-            staffCountSelect.appendChild(option2);
-            staffCountSelect.appendChild(option3);
-            
-            inputWrapper.appendChild(newInput);
-            inputWrapper.appendChild(staffCountSelect);
-            patientContainer.appendChild(inputWrapper);
-            patientInputs.appendChild(patientContainer);
-        }
-
+        // Update the generateSchedule function to validate first (around line 577)
         function generateSchedule() {
+            // Validate staff requirements first
+            if (!validateStaffRequirements()) {
+                return;
+            }
+            
             const patientInputs = document.querySelectorAll('.patient-container');
             const staffInputs = document.querySelectorAll('.staff-container');
             const securityStaffInputs = document.querySelectorAll('.security-container');
