@@ -1219,6 +1219,7 @@
 
         function saveToLocalStorage() {
             const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
+            const nurseInputs = Array.from(document.querySelectorAll('.nurse-name')).map(input => input.value.trim());
             const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
                 return {
                     name: container.querySelector('.patient-name').value.trim(),
@@ -1226,14 +1227,16 @@
                 };
             });
             
-            // Fix this line to properly get security staff values
             const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
             const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
+            const nurseCount = document.getElementById('nurseCountSelect').value;
             
             const data = {
                 staff: staffInputs,
+                nurses: nurseInputs,
+                nurseCount: nurseCount,
                 patients: patientInputs,
-                securityStaff: securityStaffValues, // Use the correctly extracted values
+                securityStaff: securityStaffValues,
                 nurseInCharge,
                 schedule,
                 isDayShift,
@@ -1250,31 +1253,41 @@
             if (!savedData) {
                 console.warn("No data found in localStorage.");
                 // Add default data
+                updateNurseInputs(2); // Default to 2 nurses
                 addStaffInput();
                 addPatientInput();
                 return;
             }
             
-            // Fix: Don't destructure isDayShift as savedShift, use a different variable name
             const parsedData = JSON.parse(savedData);
-            const { staff, patients, securityStaff: savedSecurityStaff, nurseInCharge, schedule: savedSchedule, isDarkMode } = parsedData;
+            const { 
+                staff, 
+                nurses, 
+                nurseCount, 
+                patients, 
+                securityStaff: savedSecurityStaff, 
+                nurseInCharge, 
+                schedule: savedSchedule, 
+                isDarkMode 
+            } = parsedData;
             
             // Now assign the saved shift value to the global variable
             isDayShift = parsedData.isDayShift;
             
-            // Restore dark mode
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                document.getElementById('toggleModeBtn').textContent = '☀️'; // Light mode symbol
-            } else {
-                document.body.classList.remove('dark-mode');
-                document.getElementById('toggleModeBtn').textContent = '🌙'; // Dark mode symbol
+            // Update nurse count dropdown
+            const nurseCountSelect = document.getElementById('nurseCountSelect');
+            if (nurseCount) {
+                nurseCountSelect.value = nurseCount;
             }
             
-            // Restore nurse in charge
-            if (nurseInCharge) {
-                document.getElementById('nurseInChargeInput').value = nurseInCharge;
-            }
+            // Restore nurses
+            updateNurseInputs(nurseCount || 2);
+            const nurseElements = document.querySelectorAll('.nurse-name');
+            nurses.forEach((name, index) => {
+                if (index < nurseElements.length) {
+                    nurseElements[index].value = name;
+                }
+            });
             
             // Restore shift
             isDayShift = parsedData.isDayShift;
