@@ -1811,25 +1811,3 @@ document.getElementById('resetRotationBtn').addEventListener('click', () => {
         );
     }
 });
-
-const nurseCountSelect = document.getElementById('nurseCountSelect');
-if (nurseCountSelect) {
-    nurseCountSelect.addEventListener('change', function() {
-        updateNurseInputs(parseInt(this.value));
-        
-        // Show quick notification about nurse count change
-        const confirmationDiv = document.createElement('div');
-        confirmationDiv.className = 'error-message';
-        confirmationDiv.style.backgroundColor = '#4CAF50';
-        confirmationDiv.textContent = `Nurse count updated to ${this.value}`;
-        document.body.appendChild(confirmationDiv);
-        setTimeout(() => confirmationDiv.remove(), 2000);
-    });
-    
-    // Initialize nurse inputs based on current selection
-    updateNurseInputs(parseInt(nurseCountSelect.value));
-}
-
-    </script>
-</body>
-</html>
