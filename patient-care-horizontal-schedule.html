@@ -1035,7 +1035,13 @@ function generateSchedule() {
                         cell.className = 'staff-lunch';
                     } else if (breakStatus === "NIGHT BREAK") {
                         cell.textContent = "BREAK";
-                        cell.className = 'staff-night-break';
+                        cell.style.backgroundColor = "#673ab7"; // Purple for night break
+                        cell.style.color = "#ffffff";
+                    } else if (breakStatus && cleaningDuties.includes(breakStatus)) {
+                        // This is for cleaning duties
+                        cell.textContent = breakStatus;
+                        cell.style.backgroundColor = "#9c27b0"; // Purple for cleaning duties
+                        cell.style.color = "#ffffff";
                     } else {
                         // Rest of code for normal cell rendering
                         let assigned = false;
