@@ -986,16 +986,24 @@ function generateSchedule() {
                 staffCell.textContent = s;
                 staffCell.className = 'row-header';
 
-                // Add safety check before accessing staffColors
-                if (staffColors[s]) {
+                // Check if this is security staff
+                if (securityStaff.includes(s)) {
+                    // Special styling for security staff name cell
+                    staffCell.style.backgroundColor = "#ff9800"; // Orange background
+                    staffCell.style.color = "#000000"; // Black text for contrast
+                    staffCell.style.fontWeight = "bold";
+                    staffCell.textContent = s + " (Security)"; // Add explicit label
+                } else if (staffColors[s]) {
+                    // Regular staff with their assigned color
                     const { bgColor, textColor } = staffColors[s];
-                    staffCell.style.backgroundColor = bgColor; // Assign staff color
-                    staffCell.style.color = textColor; // Ensure text is visible
+                    staffCell.style.backgroundColor = bgColor;
+                    staffCell.style.color = textColor;
                 } else {
                     // Fallback colors
                     staffCell.style.backgroundColor = "#f8f9fa"; // Light gray background
                     staffCell.style.color = "#000000"; // Black text for contrast
                 }
+
                 row.appendChild(staffCell);
                 
                 // Add cells for each time slot
