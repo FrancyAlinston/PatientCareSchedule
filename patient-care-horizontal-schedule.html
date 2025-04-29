@@ -1606,7 +1606,6 @@ window.onload = function() {
             
             // Reset UI elements
             document.getElementById('nurseInChargeInput').value = '';
-            document.getElementById('nurseInCharge2Input').value = '';
             addStaffInput();
             addPatientInput();
             
@@ -1710,9 +1709,10 @@ window.onload = function() {
                 input.value = securityNames[index % securityNames.length];
             });
             
-            // Add nurse in charge
+            // Add nurse in charge inputs
             document.getElementById('nurseInChargeInput').value = 'Charge Nurse Wilson';
-            
+            document.getElementById('nurseInCharge2Input').value = 'Charge Nurse Thompson';
+
             // Save to localStorage
             saveToLocalStorage();
             
