@@ -842,14 +842,150 @@ function generateSchedule() {
             
             // Total break time is 2 hours
             staffStats[s].breakTime = 2.0;
-        }
-    });
 
-    // Render the schedule
-    renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
-    
-    // Save to localStorage
-    saveToLocalStorage();
+            // Define all cleaning duties
+            const cleaningDuties = [
+                "DINING ROOM", 
+                "OFFICE ROOM", 
+                "TAKE OUT BINS", 
+                "LAUNDRY ROOM", 
+                "PHONE ROOM",
+                "LOUNGE", 
+                "KITCHEN", 
+                "QUIET ROOM", 
+                "CORRIDOR", 
+                "TOILETS"
+            ];
+            
+            // Find regular staff (not security staff and not nurse in charge)
+            const regularStaff = staff.filter(s => 
+                !securityStaff.includes(s) && 
+                s !== nurseInCharge1 && 
+                s !== nurseInCharge2
+            );
+            
+            if (regularStaff.length > 0) {
+                // Create a map to track available free slots for each staff member
+                const freeSlots = {};
+                regularStaff.forEach(s => {
+                    freeSlots[s] = [];
+                    
+                    // Find all free time slots for this staff member
+                    timeSlots.forEach((time, timeIndex) => {
+                        // Skip if on break
+                        if (schedule[time].staffBreaks[s]) {
+                            return;
+                        }
+                        
+                        // Check if staff is already assigned to a patient
+                        let isAssigned = false;
+                        for (const patient in schedule[time].patientAssignments) {
+                            if (schedule[time].patientAssignments[patient].includes(s)) {
+                                isAssigned = true;
+                                break;
+                            }
+                        }
+                        
+                        // If not assigned and not on break, this is a free slot
+                        if (!isAssigned) {
+                            freeSlots[s].push({ time, timeIndex });
+                        }
+                    });
+                });
+                
+                // Try to distribute duties fairly
+                let dutiesAssigned = 0;
+                const maxDutiesPerStaff = Math.ceil(cleaningDuties.length / regularStaff.length);
+                const staffDutyCount = {};
+                regularStaff.forEach(s => { staffDutyCount[s] = 0; });
+                
+                // Assign duties - first pass prioritizing staff with more free slots
+                while (dutiesAssigned < cleaningDuties.length) {
+                    // Sort staff by number of free slots (descending) and number of duties assigned (ascending)
+                    const staffByAvailability = [...regularStaff].sort((a, b) => {
+                        if (staffDutyCount[a] !== staffDutyCount[b]) {
+                            return staffDutyCount[a] - staffDutyCount[b]; // Staff with fewer duties first
+                        }
+                        return freeSlots[b].length - freeSlots[a].length; // Then staff with more free slots
+                    });
+                    
+                    // Try to assign a duty to the first available staff
+                    let assigned = false;
+                    for (const s of staffByAvailability) {
+                        // Skip if this staff member has reached their duty limit
+                        if (staffDutyCount[s] >= maxDutiesPerStaff) continue;
+                        
+                        // Skip if no free slots
+                        if (freeSlots[s].length === 0) continue;
+                        
+                        // Get the duty to assign
+                        const duty = cleaningDuties[dutiesAssigned];
+                        
+                        // Try to find a good slot - prefer middle of shift when possible
+                        const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 3 && slot.timeIndex <= 8);
+                        const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
+                        
+                        // Assign the duty
+                        schedule[slot.time].staffBreaks[s] = duty;
+                        
+                        // Store cleaning duty in the staff stats
+                        if (!staffStats[s].cleaningDuties) {
+                            staffStats[s].cleaningDuties = [];
+                        }
+                        staffStats[s].cleaningDuties.push({
+                            duty: duty,
+                            time: slot.time
+                        });
+                        
+                        // Remove this slot from available slots
+                        freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
+                        
+                        // Update counters
+                        staffDutyCount[s]++;
+                        dutiesAssigned++;
+                        assigned = true;
+                        break;
+                    }
+                    
+                    // If we couldn't assign any more duties, break the loop
+                    if (!assigned || dutiesAssigned >= cleaningDuties.length) break;
+                }
+                
+                // Second pass if there are still duties to assign - be less picky
+                if (dutiesAssigned < cleaningDuties.length) {
+                    // Reset max duties constraint and try again
+                    for (let i = dutiesAssigned; i < cleaningDuties.length; i++) {
+                        const duty = cleaningDuties[i];
+                        
+                        // Find any staff with free slots
+                        for (const s of regularStaff) {
+                            if (freeSlots[s].length > 0) {
+                                const slot = freeSlots[s][0];
+                                
+                                // Assign the duty
+                                schedule[slot.time].staffBreaks[s] = duty;
+                                
+                                // Store cleaning duty
+                                if (!staffStats[s].cleaningDuties) {
+                                    staffStats[s].cleaningDuties = [];
+                                }
+                                staffStats[s].cleaningDuties.push({
+                                    duty: duty,
+                                    time: slot.time
+                                });
+                                
+                                // Remove this slot from available slots
+                                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
+                                
+                                dutiesAssigned++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
         function renderSchedule(schedule, staff, patients, staffStats) {
@@ -1782,7 +1918,7 @@ window.onload = function() {
             // Fill security staff inputs with names
             currentSecurityInputs.forEach((input, index) => {
                 input.value = securityNames[index % securityNames.length];
-            });
+                       });
             
             // Add nurse in charge inputs
             document.getElementById('nurseInChargeInput').value = 'Charge Nurse Wilson';
