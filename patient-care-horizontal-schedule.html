@@ -513,31 +513,6 @@
             return Math.max(0, Math.min(1, adjustedLuminance));
         }
 
-        // Add this function after the isSecurityRestrictedHour function and before window.onload
-function updateNurseInputs(count) {
-    const nurseInputs = document.getElementById('nurseInputs');
-    nurseInputs.innerHTML = '';
-    
-    for (let i = 0; i < count; i++) {
-        const nurseContainer = document.createElement('div');
-        nurseContainer.className = 'nurse-container';
-        nurseContainer.style.marginBottom = '10px';
-        
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.placeholder = `Enter Nurse ${i+1} Name`;
-        newInput.className = 'nurse-name';
-        
-        nurseContainer.appendChild(newInput);
-        nurseInputs.appendChild(nurseContainer);
-        
-        // Add event listener to the new input
-        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    }
-    
-    saveToLocalStorage();
-}
-
         // Function to validate staff requirements
         function validateStaffRequirements() {
             const nurseCount = document.querySelectorAll('.staff-container').length;
@@ -561,7 +536,7 @@ function updateNurseInputs(count) {
             return true;
         }
 
-        // Update the generateSchedule function to validate first (around line 577)
+        // Update the generateSchedule function to handle both nurses in charge
         function generateSchedule() {
             const patientInputs = document.querySelectorAll('.patient-container');
             const staffInputs = document.querySelectorAll('.staff-container');
@@ -587,21 +562,17 @@ function updateNurseInputs(count) {
             });
             
             // Process nurse in charge
-            const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
-            if (nurseInCharge) {
-                staff.push(nurseInCharge); 
-                // Mark them as charge nurse rather than regular nurse
-                // This differentiates them from floor nurses in the scheduling
+            const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+            if (nurseInCharge1) {
+                staff.push(nurseInCharge1);
+                nurses.push(nurseInCharge1);
             }
-            
-            // Process floor nurses
-            nurseInputs.forEach(container => {
-                const nurseName = container.querySelector('.nurse-name').value.trim();
-                if (nurseName) {
-                    staff.push(nurseName);
-                    nurses.push(nurseName); // Add to nurses array for special handling
-                }
-            });
+
+            const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+            if (nurseInCharge2) {
+                staff.push(nurseInCharge2);
+                nurses.push(nurseInCharge2);
+            }
 
             // Process other staff
             staffInputs.forEach(container => {
@@ -1284,7 +1255,6 @@ function updateNurseInputs(count) {
             if (!savedData) {
                 console.warn("No data found in localStorage.");
                 // Add default data
-                updateNurseInputs(2); // Default to 2 nurses
                 addStaffInput();
                 addPatientInput();
                 return;
