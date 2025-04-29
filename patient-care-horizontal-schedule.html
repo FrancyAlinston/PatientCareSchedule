@@ -1000,7 +1000,7 @@ function generateSchedule() {
                 staffCell.className = 'row-header';
 
                 // Check if this is security staff
-                if (
+                if (securityStaff.includes(s)) {
                     // Special styling for security staff name cell
                     staffCell.style.backgroundColor = "#ff9800"; // Orange background
                     staffCell.style.color = "#000000"; // Black text for contrast
@@ -1693,6 +1693,7 @@ window.onload = function() {
             const legendDiv = document.querySelector('.legend');
             if (isDayShift) {
                 legendDiv.innerHTML = `
+
                     <div class="legend-item">
                         <div class="legend-color legend-break"></div>
                         <div>30-min Break</div>
