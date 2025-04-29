@@ -1169,12 +1169,7 @@ function generateSchedule() {
                 });
                 
                 // List all possible cleaning duties
-                const allDuties = [
-                    "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
-                    "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
-                ];
-                
-                allDuties.forEach(duty => {
+                cleaningDuties.forEach(duty => {
                     const assignment = dutyAssignments[duty];
                     if (assignment) {
                         statsHtml += `<tr>
@@ -1193,6 +1188,9 @@ function generateSchedule() {
                 
                 statsHtml += '</table>';
             }
+            
+            // Set the HTML for the stats section
+            document.getElementById('stats').innerHTML = statsHtml;
         }
 
         function renderBreakHoursTable(staffStats, staff) {
