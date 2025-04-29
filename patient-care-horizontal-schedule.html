@@ -1258,11 +1258,10 @@
             const parsedData = JSON.parse(savedData);
             const { 
                 staff, 
-                nurses, 
-                nurseCount, 
                 patients, 
                 securityStaff: savedSecurityStaff, 
-                nurseInCharge, 
+                nurseInCharge1, 
+                nurseInCharge2,
                 schedule: savedSchedule, 
                 isDarkMode 
             } = parsedData;
@@ -1270,21 +1269,16 @@
             // Now assign the saved shift value to the global variable
             isDayShift = parsedData.isDayShift;
             
-            // Update nurse count dropdown
-            const nurseCountSelect = document.getElementById('nurseCountSelect');
-            if (nurseCount) {
-                nurseCountSelect.value = nurseCount;
+            // Restore nurse in charge inputs
+            if (document.getElementById('nurseInChargeInput')) {
+                document.getElementById('nurseInChargeInput').value = nurseInCharge1 || '';
             }
             
-            // Restore nurses
-            updateNurseInputs(nurseCount || 2);
-            const nurseElements = document.querySelectorAll('.nurse-name');
-            nurses.forEach((name, index) => {
-                if (index < nurseElements.length) {
-                    nurseElements[index].value = name;
-                }
-            });
+            if (document.getElementById('nurseInCharge2Input')) {
+                document.getElementById('nurseInCharge2Input').value = nurseInCharge2 || '';
+            }
             
+            // Rest of the function remains the same...
             // Restore shift
             isDayShift = parsedData.isDayShift;
             timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
