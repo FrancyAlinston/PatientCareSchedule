@@ -435,6 +435,10 @@
         let isDayShift = true;
         let securityStaff = []; // Add this new global variable
         let staffPatientHistory = {};
+        const cleaningDuties = [
+            "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
+            "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
+        ];
 
         // Time slots for day and night shifts
         const dayShiftSlots = [
