@@ -1553,12 +1553,8 @@ window.onload = function() {
         
         // Add event listeners
         document.getElementById('addStaffBtn').addEventListener('click', () => {
-            const staffInputs = document.getElementById('staffInputs');
-            if (staffInputs.children.length < 2) {
-                addStaffInput();
-            } else {
-                showError("Maximum of 2 nurses allowed");
-            }
+            // Remove the staff limit check - allow adding unlimited staff
+            addStaffInput();
         });
 
         document.getElementById('removeStaffBtn').addEventListener('click', () => {
