@@ -592,12 +592,20 @@ function updateNurseInputs(count) {
                 }
             });
             
-            // Process nurses
+            // Process nurse in charge
+            const nurseInCharge = document.getElementById('nurseInChargeInput').value.trim();
+            if (nurseInCharge) {
+                staff.push(nurseInCharge); 
+                // Mark them as charge nurse rather than regular nurse
+                // This differentiates them from floor nurses in the scheduling
+            }
+            
+            // Process floor nurses
             nurseInputs.forEach(container => {
                 const nurseName = container.querySelector('.nurse-name').value.trim();
                 if (nurseName) {
                     staff.push(nurseName);
-                    nurses.push(nurseName);
+                    nurses.push(nurseName); // Add to nurses array for special handling
                 }
             });
 
@@ -1254,13 +1262,19 @@ function updateNurseInputs(count) {
             const nurseCountSelect = document.getElementById('nurseCountSelect');
             const nurseCount = nurseCountSelect ? nurseCountSelect.value : "2"; // Default to 2 if not found
             
+            const allNurses = [
+                nurseInCharge, 
+                ...nurseInputs
+            ].filter(name => name); // Filter out empty values
+            
             const data = {
                 staff: staffInputs,
                 nurses: nurseInputs,
                 nurseCount: nurseCount,
+                nurseInCharge: nurseInCharge,
+                allNursingStaff: allNurses, // Add this for clarity
                 patients: patientInputs,
                 securityStaff: securityStaffValues,
-                nurseInCharge,
                 schedule,
                 isDayShift,
                 isDarkMode: document.body.classList.contains('dark-mode'),
@@ -1845,7 +1859,6 @@ document.getElementById('resetRotationBtn').addEventListener('click', () => {
     }
 });
 
-// Add this to the window.onload function instead of as a standalone statement
 const nurseCountSelect = document.getElementById('nurseCountSelect');
 if (nurseCountSelect) {
     nurseCountSelect.addEventListener('change', function() {
