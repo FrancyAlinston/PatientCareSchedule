@@ -1212,7 +1212,6 @@
 
         function saveToLocalStorage() {
             const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
-            const nurseInputs = Array.from(document.querySelectorAll('.nurse-name')).map(input => input.value.trim());
             const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
                 return {
                     name: container.querySelector('.patient-name').value.trim(),
@@ -1221,23 +1220,19 @@
             });
             
             const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
-            const nurseInCharge = document.getElementById('nurseInChargeInput')?.value.trim() || '';
-            
-            // Check if the nurseCountSelect exists before trying to access its value
-            const nurseCountSelect = document.getElementById('nurseCountSelect');
-            const nurseCount = nurseCountSelect ? nurseCountSelect.value : "2"; // Default to 2 if not found
+            const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
+            const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
             
             const allNurses = [
-                nurseInCharge, 
-                ...nurseInputs
+                nurseInCharge1, 
+                nurseInCharge2
             ].filter(name => name); // Filter out empty values
             
             const data = {
                 staff: staffInputs,
-                nurses: nurseInputs,
-                nurseCount: nurseCount,
-                nurseInCharge: nurseInCharge,
-                allNursingStaff: allNurses, // Add this for clarity
+                nurses: allNurses,
+                nurseInCharge1: nurseInCharge1,
+                nurseInCharge2: nurseInCharge2,
                 patients: patientInputs,
                 securityStaff: securityStaffValues,
                 schedule,
