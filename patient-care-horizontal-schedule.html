@@ -1144,8 +1144,51 @@ function generateSchedule() {
             statsHtml += `<p>Average Work Hours: ${avgHours.toFixed(1)}</p>`;
             statsHtml += `<p>Balance Score: ${balanceScore} (lower is better)</p>`;
             
-            const statsDiv = document.getElementById('stats');
-            statsDiv.innerHTML = statsHtml;
+            // Add this to the end of the renderStats function
+            if (!isDayShift) {
+                // Add a cleaning duties summary
+                statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
+                statsHtml += '<table>';
+                statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th></tr>';
+                
+                // Create a map of duties to staff
+                const dutyAssignments = {};
+                staff.forEach(s => {
+                    if (staffStats[s].cleaningDuties) {
+                        staffStats[s].cleaningDuties.forEach(item => {
+                            dutyAssignments[item.duty] = {
+                                staff: s,
+                                time: item.time
+                            };
+                        });
+                    }
+                });
+                
+                // List all possible cleaning duties
+                const allDuties = [
+                    "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
+                    "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
+                ];
+                
+                allDuties.forEach(duty => {
+                    const assignment = dutyAssignments[duty];
+                    if (assignment) {
+                        statsHtml += `<tr>
+                            <td>${duty}</td>
+                            <td>${assignment.staff}</td>
+                            <td>${assignment.time}</td>
+                        </tr>`;
+                    } else {
+                        statsHtml += `<tr>
+                            <td>${duty}</td>
+                            <td>Not Assigned</td>
+                            <td>N/A</td>
+                        </tr>`;
+                    }
+                });
+                
+                statsHtml += '</table>';
+            }
         }
 
         function renderBreakHoursTable(staffStats, staff) {
