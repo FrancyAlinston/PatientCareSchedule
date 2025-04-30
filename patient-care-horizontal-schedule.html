@@ -1354,6 +1354,26 @@ document.getElementById('clearDebugBtn').addEventListener('click', function() {
     document.getElementById('debugOutput').innerHTML = '';
 });
 
+// Add a close button to the debug panel header
+const debugPanelHeader = document.querySelector('#debugPanel h3');
+const closeDebugPanelBtn = document.createElement('span');
+closeDebugPanelBtn.innerHTML = '✖';
+closeDebugPanelBtn.style.position = 'absolute';
+closeDebugPanelBtn.style.right = '40px';
+closeDebugPanelBtn.style.top = '10px';
+closeDebugPanelBtn.style.cursor = 'pointer';
+closeDebugPanelBtn.style.fontSize = '16px';
+closeDebugPanelBtn.style.fontWeight = 'bold';
+closeDebugPanelBtn.title = 'Close Debug Console';
+
+// Add event listener to close the debug panel when clicked
+closeDebugPanelBtn.addEventListener('click', function() {
+    document.getElementById('debugPanel').style.display = 'none';
+});
+
+// Insert the close button after the heading
+debugPanelHeader.after(closeDebugPanelBtn);
+
 // Capture global errors
 window.onerror = function(message, source, lineno, colno, error) {
     logError("Global Error", `${message} at line ${lineno}:${colno}`, error);
@@ -1942,4 +1962,3 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     </script>
 </body>
 </html>
-`
