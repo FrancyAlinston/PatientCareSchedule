@@ -1389,28 +1389,54 @@ window.onunhandledrejection = function(event) {
     logError("Unhandled Promise Rejection", event.reason.message || "Unknown promise error", event.reason);
 };
 
-        // Add this function near the top of your script section
+        // Enhance the logError function to show more detailed information in the debug panel
 function logError(errorType, message, errorObject = null) {
     console.error(`[${errorType}] ${message}`);
     if (errorObject) {
         console.error(errorObject);
     }
     
+    // Format timestamp
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString() + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    
     // Also log to a debug element if present
     const debugElement = document.getElementById('debugOutput');
     if (debugElement) {
         const errorEntry = document.createElement('div');
         errorEntry.className = 'error-entry';
-        errorEntry.innerHTML = `<strong>${errorType}:</strong> ${message}`;
-        debugElement.appendChild(errorEntry);
+        errorEntry.style.borderBottom = '1px solid #555';
+        errorEntry.style.paddingBottom = '8px';
+        errorEntry.style.marginBottom = '8px';
+        
+        // Add timestamp and error type with color coding
+        let errorColor = '#ff5555'; // Default red
+        if (errorType === 'Info') errorColor = '#55aaff';
+        if (errorType === 'Warning') errorColor = '#ffaa55';
+        
+        errorEntry.innerHTML = `<div style="color: #aaa; font-size: 11px;">[${timestamp}]</div>
+                               <div style="color: ${errorColor}; font-weight: bold;">${errorType}</div>
+                               <div>${message}</div>`;
+        
+        // Add error object details if present
+        if (errorObject && errorObject.stack) {
+            const stackDiv = document.createElement('div');
+            stackDiv.style.marginTop = '5px';
+            stackDiv.style.color = '#aaa';
+            stackDiv.style.fontSize = '11px';
+            stackDiv.style.fontFamily = 'monospace';
+            stackDiv.style.whiteSpace = 'pre-wrap';
+            stackDiv.textContent = errorObject.stack.split('\n').slice(0, 3).join('\n'); // Show first 3 lines
+            errorEntry.appendChild(stackDiv);
+        }
+        
+        // Add to the beginning so newest errors are at the top
+        debugElement.insertBefore(errorEntry, debugElement.firstChild);
     }
 }
 
-// Then modify your existing error handlers to use this function
-// For example, replace:
-// console.error("Error:", error);
-// With:
-// logError("Initialization Error", "Failed to initialize application", error);
+// Add this to the window.onload to make the debug panel more informative from the start
+logError("Info", "Debug console initialized. Errors and warnings will appear here.");
 
         // Enhance the saveToLocalStorage function to explicitly save all UI state
 function saveToLocalStorage() {
@@ -1966,4 +1992,3 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     </script>
 </body>
 </html>
-`
