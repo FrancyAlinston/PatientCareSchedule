@@ -1496,6 +1496,92 @@ function findBestStaffForPatient(availableStaff, patientName, count) {
     return sorted.slice(0, count);
 }
 
+        // Add this function to render the schedule
+        function renderSchedule(schedule, staff, patients, staffStats) {
+            // Clear previous schedule
+            const scheduleHeader = document.getElementById('scheduleHeader');
+            const scheduleBody = document.getElementById('scheduleBody');
+            const staffHeader = document.getElementById('staffHeader');
+            const staffBody = document.getElementById('staffBody');
+            const breakHoursTable = document.getElementById('breakHoursTable').querySelector('tbody');
+            
+            scheduleHeader.innerHTML = '';
+            scheduleBody.innerHTML = '';
+            staffHeader.innerHTML = '';
+            staffBody.innerHTML = '';
+            breakHoursTable.innerHTML = '';
+            
+            // Create header for the patient schedule
+            const headerRow = document.createElement('tr');
+            
+            // Add blank cell for the corner
+            const cornerCell = document.createElement('th');
+            headerRow.appendChild(cornerCell);
+            
+            // Add time slots as headers
+            timeSlots.forEach(time => {
+                const th = document.createElement('th');
+                th.textContent = time;
+                headerRow.appendChild(th);
+            });
+            
+            scheduleHeader.appendChild(headerRow);
+            
+            // Create rows for each patient
+            patients.forEach(patient => {
+                const row = document.createElement('tr');
+                
+                // Add patient name as row header
+                const nameCell = document.createElement('td');
+                nameCell.textContent = patient;
+                nameCell.className = 'row-header';
+                row.appendChild(nameCell);
+                
+                // Add cells for each time slot
+                timeSlots.forEach(time => {
+                    const cell = document.createElement('td');
+                    const assignedStaff = schedule[time].patientAssignments[patient];
+                    
+                    if (assignedStaff.length === 0) {
+                        cell.textContent = "UNASSIGNED";
+                        cell.className = 'staff-unassigned';
+                        cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
+                        cell.style.color = "#000000"; // Black text for contrast
+                    } else {
+                        // Use initials instead of full names
+                        const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
+                        cell.textContent = staffInitials;
+                        
+                        // Add a title attribute for hover tooltip showing full names
+                        cell.title = assignedStaff.join(", ");
+                        
+                        // Color the cell based on the first assigned staff member's color
+                        if (assignedStaff.length > 0) {
+                            // Generate a color based on the staff name
+                            const staffName = assignedStaff[0];
+                            const hash = staffName.split('').reduce((hash, char) => {
+                                return ((hash << 5) - hash) + char.charCodeAt(0);
+                            }, 0);
+                            
+                            const hue = Math.abs(hash) % 360;
+                            const bgColor = `hsl(${hue}, 70%, 85%)`;
+                            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+                            
+                            cell.style.backgroundColor = bgColor;
+                            cell.style.color = textColor;
+                        }
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                scheduleBody.appendChild(row);
+            });
+            
+            // Implement staff schedule and break hours table population
+            // (Similar logic as above but for staff schedule)
+        }
+
         // Update window.onload to initialize the cleaning duties section
         window.onload = function() {
             // Set moon emoji for dark mode button
@@ -1527,4 +1613,3 @@ function findBestStaffForPatient(availableStaff, patientName, count) {
 </script>
 </body>
 </html>
-`
