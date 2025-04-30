@@ -1906,79 +1906,26 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     document.getElementById('nurseInChargeInput').value = nurseNames[0];
     document.getElementById('nurseInCharge2Input').value = nurseNames[1];
     
-    // Fill staff inputs
-    const staffInputs = document.getElementById('staffInputs');
-    staffInputs.innerHTML = '';
-    staffNames.forEach(name => {
-        const staffContainer = document.createElement('div');
-        staffContainer.className = 'staff-container';
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.value = name;
-        newInput.className = 'staff-name';
-        staffContainer.appendChild(newInput);
-        staffInputs.appendChild(staffContainer);
-        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    // Fill existing staff inputs without changing structure
+    const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+    staffInputs.forEach((input, index) => {
+        input.value = index < staffNames.length ? staffNames[index] : `Staff ${index + 1}`;
     });
     
-    // Fill security staff inputs
-    const securityStaffInputs = document.getElementById('securityStaffInputs');
-    securityStaffInputs.innerHTML = '';
-    securityNames.forEach(name => {
-        const securityContainer = document.createElement('div');
-        securityContainer.className = 'security-container';
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.value = name;
-        newInput.className = 'security-name';
-        securityContainer.appendChild(newInput);
-        securityStaffInputs.appendChild(securityContainer);
-        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    // Fill existing security staff inputs without changing structure
+    const securityStaffInputs = document.querySelectorAll('.security-container .security-name');
+    securityStaffInputs.forEach((input, index) => {
+        input.value = index < securityNames.length ? securityNames[index] : `Security ${index + 1}`;
     });
     
-    // Fill patient inputs
-    const patientInputs = document.getElementById('patientInputs');
-    patientInputs.innerHTML = '';
-    patientNames.forEach((name, index) => {
-        const patientContainer = document.createElement('div');
-        patientContainer.className = 'patient-container';
+    // Fill existing patient inputs without changing structure
+    const patientContainers = document.querySelectorAll('.patient-container');
+    patientContainers.forEach((container, index) => {
+        const nameInput = container.querySelector('.patient-name');
+        const staffCountSelect = container.querySelector('.staff-count');
         
-        const inputWrapper = document.createElement('div');
-        inputWrapper.style.display = 'flex';
-        inputWrapper.style.alignItems = 'center';
-        inputWrapper.style.gap = '10px';
-        
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.value = name;
-        newInput.className = 'patient-name';
-        
-        const staffCountSelect = document.createElement('select');
-        staffCountSelect.className = 'staff-count';
-        
-        const option1 = document.createElement('option');
-        option1.value = 1;
-        option1.textContent = '1:1';
-        const option2 = document.createElement('option');
-        option2.value = 2;
-        option2.textContent = '2:1';
-        const option3 = document.createElement('option');
-        option3.value = 3;
-        option3.textContent = '3:1';
-        
-        staffCountSelect.appendChild(option1);
-        staffCountSelect.appendChild(option2);
-        staffCountSelect.appendChild(option3);
+        nameInput.value = index < patientNames.length ? patientNames[index] : `Patient ${index + 1}`;
         staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
-        
-        inputWrapper.appendChild(newInput);
-        inputWrapper.appendChild(staffCountSelect);
-        patientContainer.appendChild(inputWrapper);
-        patientInputs.appendChild(patientContainer);
-        
-        // Add event listeners
-        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-        staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
     });
     
     // Show confirmation message
@@ -1995,3 +1942,4 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     </script>
 </body>
 </html>
+`
