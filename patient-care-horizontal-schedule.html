@@ -1437,6 +1437,65 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
     }
 }
 
+function assignPatients(staff, patients, staffStats) {
+    // Create a list of all time slots
+    timeSlots.forEach(time => {
+        // Get available staff for this time slot (those not on break)
+        const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+        
+        if (availableStaff.length === 0) {
+            // No staff available for this time slot, all patients will be unassigned
+            return;
+        }
+        
+        // Sort patients by staffCount (highest first) to prioritize higher needs
+        const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
+        
+        // For each patient, assign the required number of staff
+        for (const patient of sortedPatients) {
+            // Calculate how many staff we can assign to this patient
+            const staffNeeded = Math.min(patient.staffCount, availableStaff.length);
+            
+            if (staffNeeded === 0) {
+                // No staff available for this patient
+                continue;
+            }
+            
+            // Find the best staff for this patient based on rotation history
+            const bestStaff = findBestStaffForPatient(availableStaff, patient.name, staffNeeded);
+            
+            // Assign the staff to this patient
+            bestStaff.forEach(s => {
+                schedule[time].patientAssignments[patient.name].push(s);
+                
+                // Update rotation history
+                staffPatientHistory[s][patient.name]++;
+                
+                // Update stats
+                staffStats[s].workHours++;
+                
+                // Remove this staff from available staff for this time slot
+                const index = availableStaff.indexOf(s);
+                if (index !== -1) {
+                    availableStaff.splice(index, 1);
+                }
+            });
+        }
+    });
+}
+
+function findBestStaffForPatient(availableStaff, patientName, count) {
+    // Sort staff by how many times they've worked with this patient (ascending)
+    const sorted = [...availableStaff].sort((a, b) => {
+        const countA = staffPatientHistory[a][patientName] || 0;
+        const countB = staffPatientHistory[b][patientName] || 0;
+        return countA - countB;
+    });
+    
+    // Return the top 'count' staff
+    return sorted.slice(0, count);
+}
+
         // Update window.onload to initialize the cleaning duties section
         window.onload = function() {
             // Set moon emoji for dark mode button
@@ -1468,3 +1527,4 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
 </script>
 </body>
 </html>
+`
