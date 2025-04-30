@@ -1824,9 +1824,17 @@ document.getElementById('toggleShiftBtn').addEventListener('click', function() {
     document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
     this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
     
+    // Show or hide cleaning duties section based on shift
+    document.getElementById('cleaningDutiesSection').style.display = isDayShift ? 'none' : 'block';
+    
     // Update legend based on shift
     updateLegend();
     saveToLocalStorage();
+    
+    // If night shift, populate cleaning duties table
+    if (!isDayShift) {
+        populateCleaningDutiesTable();
+    }
     
     // If a schedule exists, regenerate it with the new shift type
     if (Object.keys(schedule).length > 0) {
@@ -1906,3 +1914,4 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
+`
