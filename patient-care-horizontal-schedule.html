@@ -1345,6 +1345,12 @@ document.getElementById('toggleDebugBtn').addEventListener('click', function() {
     const debugPanel = document.getElementById('debugPanel');
     if (debugPanel.style.display === 'none') {
         debugPanel.style.display = 'block';
+        
+        // Add current state information
+        logError("Info", `Current shift: ${isDayShift ? 'Day Shift' : 'Night Shift'}`);
+        logError("Info", `Dark mode: ${document.body.classList.contains('dark-mode') ? 'Enabled' : 'Disabled'}`);
+        logError("Info", `Staff count: ${document.querySelectorAll('.staff-container').length}`);
+        logError("Info", `Patient count: ${document.querySelectorAll('.patient-container').length}`);
     } else {
         debugPanel.style.display = 'none';
     }
@@ -1992,3 +1998,4 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     </script>
 </body>
 </html>
+`
