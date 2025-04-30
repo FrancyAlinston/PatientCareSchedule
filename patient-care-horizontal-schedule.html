@@ -1995,7 +1995,25 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     // Save to localStorage
     saveToLocalStorage();
 });
+
+// Add event listener to document to close debug panel when clicking outside
+document.addEventListener('click', function(event) {
+    const debugPanel = document.getElementById('debugPanel');
+    const toggleButton = document.getElementById('toggleDebugBtn');
+    
+    // If debug panel is visible
+    if (debugPanel.style.display !== 'none') {
+        // Check if click was outside debug panel and not on the toggle button
+        if (!debugPanel.contains(event.target) && event.target !== toggleButton) {
+            debugPanel.style.display = 'none';
+        }
+    }
+});
+
+// Prevent clicks inside the debug panel from bubbling to document
+document.getElementById('debugPanel').addEventListener('click', function(event) {
+    event.stopPropagation();
+});
     </script>
 </body>
 </html>
-`
