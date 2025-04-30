@@ -1137,7 +1137,7 @@ function generateSchedule() {
             staff.forEach(s => {
                 if (isDayShift) {
                     statsHtml += `<tr>
-                        <td>${s}</td>
+                        <td title="${s}">${getInitials(s)}</td>
                         <td>${staffStats[s].workHours} hours</td>
                         <td>${staffStats[s].breakTime} hours</td>
                         <td>${staffStats[s].shortBreakTime}</td>
@@ -1153,7 +1153,7 @@ function generateSchedule() {
                     }
                     
                     statsHtml += `<tr>
-                        <td>${s}</td>
+                        <td title="${s}">${getInitials(s)}</td>
                         <td>${staffStats[s].workHours} hours</td>
                         <td>${staffStats[s].breakTime} hours</td>
                         <td>${staffStats[s].shortBreakTime ? staffStats[s].shortBreakTime + " to " + staffStats[s].secondBreakTime : "N/A"}</td>
@@ -1212,7 +1212,7 @@ function generateSchedule() {
                     if (assignment) {
                         statsHtml += `<tr>
                             <td>${duty}</td>
-                            <td>${assignment.staff}</td>
+                            <td title="${assignment.staff}">${getInitials(assignment.staff)}</td>
                             <td>${assignment.time}</td>
                         </tr>`;
                     } else {
@@ -1237,9 +1237,10 @@ function generateSchedule() {
             staff.forEach(s => {
                 const row = document.createElement('tr');
                 
-                // Staff name
+                // Staff name cell with initials
                 const staffCell = document.createElement('td');
-                staffCell.textContent = s;
+                staffCell.textContent = getInitials(s);
+                staffCell.title = s; // Add full name as tooltip
                 row.appendChild(staffCell);
                 
                 // 30-min Break
@@ -1266,17 +1267,17 @@ function generateSchedule() {
             let rotationHtml = '<h3>Staff-Patient Rotation Summary</h3>';
             rotationHtml += '<table class="rotation-table">';
             
-            // Header row with patient names
+            // Header row with patient initials
             rotationHtml += '<tr><th>Staff</th>';
             patients.forEach(patient => {
                 const patientName = typeof patient === 'object' ? patient.name : patient;
-                rotationHtml += `<th>${patientName}</th>`;
+                rotationHtml += `<th title="${patientName}">${getInitials(patientName)}</th>`;
             });
             rotationHtml += '</tr>';
             
-            // Rows for each staff member
+            // Rows for each staff member with initials
             staff.forEach(s => {
-                rotationHtml += `<tr><td>${s}</td>`;
+                rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
                 
                 patients.forEach(patient => {
                     const patientName = typeof patient === 'object' ? patient.name : patient;
