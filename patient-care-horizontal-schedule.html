@@ -1284,83 +1284,136 @@ function generateSchedule() {
         }
 
         function saveToLocalStorage() {
-            const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
-            const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
-                return {
-                    name: container.querySelector('.patient-name').value.trim(),
-                    staffCount: container.querySelector('.staff-count').value
+            try {
+                // Get all current values
+                const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
+                const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+                    return {
+                        name: container.querySelector('.patient-name').value.trim(),
+                        staffCount: parseInt(container.querySelector('.staff-count').value)
+                    };
+                });
+                
+                const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+                const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
+                const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
+                
+                // Clean up any empty values
+                const cleanedStaff = staffInputs.filter(Boolean);
+                const cleanedPatients = patientInputs.filter(p => p.name);
+                const cleanedSecurity = securityStaffValues.filter(Boolean);
+                
+                const data = {
+                    staff: cleanedStaff,
+                    nurses: [nurseInCharge1, nurseInCharge2].filter(Boolean),
+                    nurseInCharge1,
+                    nurseInCharge2,
+                    patients: cleanedPatients,
+                    securityStaff: cleanedSecurity,
+                    schedule,
+                    isDayShift,
+                    isDarkMode: document.body.classList.contains('dark-mode'),
+                    staffPatientHistory: staffPatientHistory || {}
                 };
-            });
-            
-            const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
-            const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
-            const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
-            
-            const allNurses = [
-                nurseInCharge1, 
-                nurseInCharge2
-            ].filter(name => name); // Filter out empty values
-            
-            const data = {
-                staff: staffInputs,
-                nurses: allNurses,
-                nurseInCharge1: nurseInCharge1,
-                nurseInCharge2: nurseInCharge2,
-                patients: patientInputs,
-                securityStaff: securityStaffValues,
-                schedule,
-                isDayShift,
-                isDarkMode: document.body.classList.contains('dark-mode'),
-                staffPatientHistory,
-            };
-            
-            localStorage.setItem('patientCareData', JSON.stringify(data));
-            console.log("Data saved to localStorage:", data);
+                
+                localStorage.setItem('patientCareData', JSON.stringify(data));
+                console.log("Data saved to localStorage:", data);
+                return true;
+            } catch (error) {
+                console.error("Error saving to localStorage:", error);
+                return false;
+            }
         }
 
         function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('patientCareData');
-            if (!savedData) {
-                console.warn("No data found in localStorage.");
-                // Add default data
-                addStaffInput();
-                addPatientInput();
-                return;
+            try {
+                const savedData = localStorage.getItem('patientCareData');
+                if (!savedData) {
+                    console.warn("No data found in localStorage.");
+                    // Add default data
+                    addStaffInput();
+                    addPatientInput();
+                    return false;
+                }
+                
+                const parsedData = JSON.parse(savedData);
+                
+                // Load shift type
+                isDayShift = parsedData.isDayShift !== undefined ? parsedData.isDayShift : true;
+                timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+                
+                // Update UI for shift type
+                document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+                document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+                
+                // Load dark mode setting
+                if (parsedData.isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('toggleModeBtn').textContent = '☀️';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    document.getElementById('toggleModeBtn').textContent = '🌙';
+                }
+                
+                // Load nurse in charge values
+                if (document.getElementById('nurseInChargeInput')) {
+                    document.getElementById('nurseInChargeInput').value = parsedData.nurseInCharge1 || '';
+                }
+                if (document.getElementById('nurseInCharge2Input')) {
+                    document.getElementById('nurseInCharge2Input').value = parsedData.nurseInCharge2 || '';
+                }
+                
+                // Load staff, patients, and security staff
+                loadStaffFromData(parsedData.staff || []);
+                loadPatientsFromData(parsedData.patients || []);
+                loadSecurityStaffFromData(parsedData.securityStaff || []);
+                
+                // Load rotation history
+                staffPatientHistory = parsedData.staffPatientHistory || {};
+                
+                // Load schedule
+                if (parsedData.schedule && Object.keys(parsedData.schedule).length > 0) {
+                    schedule = parsedData.schedule;
+                    
+                    // Render the schedule if it exists
+                    const staff = [
+                        ...(parsedData.staff || []), 
+                        ...(parsedData.securityStaff || []),
+                        parsedData.nurseInCharge1,
+                        parsedData.nurseInCharge2
+                    ].filter(Boolean);
+                    
+                    const patients = (parsedData.patients || []).map(p => p.name).filter(Boolean);
+                    
+                    // Create staffStats for rendering
+                    const staffStats = {};
+                    staff.forEach(s => {
+                        staffStats[s] = {
+                            workHours: 0,
+                            breakTime: 0,
+                            shortBreakTime: "",
+                            secondBreakTime: ""
+                        };
+                    });
+                    
+                    // Render the schedule
+                    renderSchedule(schedule, staff, patients, staffStats);
+                }
+                
+                console.log("Data loaded successfully from localStorage");
+                return true;
+            } catch (error) {
+                console.error("Error loading from localStorage:", error);
+                return false;
             }
-            
-            const parsedData = JSON.parse(savedData);
-            const { 
-                staff, 
-                patients, 
-                securityStaff: savedSecurityStaff, 
-                nurseInCharge1, 
-                nurseInCharge2,
-                schedule: savedSchedule, 
-                isDarkMode 
-            } = parsedData;
-            
-            // Now assign the saved shift value to the global variable (only once)
-            isDayShift = parsedData.isDayShift;
-            timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
-            
-            // Restore nurse in charge inputs
-            if (document.getElementById('nurseInChargeInput')) {
-                document.getElementById('nurseInChargeInput').value = nurseInCharge1 || '';
-            }
-            
-            if (document.getElementById('nurseInCharge2Input')) {
-                document.getElementById('nurseInCharge2Input').value = nurseInCharge2 || '';
-            }
-            
-            // Rest of the function remains the same...
-            // Restore shift
-            document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
-            document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
-            
-            // Restore staff
+        }
+
+        // Helper functions for loadFromLocalStorage
+        function loadStaffFromData(staffData) {
             const staffInputs = document.getElementById('staffInputs');
             staffInputs.innerHTML = '';
-            staff.forEach(name => {
+            
+            staffData.forEach(name => {
                 const staffContainer = document.createElement('div');
                 staffContainer.className = 'staff-container';
                 
@@ -1368,15 +1421,23 @@ function generateSchedule() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'staff-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
                 
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
             });
             
-            // Restore patients
+            // Add at least one staff input if none were loaded
+            if (staffData.length === 0) {
+                addStaffInput();
+            }
+        }
+
+        function loadPatientsFromData(patientsData) {
             const patientInputs = document.getElementById('patientInputs');
             patientInputs.innerHTML = '';
-            patients.forEach(({ name, staffCount }) => {
+            
+            patientsData.forEach(({ name, staffCount }) => {
                 const patientContainer = document.createElement('div');
                 patientContainer.className = 'patient-container';
                 
@@ -1389,9 +1450,11 @@ function generateSchedule() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'patient-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
                 
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
+                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
                 
                 const option1 = document.createElement('option');
                 option1.value = 1;
@@ -1406,7 +1469,7 @@ function generateSchedule() {
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
-                staffCountSelect.value = staffCount;
+                staffCountSelect.value = staffCount || 1;
                 
                 inputWrapper.appendChild(newInput);
                 inputWrapper.appendChild(staffCountSelect);
@@ -1414,20 +1477,24 @@ function generateSchedule() {
                 patientInputs.appendChild(patientContainer);
             });
             
-            // Restore security staff
+            // Add at least one patient input if none were loaded
+            if (patientsData.length === 0) {
+                addPatientInput();
+            }
+        }
+
+        function loadSecurityStaffFromData(securityStaffData) {
             const securityStaffInputs = document.getElementById('securityStaffInputs');
             securityStaffInputs.innerHTML = '';
-
+            
             // Reset the global array
-            securityStaff = []; // Clear the existing array
-            // Add loaded security staff to global variable
-            savedSecurityStaff.forEach(name => {
+            securityStaff = [];
+            
+            securityStaffData.forEach(name => {
                 if (!securityStaff.includes(name)) {
                     securityStaff.push(name);
                 }
-            });
-
-            securityStaff.forEach(name => {
+                
                 const securityContainer = document.createElement('div');
                 securityContainer.className = 'security-container';
                 
@@ -1435,53 +1502,11 @@ function generateSchedule() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'security-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
                 
                 securityContainer.appendChild(newInput);
                 securityStaffInputs.appendChild(securityContainer);
             });
-            
-            // Restore schedule with better error handling
-            try {
-                schedule = savedSchedule || {}; // Ensure schedule is initialized
-                
-                // Validate schedule structure and recreate if needed
-                const isValidSchedule = timeSlots.every(time => 
-                    schedule[time] && 
-                    schedule[time].patientAssignments && 
-                    schedule[time].staffBreaks
-                );
-                
-                if (!isValidSchedule) {
-                    // If schedule is invalid, regenerate it from scratch
-                    console.warn("Saved schedule format is invalid, regenerating...");
-                    generateSchedule();
-                    return;
-                }
-                
-                // Regenerate the schedule
-                if (Object.keys(schedule).length > 0) {
-                    const staffStats = {};
-                    staff.forEach(s => {
-                        staffStats[s] = {
-                            workHours: 0,
-                            breakTime: 0,
-                            shortBreakTime: "",
-                            secondBreakTime: ""
-                        };
-                    });
-                    
-                    renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
-                }
-            } catch (error) {
-                console.error("Error restoring schedule:", error);
-                // Reset to empty schedule
-                schedule = {};
-                // Add default data
-                addStaffInput();
-                addPatientInput();
-            }
-            
-            console.log("Data loaded from localStorage:", { staff, patients, securityStaff, schedule, isDayShift, isDarkMode });
         }
 
         function clearAllData() {
