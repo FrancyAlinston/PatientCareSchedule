@@ -1752,12 +1752,237 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
 // Initialize on window load
 window.onload = function() {
     try {
-        // Your existing code
+        // Load data from localStorage
+        loadFromLocalStorage();
+        
+        // Set up event listeners
+        document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            clearAllData();
+            localStorage.removeItem('patientCareData');
+            addStaffInput();
+            addPatientInput();
+            addSecurityStaffInput();
+        });
+        
+        document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+        document.getElementById('removeStaffBtn').addEventListener('click', function() {
+            const staffInputs = document.getElementById('staffInputs');
+            if (staffInputs.lastChild) {
+                staffInputs.removeChild(staffInputs.lastChild);
+                saveToLocalStorage();
+            }
+        });
+        
+        document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+        document.getElementById('removePatientBtn').addEventListener('click', function() {
+            const patientInputs = document.getElementById('patientInputs');
+            if (patientInputs.lastChild) {
+                patientInputs.removeChild(patientInputs.lastChild);
+                saveToLocalStorage();
+            }
+        });
+        
+        document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+        document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
+            const securityStaffInputs = document.getElementById('securityStaffInputs');
+            if (securityStaffInputs.lastChild) {
+                securityStaffInputs.removeChild(securityStaffInputs.lastChild);
+                saveToLocalStorage();
+            }
+        });
+        
+        document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+            isDayShift = !isDayShift;
+            timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+            document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+            this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+            
+            // Update legend based on shift
+            const legendDiv = document.querySelector('.legend');
+            if (isDayShift) {
+                legendDiv.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-color legend-break"></div>
+                        <div>30-min Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-lunch"></div>
+                        <div>1-hour 2nd Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-unassigned"></div>
+                        <div>Unassigned</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-security"></div>
+                        <div>Security Duty</div>
+                    </div>
+                `;
+            } else {
+                legendDiv.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-color legend-night-break"></div>
+                        <div>2-hour Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-cleaning-duty"></div>
+                        <div>Cleaning Duty</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-unassigned"></div>
+                        <div>Unassigned</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-security"></div>
+                        <div>Security Duty</div>
+                    </div>
+                `;
+            }
+            
+            // Update break hours table header
+            const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
+            if (isDayShift) {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>30-min Break</th>
+                    <th>1-hour 2nd Break</th>
+                </tr>`;
+            } else {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>Break Start</th>
+                    <th>Break End</th>
+                </tr>`;
+            }
+            
+            saveToLocalStorage();
+            
+            // If a schedule exists, regenerate it with the new shift type
+            if (Object.keys(schedule).length > 0) {
+                generateSchedule();
+            }
+        });
+        
+        document.getElementById('toggleModeBtn').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            saveToLocalStorage();
+        });
+        
+        // Add event listener for debug fill button
+        document.getElementById('debugFillBtn').addEventListener('click', function() {
+            // Mock data for quick filling
+            const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee', 'Emma Wilson', 'Michael Davis'];
+            const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D', 'Patient E', 'Patient F', 'Patient G', 'Patient H'];
+            const securityNames = ['Security Officer Jones'];
+            const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
+            
+            // Fill nurse in charge inputs
+            document.getElementById('nurseInChargeInput').value = nurseNames[0];
+            document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+            
+            // Fill security staff inputs
+            const securityStaffInputs = document.getElementById('securityStaffInputs');
+            securityStaffInputs.innerHTML = '';
+            securityNames.forEach(name => {
+                const securityContainer = document.createElement('div');
+                securityContainer.className = 'security-container';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'security-name';
+                
+                securityContainer.appendChild(newInput);
+                securityStaffInputs.appendChild(securityContainer);
+            });
+            
+            // Fill staff inputs
+            const staffInputs = document.getElementById('staffInputs');
+            staffInputs.innerHTML = '';
+            staffNames.forEach(name => {
+                const staffContainer = document.createElement('div');
+                staffContainer.className = 'staff-container';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'staff-name';
+                
+                staffContainer.appendChild(newInput);
+                staffInputs.appendChild(staffContainer);
+            });
+            
+            // Fill patient inputs
+            const patientInputs = document.getElementById('patient```html
+            const patientInputs = document.getElementById('patientInputs');
+            patientInputs.innerHTML = '';
+            patientNames.forEach((name, index) => {
+                const patientContainer = document.createElement('div');
+                patientContainer.className = 'patient-container';
+                
+                const inputWrapper = document.createElement('div');
+                inputWrapper.style.display = 'flex';
+                inputWrapper.style.alignItems = 'center';
+                inputWrapper.style.gap = '10px';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'patient-name';
+                
+                const staffCountSelect = document.createElement('select');
+                staffCountSelect.className = 'staff-count';
+                
+                const option1 = document.createElement('option');
+                option1.value = 1;
+                option1.textContent = '1:1';
+                const option2 = document.createElement('option');
+                option2.value = 2;
+                option2.textContent = '2:1';
+                const option3 = document.createElement('option');
+                option3.value = 3;
+                option3.textContent = '3:1';
+                
+                staffCountSelect.appendChild(option1);
+                staffCountSelect.appendChild(option2);
+                staffCountSelect.appendChild(option3);
+                staffCountSelect.value = Math.min(index % 3 + 1, 3); // Values 1, 2, 3 cycling
+                
+                inputWrapper.appendChild(newInput);
+                inputWrapper.appendChild(staffCountSelect);
+                patientContainer.appendChild(inputWrapper);
+                patientInputs.appendChild(patientContainer);
+            });
+            
+            saveToLocalStorage();
+            
+            // Show confirmation
+            const confirmationDiv = document.createElement('div');
+            confirmationDiv.className = 'error-message';
+            confirmationDiv.style.backgroundColor = '#4CAF50'; // Green
+            confirmationDiv.textContent = "Debug data filled successfully!";
+            document.body.appendChild(confirmationDiv);
+            setTimeout(() => confirmationDiv.remove(), 3000);
+        });
+        
+        // Initialize if no saved data
+        if (document.getElementById('staffInputs').children.length === 0) {
+            addStaffInput();
+        }
+        
+        if (document.getElementById('patientInputs').children.length === 0) {
+            addPatientInput();
+        }
+        
     } catch (error) {
         console.error("Error:", error);
         showError("Something went wrong. Please try again.");
     }
-}; // Add this closing brace
+};
+
 
 document.getElementById('resetRotationBtn').addEventListener('click', () => {
     // Get current staff and patients from inputs
