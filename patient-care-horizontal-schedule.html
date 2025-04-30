@@ -1207,25 +1207,7 @@ function generateSchedule() {
         }
 
         function renderBreakHoursTable(staffStats, staff) {
-            const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
             const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
-            
-            // Update table headers based on shift
-            if (isDayShift) {
-                breakHoursTableHead.innerHTML = `
-                <tr>
-                    <th>Staff</th>
-                    <th>30-min Break</th>
-                    <th>1-hour 2nd Break</th>
-                </tr>`;
-            } else {
-                breakHoursTableHead.innerHTML = `
-                <tr>
-                    <th>Staff</th>
-                    <th>Break Start</th>
-                    <th>Break End</th>
-                </tr>`;
-            }
             
             staff.forEach(s => {
                 const row = document.createElement('tr');
@@ -1295,6 +1277,68 @@ function generateSchedule() {
             // Add rotation visualization to stats
             document.getElementById('rotationStats').innerHTML = rotationHtml;
         }
+
+        // Add this new function to simplify updating the legend
+function updateLegend() {
+    const legendDiv = document.querySelector('.legend');
+    if (isDayShift) {
+        legendDiv.innerHTML = `
+            <div class="legend-item">
+                <div class="legend-color legend-break"></div>
+                <div>30-min Break</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-lunch"></div>
+                <div>1-hour 2nd Break</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-unassigned"></div>
+                <div>Unassigned</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-security"></div>
+                <div>Security Duty</div>
+            </div>
+        `;
+    } else {
+        legendDiv.innerHTML = `
+            <div class="legend-item">
+                <div class="legend-color legend-night-break"></div>
+                <div>2-hour Break</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-cleaning-duty"></div>
+                <div>Cleaning Duty</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-unassigned"></div>
+                <div>Unassigned</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-security"></div>
+                <div>Security Duty</div>
+            </div>
+        `;
+    }
+    
+    // Update break hours table header
+    const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
+    if (isDayShift) {
+        breakHoursTableHead.innerHTML = `
+        <tr>
+            <th>Staff</th>
+            <th>30-min Break</th>
+            <th>1-hour 2nd Break</th>
+        </tr>`;
+    } else {
+        breakHoursTableHead.innerHTML = `
+        <tr>
+            <th>Staff</th>
+            <th>Break Start</th>
+            <th>Break End</th>
+        </tr>`;
+    }
+}
 
         // Add this to your window.onload function
 document.getElementById('toggleDebugBtn').addEventListener('click', function() {
@@ -1848,6 +1892,7 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     document.getElementById('nurseInChargeInput').value = nurseNames[0];
     document.getElementById('nurseInCharge2Input').value = nurseNames[1];
     
+```html
     // Fill staff inputs
     const staffInputs = document.getElementById('staffInputs');
     staffInputs.innerHTML = '';
@@ -1879,8 +1924,7 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     // Fill patient inputs
     const patientInputs = document.getElementById('patientInputs');
     patientInputs.innerHTML = '';
-    patientNames```html
-.forEach((name, index) => {
+    patientNames.forEach((name, index) => {
         addPatientInput();
         const lastInput = patientInputs.lastChild.querySelector('.patient-name');
         lastInput.value = name;
