@@ -1921,8 +1921,75 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
         newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
     });
     
-    // Rest of your debug fill function...
+    // Fill security staff inputs
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    securityStaffInputs.innerHTML = '';
+    securityNames.forEach(name => {
+        const securityContainer = document.createElement('div');
+        securityContainer.className = 'security-container';
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.value = name;
+        newInput.className = 'security-name';
+        securityContainer.appendChild(newInput);
+        securityStaffInputs.appendChild(securityContainer);
+        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    });
     
+    // Fill patient inputs
+    const patientInputs = document.getElementById('patientInputs');
+    patientInputs.innerHTML = '';
+    patientNames.forEach((name, index) => {
+        const patientContainer = document.createElement('div');
+        patientContainer.className = 'patient-container';
+        
+        const inputWrapper = document.createElement('div');
+        inputWrapper.style.display = 'flex';
+        inputWrapper.style.alignItems = 'center';
+        inputWrapper.style.gap = '10px';
+        
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.value = name;
+        newInput.className = 'patient-name';
+        
+        const staffCountSelect = document.createElement('select');
+        staffCountSelect.className = 'staff-count';
+        
+        const option1 = document.createElement('option');
+        option1.value = 1;
+        option1.textContent = '1:1';
+        const option2 = document.createElement('option');
+        option2.value = 2;
+        option2.textContent = '2:1';
+        const option3 = document.createElement('option');
+        option3.value = 3;
+        option3.textContent = '3:1';
+        
+        staffCountSelect.appendChild(option1);
+        staffCountSelect.appendChild(option2);
+        staffCountSelect.appendChild(option3);
+        staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+        
+        inputWrapper.appendChild(newInput);
+        inputWrapper.appendChild(staffCountSelect);
+        patientContainer.appendChild(inputWrapper);
+        patientInputs.appendChild(patientContainer);
+        
+        // Add event listeners
+        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+        staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+    });
+    
+    // Show confirmation message
+    const confirmationDiv = document.createElement('div');
+    confirmationDiv.className = 'error-message';
+    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+    confirmationDiv.textContent = "Debug data filled successfully!";
+    document.body.appendChild(confirmationDiv);
+    setTimeout(() => confirmationDiv.remove(), 3000);
+    
+    // Save to localStorage
     saveToLocalStorage();
 });
     </script>
