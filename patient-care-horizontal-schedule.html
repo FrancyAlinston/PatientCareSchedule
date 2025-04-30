@@ -1263,6 +1263,37 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         // Count existing manual assignments for each staff member
         staffList.forEach(s => {
             const manualDutyCount
+        });
+    }
+
+    // Update window.onload to initialize the cleaning duties section
+    window.onload = function() {
+        // Set moon emoji for dark mode button
+        document.getElementById('toggleModeBtn').innerHTML = '🌙';
+        
+        try {
+            // Load data from localStorage
+            loadFromLocalStorage();
+            
+            // Make sure dark mode is correctly applied based on saved preference
+            // Existing dark mode code...
+            
+            // Show/hide cleaning duties section based on shift
+            document.getElementById('cleaningDutiesSection').style.display = isDayShift ? 'none' : 'block';
+            
+            // If in night shift mode, populate the cleaning duties table
+            if (!isDayShift) {
+                populateCleaningDutiesTable();
+            }
+            
+            // Rest of existing onload code...
+        } catch (error) {
+            console.error("Error:", error);
+            showError("Something went wrong. Please try again.");
+        }
+
+        // Rest of existing onload code...
+    };
 </script>
 </body>
 </html>
