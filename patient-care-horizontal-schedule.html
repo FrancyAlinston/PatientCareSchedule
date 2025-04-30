@@ -1152,149 +1152,102 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         s !== nurseInCharge2
     );
     
+    // First check if we have any manual assignments
+    const hasManualAssignments = Object.keys(manualCleaningAssignments).length > 0;
+    
     if (regularStaff.length > 0) {
+        // Process manual assignments first if available
+        if (hasManualAssignments) {
+            // Group duties by staff member
+            const staffDuties = {};
+            
+            // Build the grouping
+            for (const [duty, staffName] of Object.entries(manualCleaningAssignments)) {
+                if (!staffDuties[staffName]) {
+                    staffDuties[staffName] = [];
+                }
+                staffDuties[staffName].push(duty);
+            }
+            
+            // Assign the grouped duties (including special kitchen combinations)
+            for (const [staffName, duties] of Object.entries(staffDuties)) {
+                // Find available slots for this staff
+                const availableSlots = findAvailableTimeSlots(staffName);
+                
+                if (availableSlots.length >= duties.length) {
+                    // Assign duties to available slots
+                    duties.forEach((duty, index) => {
+                        const slot = availableSlots[index];
+                        
+                        // Assign the duty
+                        schedule[slot.time].staffBreaks[staffName] = duty;
+                        
+                        // Store cleaning duty in staff stats
+                        if (!staffStats[staffName].cleaningDuties) {
+                            staffStats[staffName].cleaningDuties = [];
+                        }
+                        
+                        staffStats[staffName].cleaningDuties.push({
+                            duty: duty,
+                            time: slot.time
+                        });
+                    });
+                } else {
+                    // Not enough slots available, show an error
+                    showError(`Not enough free time slots for ${staffName} to complete all assigned cleaning duties.`);
+                }
+            }
+            
+            // Get remaining unassigned duties
+            const assignedDuties = Object.keys(manualCleaningAssignments);
+            const remainingDuties = cleaningDuties.filter(duty => !assignedDuties.includes(duty));
+            
+            // Auto-assign remaining duties
+            autoAssignCleaningDuties(regularStaff, remainingDuties, staffStats);
+        } else {
+            // No manual assignments, auto-assign all duties
+            autoAssignCleaningDuties(regularStaff, cleaningDuties, staffStats);
+        }
+    }
+    
+    // Helper function to find available time slots for a staff member
+    function findAvailableTimeSlots(staffName) {
+        const availableSlots = [];
+        
+        timeSlots.forEach((time, timeIndex) => {
+            // Skip if on break or already assigned
+            if (schedule[time].staffBreaks[staffName]) {
+                return;
+            }
+            
+            // Skip security restricted hours
+            if (isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                return;
+            }
+            
+            // This is a free slot
+            availableSlots.push({ time, timeIndex });
+        });
+        
+        return availableSlots;
+    }
+    
+    // Helper function to auto-assign cleaning duties
+    function autoAssignCleaningDuties(staffList, dutiesList, staffStats) {
+        if (dutiesList.length === 0) return; // Nothing to assign
+        
         // Create a map to track available free slots for each staff member
         const freeSlots = {};
-        regularStaff.forEach(s => {
-            freeSlots[s] = [];
-            
-            // Find all free time slots for this staff member
-            timeSlots.forEach((time, timeIndex) => {
-                // Skip if on break
-                if (schedule[time].staffBreaks[s]) {
-                    return;
-                }
-                
-                // Skip security restricted hours
-                if (isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
-                    return;
-                }
-                
-                // This is a free slot
-                freeSlots[s].push({ time, timeIndex });
-            });
+        staffList.forEach(s => {
+            freeSlots[s] = findAvailableTimeSlots(s);
         });
         
         // Try to distribute duties fairly
         let dutiesAssigned = 0;
-        const maxDutiesPerStaff = Math.ceil(cleaningDuties.length / regularStaff.length);
+        const maxDutiesPerStaff = Math.ceil(dutiesList.length / staffList.length);
         const staffDutyCount = {};
-        regularStaff.forEach(s => { staffDutyCount[s] = 0; });
+        staffList.forEach(s => { staffDutyCount[s] = 0; });
         
-        // Assign duties - prioritize staff with more free slots
-        while (dutiesAssigned < cleaningDuties.length) {
-            // Sort staff by number of duties assigned (ascending)
-            const staffByAvailability = [...regularStaff].sort((a, b) => {
-                return staffDutyCount[a] - staffDutyCount[b]; // Staff with fewer duties first
-            });
-            
-            // Try to assign a duty to the first available staff
-            let assigned = false;
-            for (const s of staffByAvailability) {
-                // Skip if this staff member has reached their duty limit
-                if (staffDutyCount[s] >= maxDutiesPerStaff) continue;
-                
-                // Skip if no free slots
-                if (freeSlots[s].length === 0) continue;
-                
-                // Get the duty to assign
-                const duty = cleaningDuties[dutiesAssigned];
-                
-                // Try to find a good slot - prefer middle of shift when possible
-                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 3 && slot.timeIndex <= 8);
-                const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
-                
-                // Assign the duty
-                schedule[slot.time].staffBreaks[s] = duty;
-                
-                // Store cleaning duty in the staff stats
-                if (!staffStats[s].cleaningDuties) {
-                    staffStats[s].cleaningDuties = [];
-                }
-                staffStats[s].cleaningDuties.push({
-                    duty: duty,
-                    time: slot.time
-                });
-                
-                // Remove this slot from available slots
-                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
-                
-                // Update counters
-                staffDutyCount[s]++;
-                dutiesAssigned++;
-                assigned = true;
-                break;
-            }
-            
-            // If we couldn't assign any more duties, break the loop
-            if (!assigned || dutiesAssigned >= cleaningDuties.length) break;
-        }
-    }
-}
-
-function assignPatients(staff, patients, staffStats) {
-    // Create a list of all time slots
-    timeSlots.forEach(time => {
-        // Get available staff for this time slot (those not on break)
-        const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
-        
-        if (availableStaff.length === 0) {
-            // No staff available for this time slot, all patients will be unassigned
-            return;
-        }
-        
-        // Sort patients by staffCount (highest first) to prioritize higher needs
-        const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
-        
-        // For each patient, assign the required number of staff
-        for (const patient of sortedPatients) {
-            // Calculate how many staff we can assign to this patient
-            const staffNeeded = Math.min(patient.staffCount, availableStaff.length);
-            
-            if (staffNeeded === 0) {
-                // No staff available for this patient
-                continue;
-            }
-            
-            // Find the best staff for this patient based on rotation history
-            const bestStaff = findBestStaffForPatient(availableStaff, patient.name, staffNeeded);
-            
-            // Assign the staff to this patient
-            bestStaff.forEach(s => {
-                schedule[time].patientAssignments[patient.name].push(s);
-                
-                // Update rotation history
-                staffPatientHistory[s][patient.name]++;
-                
-                // Update stats
-                staffStats[s].workHours++;
-                
-                // Remove this staff from available staff for this time slot
-                const index = availableStaff.indexOf(s);
-                if (index !== -1) {
-                    availableStaff.splice(index, 1);
-                }
-            });
-        }
-    });
-}
-
-function findBestStaffForPatient(availableStaff, patientName, count) {
-    // Sort staff by how many times they've worked with this patient (ascending)
-    const sorted = [...availableStaff].sort((a, b) => {
-        const countA = staffPatientHistory[a][patientName] || 0;
-        const countB = staffPatientHistory[b][patientName] || 0;
-        return countA - countB;
-    });
-    
-    // Return the top 'count' staff
-    return sorted.slice(0, count);
-}
-
-function renderSchedule(schedule, staff, patients, staffStats) {
-    // Clear previous schedule
-    const scheduleHeader = document.getElementById('scheduleHeader');
-    const scheduleBody = document.getElementById('scheduleBody');
-    const staffHeader = document.getElementById('staffHeader');
-    const staffBody = document.getElementById('staffBody');
-    const breakHoursTable = document.getElementById('breakHours
+        // Count existing manual assignments for each staff member
+        staffList.forEach(s => {
+            const manualDutyCount
