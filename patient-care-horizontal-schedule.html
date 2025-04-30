@@ -1548,6 +1548,12 @@ function generateSchedule() {
                 inputWrapper.appendChild(staffCountSelect);
                 patientContainer.appendChild(inputWrapper);
                 patientInputs.appendChild(patientContainer);
+                
+                // Add event listeners to the new elements
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+                
+                saveToLocalStorage();
             });
             
             // Restore security staff
@@ -1708,7 +1714,7 @@ function addPatientInput() {
     staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
     
     saveToLocalStorage();
-}
+} // Add this missing closing brace
 
 // Function to add security staff input
 function addSecurityStaffInput() {
@@ -1906,6 +1912,7 @@ window.onload = function() {
             
             // Fill patient inputs with names
             currentPatientInputs.forEach((input, index) => {
+                input.value = patientNames[index```html
                 input.value = patientNames[index % patientNames.length];
                 
                 // Set random staff count (1:1, 2:1, or 3:1)
@@ -2001,3 +2008,4 @@ document.getElementById('resetRotationBtn').addEventListener('click', () => {
         );
     }
 });
+```
