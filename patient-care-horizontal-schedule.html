@@ -595,7 +595,7 @@
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Simplified saveToLocalStorage function that only stores essential data
+        // Update saveToLocalStorage to include cleaning assignments
         function saveToLocalStorage() {
             try {
                 // Get all current input values
@@ -632,7 +632,7 @@
             }
         }
 
-        // Simplified loadFromLocalStorage function to match
+        // Update loadFromLocalStorage to load cleaning assignments
         function loadFromLocalStorage() {
             try {
                 const savedData = localStorage.getItem('patientCareData');
@@ -677,7 +677,19 @@
                 loadSecurityStaffFromData(parsedData.securityStaff || []);
                 
                 // Load manual cleaning assignments
-                manualCleaningAssignments = parsedData.manualCleaningAssignments || {};
+                if (parsedData.manualCleaningAssignments) {
+                    manualCleaningAssignments = parsedData.manualCleaningAssignments;
+                } else {
+                    manualCleaningAssignments = {};
+                }
+                
+                // Show/hide cleaning duties section based on shift
+                document.getElementById('cleaningDutiesSection').style.display = isDayShift ? 'none' : 'block';
+                
+                // If in night shift mode, populate the cleaning duties table
+                if (!isDayShift) {
+                    populateCleaningDutiesTable();
+                }
                 
                 // Initialize empty schedule when loading (instead of loading saved schedule)
                 schedule = {}; 
@@ -1251,3 +1263,6 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         // Count existing manual assignments for each staff member
         staffList.forEach(s => {
             const manualDutyCount
+</script>
+</body>
+</html>
