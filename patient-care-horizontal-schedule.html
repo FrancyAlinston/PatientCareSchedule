@@ -1985,16 +1985,11 @@ window.onload = function() {
 
 
 document.getElementById('resetRotationBtn').addEventListener('click', () => {
-    // Get current staff and patients from inputs
+    // Define these variables first
     const currentStaff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
-    
-    // Get security staff too
     const currentSecurityStaff = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
-    
-    // Combine regular and security staff
     const allStaff = [...currentStaff, ...currentSecurityStaff];
     
-    // Get current patients
     const currentPatients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
         return {
             name: container.querySelector('.patient-name').value.trim(),
@@ -2042,3 +2037,4 @@ document.getElementById('resetRotationBtn').addEventListener('click', () => {
     </script>
 </body>
 </html>
+```
