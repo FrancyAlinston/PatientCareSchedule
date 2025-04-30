@@ -1556,7 +1556,7 @@ function renderStats(staffStats, staff, patients) {
         // Add a cleaning duties summary
         statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
         statsHtml += '<table>';
-        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th></tr>';
+        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th><th>Status</th></tr>'; // Added Status column
         
         // Create a map of duties to staff
         const dutyAssignments = {};
@@ -1571,6 +1571,10 @@ function renderStats(staffStats, staff, patients) {
             }
         });
         
+        // Track how many duties are assigned and unassigned
+        let assignedCount = 0;
+        let unassignedCount = 0;
+        
         // List all possible cleaning duties
         cleaningDuties.forEach(duty => {
             const assignment = dutyAssignments[duty];
@@ -1579,15 +1583,33 @@ function renderStats(staffStats, staff, patients) {
                     <td>${duty}</td>
                     <td title="${assignment.staff}">${getInitials(assignment.staff)}</td>
                     <td>${assignment.time}</td>
+                    <td style="color: green; font-weight: bold;">✓ Assigned</td>
                 </tr>`;
+                assignedCount++;
             } else {
                 statsHtml += `<tr>
                     <td>${duty}</td>
                     <td>Not Assigned</td>
                     <td>N/A</td>
+                    <td style="color: red; font-weight: bold;">⚠ Unassigned</td>
                 </tr>`;
+                unassignedCount++;
             }
         });
+        
+        // Add summary row at the bottom
+        statsHtml += `<tr style="background-color: #f8f9fa;">
+            <td colspan="3" style="text-align: right; font-weight: bold;">Duty Completion Rate:</td>
+            <td>${assignedCount} of ${cleaningDuties.length} (${Math.round(assignedCount/cleaningDuties.length*100)}%)</td>
+        </tr>`;
+        
+        // Show remaining duties count
+        if (unassignedCount > 0) {
+            statsHtml += `<tr style="background-color: #fff3cd; color: #856404;">
+                <td colspan="3" style="text-align: right; font-weight: bold;">Remaining Duties:</td>
+                <td>${unassignedCount}</td>
+            </tr>`;
+        }
         
         statsHtml += '</table>';
     }
@@ -1861,3 +1883,4 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
+`
