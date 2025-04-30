@@ -457,6 +457,69 @@
             return (firstInitial + lastInitial).toUpperCase();
         }
 
+        // Add this function to your JavaScript
+        function updateLegend() {
+            // Update legend based on shift
+            const legendDiv = document.querySelector('.legend');
+            if (isDayShift) {
+                legendDiv.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-color legend-break"></div>
+                        <div>30-min Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-lunch"></div>
+                        <div>1-hour 2nd Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-unassigned"></div>
+                        <div>Unassigned</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-security"></div>
+                        <div>Security Duty</div>
+                    </div>
+                `;
+            } else {
+                legendDiv.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-color legend-night-break"></div>
+                        <div>2-hour Break</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-cleaning-duty"></div>
+                        <div>Cleaning Duty</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-unassigned"></div>
+                        <div>Unassigned</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-security"></div>
+                        <div>Security Duty</div>
+                    </div>
+                `;
+            }
+            
+            // Update break hours table header
+            const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
+            if (isDayShift) {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>30-min Break</th>
+                    <th>1-hour 2nd Break</th>
+                </tr>`;
+            } else {
+                breakHoursTableHead.innerHTML = `
+                <tr>
+                    <th>Staff</th>
+                    <th>Break Start</th>
+                    <th>Break End</th>
+                </tr>`;
+            }
+        }
+
         // Global variables
         let schedule = {};
         let isDayShift = true;
@@ -1051,3 +1114,4 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
+`
