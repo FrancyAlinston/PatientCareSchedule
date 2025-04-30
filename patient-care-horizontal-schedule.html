@@ -548,316 +548,321 @@ function validateStaffRequirements() {
 
 // 2. Fix generateSchedule to handle nurse in charge properly
 function generateSchedule() {
-    const patientInputs = document.querySelectorAll('.patient-container');
-    const staffInputs = document.querySelectorAll('.staff-container');
-    const securityStaffInputs = document.querySelectorAll('.security-container');
+    try {
+        const patientInputs = document.querySelectorAll('.patient-container');
+        const staffInputs = document.querySelectorAll('.staff-container');
+        const securityStaffInputs = document.querySelectorAll('.security-container');
 
-    const staff = [];
-    const nurses = [];
-    const excludedHours = {};
-    const patients = [];
+        const staff = [];
+        const nurses = [];
+        const excludedHours = {};
+        const patients = [];
 
-    // Process security staff
-    securityStaffInputs.forEach(container => {
-        const staffName = container.querySelector('.security-name').value.trim();
+        // Process security staff
+        securityStaffInputs.forEach(container => {
+            const staffName = container.querySelector('.security-name').value.trim();
 
-        if (staffName) {
-            staff.push(staffName);
-            // Instead of using a Set, add to the global array
-            if (!securityStaff.includes(staffName)) {
-                securityStaff.push(staffName);
-            }
-        }
-    });
-    
-    // Process nurse in charge inputs only
-    const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
-    if (nurseInCharge1) {
-        staff.push(nurseInCharge1);
-        nurses.push(nurseInCharge1);
-    }
-
-    const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
-    if (nurseInCharge2) {
-        staff.push(nurseInCharge2);
-        nurses.push(nurseInCharge2);
-    }
-
-    // Process other staff
-    staffInputs.forEach(container => {
-        const staffName = container.querySelector('.staff-name').value.trim();
-
-        if (staffName) {
-            staff.push(staffName);
-        }
-    });
-
-    // Validate security staff limit
-    if (securityStaffInputs.length > 1) {
-        showError("Maximum of 1 security staff allowed");
-        return;
-    }
-
-    // Process patients
-    patientInputs.forEach(container => {
-        const patientName = container.querySelector('.patient-name').value.trim();
-        const staffCount = parseInt(container.querySelector('.staff-count').value);
-
-        if (patientName) {
-            patients.push({ name: patientName, staffCount });
-        }
-    });
-
-    // Validate inputs
-    if (staff.length === 0) {
-        alert("Please enter at least one staff name");
-        return;
-    }
-
-    if (patients.length === 0) {
-        alert("Please enter at least one patient name");
-        return;
-    }
-
-    // Initialize schedule data structure
-    schedule = {}; // Reset the schedule object
-    timeSlots.forEach(time => {
-        schedule[time] = {
-            patientAssignments: {},
-            staffBreaks: {}
-        };
-
-        // Initialize each patient to have no staff assigned
-        patients.forEach(patient => {
-            schedule[time].patientAssignments[patient.name] = [];
-        });
-
-        // Initialize each staff to not be on break
-        staff.forEach(s => {
-            schedule[time].staffBreaks[s] = "";
-        });
-    });
-
-    // Initialize staffStats for all staff members
-    const staffStats = {};
-    staff.forEach(s => {
-        staffStats[s] = {
-            workHours: 0,
-            breakTime: 0,
-            shortBreakTime: "",
-            secondBreakTime: ""
-        };
-    });
-
-    // Keep track of the last time a staff was assigned to a patient to avoid consecutive hours
-    const lastAssigned = {};
-
-    // Add work hour tracking
-    const staffWorkHours = {};
-    staff.forEach(s => {
-        staffWorkHours[s] = 0;
-    });
-    
-    // Add a map to track consecutive work hours
-    const consecutiveWorkHours = {};
-    staff.forEach(s => { consecutiveWorkHours[s] = 0; });
-
-    // Initialize staffPatientHistory if it doesn't exist
-    if (!staffPatientHistory) {
-        staffPatientHistory = {};
-    }
-
-    // Initialize history for each staff member
-    staff.forEach(s => {
-        if (!staffPatientHistory[s]) {
-            staffPatientHistory[s] = {};
-        }
-        
-        // Initialize counter for each patient
-        patients.forEach(patient => {
-            if (!staffPatientHistory[s][patient.name]) {
-                staffPatientHistory[s][patient.name] = 0;
-            }
-        });
-    });
-
-    timeSlots.forEach((time, timeIndex) => {
-        // Reset consecutive hours at start of new 4-hour block
-        if (timeIndex % 4 === 0) {
-            staff.forEach(s => { consecutiveWorkHours[s] = 0; });
-        }
-        
-        // Make a copy of staff for this time slot, excluding security staff during restricted hours
-        let availableStaff = [...staff].filter(s => {
-            // If this is security staff and it's a restricted hour, exclude them
-            if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
-                return false;
-            }
-            return true;
-        });
-        
-        // Create a priority queue of patients based on care requirements
-        const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
-        
-        // Process patients in order of highest care needs first
-        sortedPatients.forEach(patient => {
-            const assignedStaff = [];
-            
-            // Create a priority list of staff for this patient
-            // Staff who have worked less with this patient get higher priority
-            const prioritizedStaff = [...availableStaff].sort((a, b) => {
-                // Primary sort: staff who worked less with this patient get priority
-                if (staffPatientHistory[a][patient.name] !== staffPatientHistory[b][patient.name]) {
-                    return staffPatientHistory[a][patient.name] - staffPatientHistory[b][patient.name];
+            if (staffName) {
+                staff.push(staffName);
+                // Instead of using a Set, add to the global array
+                if (!securityStaff.includes(staffName)) {
+                    securityStaff.push(staffName);
                 }
-                
-                // Secondary sort: avoid consecutive assignments to same patient
-                const aConsecutive = lastAssigned[a] && lastAssigned[a][patient.name] === timeIndex - 1;
-                const bConsecutive = lastAssigned[b] && lastAssigned[b][patient.name] === timeIndex - 1;
-                if (aConsecutive !== bConsecutive) return aConsecutive ? 1 : -1;
-                
-                // Tertiary sort: total work hours for this shift
-                return staffWorkHours[a] - staffWorkHours[b];
+            }
+        });
+        
+        // Process nurse in charge inputs only
+        const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+        if (nurseInCharge1) {
+            staff.push(nurseInCharge1);
+            nurses.push(nurseInCharge1);
+        }
+
+        const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+        if (nurseInCharge2) {
+            staff.push(nurseInCharge2);
+            nurses.push(nurseInCharge2);
+        }
+
+        // Process other staff
+        staffInputs.forEach(container => {
+            const staffName = container.querySelector('.staff-name').value.trim();
+
+            if (staffName) {
+                staff.push(staffName);
+            }
+        });
+
+        // Validate security staff limit
+        if (securityStaffInputs.length > 1) {
+            showError("Maximum of 1 security staff allowed");
+            return;
+        }
+
+        // Process patients
+        patientInputs.forEach(container => {
+            const patientName = container.querySelector('.patient-name').value.trim();
+            const staffCount = parseInt(container.querySelector('.staff-count').value);
+
+            if (patientName) {
+                patients.push({ name: patientName, staffCount });
+            }
+        });
+
+        // Validate inputs
+        if (staff.length === 0) {
+            alert("Please enter at least one staff name");
+            return;
+        }
+
+        if (patients.length === 0) {
+            alert("Please enter at least one patient name");
+            return;
+        }
+
+        // Initialize schedule data structure
+        schedule = {}; // Reset the schedule object
+        timeSlots.forEach(time => {
+            schedule[time] = {
+                patientAssignments: {},
+                staffBreaks: {}
+            };
+
+            // Initialize each patient to have no staff assigned
+            patients.forEach(patient => {
+                schedule[time].patientAssignments[patient.name] = [];
+            });
+
+            // Initialize each staff to not be on break
+            staff.forEach(s => {
+                schedule[time].staffBreaks[s] = "";
+            });
+        });
+
+        // Initialize staffStats for all staff members
+        const staffStats = {};
+        staff.forEach(s => {
+            staffStats[s] = {
+                workHours: 0,
+                breakTime: 0,
+                shortBreakTime: "",
+                secondBreakTime: ""
+            };
+        });
+
+        // Keep track of the last time a staff was assigned to a patient to avoid consecutive hours
+        const lastAssigned = {};
+
+        // Add work hour tracking
+        const staffWorkHours = {};
+        staff.forEach(s => {
+            staffWorkHours[s] = 0;
+        });
+        
+        // Add a map to track consecutive work hours
+        const consecutiveWorkHours = {};
+        staff.forEach(s => { consecutiveWorkHours[s] = 0; });
+
+        // Initialize staffPatientHistory if it doesn't exist
+        if (!staffPatientHistory) {
+            staffPatientHistory = {};
+        }
+
+        // Initialize history for each staff member
+        staff.forEach(s => {
+            if (!staffPatientHistory[s]) {
+                staffPatientHistory[s] = {};
+            }
+            
+            // Initialize counter for each patient
+            patients.forEach(patient => {
+                if (!staffPatientHistory[s][patient.name]) {
+                    staffPatientHistory[s][patient.name] = 0;
+                }
+            });
+        });
+
+        timeSlots.forEach((time, timeIndex) => {
+            // Reset consecutive hours at start of new 4-hour block
+            if (timeIndex % 4 === 0) {
+                staff.forEach(s => { consecutiveWorkHours[s] = 0; });
+            }
+            
+            // Make a copy of staff for this time slot, excluding security staff during restricted hours
+            let availableStaff = [...staff].filter(s => {
+                // If this is security staff and it's a restricted hour, exclude them
+                if (securityStaff.includes(s) && isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                    return false;
+                }
+                return true;
             });
             
-            // Assign staff to this patient
-            for (let i = 0; i < patient.staffCount && prioritizedStaff.length > 0; i++) {
-                const staffMember = prioritizedStaff.shift(); // Take the highest priority staff
-                
-                assignedStaff.push(staffMember);
-                availableStaff = availableStaff.filter(s => s !== staffMember);
-                
-                // Update work hours and consecutive work tracking
-                staffWorkHours[staffMember]++;
-                consecutiveWorkHours[staffMember]++;
-                
-                // Update last assigned time for this staff/patient
-                if (!lastAssigned[staffMember]) {
-                    lastAssigned[staffMember] = {};
-                }
-                lastAssigned[staffMember][patient.name] = timeIndex;
-                
-                // Update history counter for this staff/patient pair
-                staffPatientHistory[staffMember][patient.name]++;
-            }
+            // Create a priority queue of patients based on care requirements
+            const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
             
-            schedule[time].patientAssignments[patient.name] = assignedStaff;
-        });
+            // Process patients in order of highest care needs first
+            sortedPatients.forEach(patient => {
+                const assignedStaff = [];
+                
+                // Create a priority list of staff for this patient
+                // Staff who have worked less with this patient get higher priority
+                const prioritizedStaff = [...availableStaff].sort((a, b) => {
+                    // Primary sort: staff who worked less with this patient get priority
+                    if (staffPatientHistory[a][patient.name] !== staffPatientHistory[b][patient.name]) {
+                        return staffPatientHistory[a][patient.name] - staffPatientHistory[b][patient.name];
+                    }
+                    
+                    // Secondary sort: avoid consecutive assignments to same patient
+                    const aConsecutive = lastAssigned[a] && lastAssigned[a][patient.name] === timeIndex - 1;
+                    const bConsecutive = lastAssigned[b] && lastAssigned[b][patient.name] === timeIndex - 1;
+                    if (aConsecutive !== bConsecutive) return aConsecutive ? 1 : -1;
+                    
+                    // Tertiary sort: total work hours for this shift
+                    return staffWorkHours[a] - staffWorkHours[b];
+                });
+                
+                // Assign staff to this patient
+                for (let i = 0; i < patient.staffCount && prioritizedStaff.length > 0; i++) {
+                    const staffMember = prioritizedStaff.shift(); // Take the highest priority staff
+                    
+                    assignedStaff.push(staffMember);
+                    availableStaff = availableStaff.filter(s => s !== staffMember);
+                    
+                    // Update work hours and consecutive work tracking
+                    staffWorkHours[staffMember]++;
+                    consecutiveWorkHours[staffMember]++;
+                    
+                    // Update last assigned time for this staff/patient
+                    if (!lastAssigned[staffMember]) {
+                        lastAssigned[staffMember] = {};
+                    }
+                    lastAssigned[staffMember][patient.name] = timeIndex;
+                    
+                    // Update history counter for this staff/patient pair
+                    staffPatientHistory[staffMember][patient.name]++;
+                }
+                
+                schedule[time].patientAssignments[patient.name] = assignedStaff;
+            });
 
-        // After assignments, update consecutive work hours
-        staff.forEach(s => {
-            let isWorking = false;
-            
-            // Check if staff is assigned to any patient this hour
-            for (const patient in schedule[time].patientAssignments) {
-                if (schedule[time].patientAssignments[patient].includes(s)) {
-                    isWorking = true;
-                    break;
-                }
-            }
-            
-            // Update consecutive hours
-            if (isWorking) {
-                consecutiveWorkHours[s]++;
+            // After assignments, update consecutive work hours
+            staff.forEach(s => {
+                let isWorking = false;
                 
-                // Force a break if more than 3 consecutive hours
-                if (consecutiveWorkHours[s] >= 3 && timeIndex < timeSlots.length - 1) {
-                    const nextHour = timeSlots[timeIndex + 1];
-                    // Only if they don't already have a break planned
-                    if (schedule[nextHour] && !schedule[nextHour].staffBreaks[s]) {
-                        schedule[nextHour].staffBreaks[s] = "30-MIN BREAK";
-                        staffStats[s].shortBreakTime = nextHour;
-                        staffStats[s].breakTime += 0.5;
-                        consecutiveWorkHours[s] = 0;
+                // Check if staff is assigned to any patient this hour
+                for (const patient in schedule[time].patientAssignments) {
+                    if (schedule[time].patientAssignments[patient].includes(s)) {
+                        isWorking = true;
+                        break;
                     }
                 }
-            } else if (schedule[time].staffBreaks[s]) {
-                // Reset consecutive work hours after a break
-                consecutiveWorkHours[s] = 0;
-            }
+                
+                // Update consecutive hours
+                if (isWorking) {
+                    consecutiveWorkHours[s]++;
+                    
+                    // Force a break if more than 3 consecutive hours
+                    if (consecutiveWorkHours[s] >= 3 && timeIndex < timeSlots.length - 1) {
+                        const nextHour = timeSlots[timeIndex + 1];
+                        // Only if they don't already have a break planned
+                        if (schedule[nextHour] && !schedule[nextHour].staffBreaks[s]) {
+                            schedule[nextHour].staffBreaks[s] = "30-MIN BREAK";
+                            staffStats[s].shortBreakTime = nextHour;
+                            staffStats[s].breakTime += 0.5;
+                            consecutiveWorkHours[s] = 0;
+                        }
+                    }
+                } else if (schedule[time].staffBreaks[s]) {
+                    // Reset consecutive work hours after a break
+                    consecutiveWorkHours[s] = 0;
+                }
+            });
         });
-    });
 
-    // Assign breaks for each staff
-    staff.forEach((s, index) => {
-        const shiftLength = timeSlots.length; // 12 hours
-        const midPoint = Math.floor(shiftLength / 2);
-        
-        // Clear any previously assigned breaks for this staff
-        timeSlots.forEach(time => {
-            schedule[time].staffBreaks[s] = "";
-        });
+        // Assign breaks for each staff
+        staff.forEach((s, index) => {
+            const shiftLength = timeSlots.length; // 12 hours
+            const midPoint = Math.floor(shiftLength / 2);
+            
+            // Clear any previously assigned breaks for this staff
+            timeSlots.forEach(time => {
+                schedule[time].staffBreaks[s] = "";
+            });
 
-        // Reset break time in stats
-        staffStats[s].breakTime = 0;
-        staffStats[s].shortBreakTime = "";
-        staffStats[s].secondBreakTime = "";
-        
-        if (isDayShift) {
-            // DAY SHIFT: 30-minute break + 1-hour second break
-            // 30-minute break - in first half of shift, staggered
-            const shortBreakOffset = index % 2; // Stagger by staff index (only 2 nurses)
-            const shortBreakHour = Math.min(2 + shortBreakOffset, 5);
-            const shortBreakTime = timeSlots[shortBreakHour];
+            // Reset break time in stats
+            staffStats[s].breakTime = 0;
+            staffStats[s].shortBreakTime = "";
+            staffStats[s].secondBreakTime = "";
             
-            // Assign 30-min break
-            schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
-            staffStats[s].shortBreakTime = shortBreakTime;
-            staffStats[s].breakTime = 0.5;
-            
-            // 1-hour second break - in second half of shift, staggered
-            const secondBreakOffset = index % 2;
-            let secondBreakHour = midPoint + 1 + secondBreakOffset;
-            
-            // Ensure second break is at least 2 hours after the short break
-            if (secondBreakHour - shortBreakHour < 2) {
-                secondBreakHour = shortBreakHour + 2;
-            }
-            
-            // Make sure second break isn't in the last hour
-            secondBreakHour = Math.min(secondBreakHour, shiftLength - 2);
-            
-            const secondBreakTime = timeSlots[secondBreakHour];
-            
-            // Assign second break
-            if (secondBreakTime !== shortBreakTime) {
-                schedule[secondBreakTime].staffBreaks[s] = "2ND BREAK";
-                staffStats[s].secondBreakTime = secondBreakTime;
-                staffStats[s].breakTime += 1.0;
+            if (isDayShift) {
+                // DAY SHIFT: 30-minute break + 1-hour second break
+                // 30-minute break - in first half of shift, staggered
+                const shortBreakOffset = index % 2; // Stagger by staff index (only 2 nurses)
+                const shortBreakHour = Math.min(2 + shortBreakOffset, 5);
+                const shortBreakTime = timeSlots[shortBreakHour];
+                
+                // Assign 30-min break
+                schedule[shortBreakTime].staffBreaks[s] = "30-MIN BREAK";
+                staffStats[s].shortBreakTime = shortBreakTime;
+                staffStats[s].breakTime = 0.5;
+                
+                // 1-hour second break - in second half of shift, staggered
+                const secondBreakOffset = index % 2;
+                let secondBreakHour = midPoint + 1 + secondBreakOffset;
+                
+                // Ensure second break is at least 2 hours after the short break
+                if (secondBreakHour - shortBreakHour < 2) {
+                    secondBreakHour = shortBreakHour + 2;
+                }
+                
+                // Make sure second break isn't in the last hour
+                secondBreakHour = Math.min(secondBreakHour, shiftLength - 2);
+                
+                const secondBreakTime = timeSlots[secondBreakHour];
+                
+                // Assign second break
+                if (secondBreakTime !== shortBreakTime) {
+                    schedule[secondBreakTime].staffBreaks[s] = "2ND BREAK";
+                    staffStats[s].secondBreakTime = secondBreakTime;
+                    staffStats[s].breakTime += 1.0;
+                } else {
+                    // Find alternative time if needed
+                    const altBreakHour = Math.min(secondBreakHour + 1, shiftLength - 2);
+                    const altBreakTime = timeSlots[altBreakHour];
+                    schedule[altBreakTime].staffBreaks[s] = "2ND BREAK";
+                    staffStats[s].secondBreakTime = altBreakTime;
+                    staffStats[s].breakTime += 1.0;
+                }
             } else {
-                // Find alternative time if needed
-                const altBreakHour = Math.min(secondBreakHour + 1, shiftLength - 2);
-                const altBreakTime = timeSlots[altBreakHour];
-                schedule[altBreakTime].staffBreaks[s] = "2ND BREAK";
-                staffStats[s].secondBreakTime = altBreakTime;
-                staffStats[s].breakTime += 1.0;
+                // NIGHT SHIFT: Single 2-hour break
+                // Place break in the middle of the shift, staggered between the two nurses
+                const breakStartOffset = index % 2; // Stagger between the 2 nurses
+                const breakStartHour = Math.min(4 + breakStartOffset, 5); // Around middle of shift
+                
+                // Assign first hour of break
+                const firstBreakTime = timeSlots[breakStartHour];
+                schedule[firstBreakTime].staffBreaks[s] = "NIGHT BREAK";
+                staffStats[s].shortBreakTime = firstBreakTime;
+                
+                // Assign second hour of break (consecutive)
+                const secondBreakTime = timeSlots[breakStartHour + 1];
+                schedule[secondBreakTime].staffBreaks[s] = "NIGHT BREAK";
+                staffStats[s].secondBreakTime = secondBreakTime;
+                
+                // Total break time is 2 hours
+                staffStats[s].breakTime = 2.0;
             }
-        } else {
-            // NIGHT SHIFT: Single 2-hour break
-            // Place break in the middle of the shift, staggered between the two nurses
-            const breakStartOffset = index % 2; // Stagger between the 2 nurses
-            const breakStartHour = Math.min(4 + breakStartOffset, 5); // Around middle of shift
-            
-            // Assign first hour of break
-            const firstBreakTime = timeSlots[breakStartHour];
-            schedule[firstBreakTime].staffBreaks[s] = "NIGHT BREAK";
-            staffStats[s].shortBreakTime = firstBreakTime;
-            
-            // Assign second hour of break (consecutive)
-            const secondBreakTime = timeSlots[breakStartHour + 1];
-            schedule[secondBreakTime].staffBreaks[s] = "NIGHT BREAK";
-            staffStats[s].secondBreakTime = secondBreakTime;
-            
-            // Total break time is 2 hours
-            staffStats[s].breakTime = 2.0;
-        }
-    });
+        });
 
-    // Render the schedule
-    renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
-    
-    // Save to localStorage
-    saveToLocalStorage();
+        // Render the schedule
+        renderSchedule(schedule, staff, patients.map(p => p.name), staffStats);
+        
+        // Save to localStorage
+        saveToLocalStorage();
+    } catch (error) {
+        logError("Schedule Generation Error", "Failed to generate schedule", error);
+        showError("Failed to generate schedule. Please check your inputs and try again.");
+    }
 }
 
         function renderSchedule(schedule, staff, patients, staffStats) {
@@ -1372,10 +1377,10 @@ function saveToLocalStorage() {
         };
         
         localStorage.setItem('patientCareData', JSON.stringify(data));
-        console.log("Data saved to localStorage:", data);
         return true;
     } catch (error) {
-        console.error("Error saving to localStorage:", error);
+        logError("Storage Error", "Failed to save data to localStorage", error);
+        showError("Failed to save your changes. Your browser storage might be full or restricted.");
         return false;
     }
 }
@@ -1458,7 +1463,8 @@ function saveToLocalStorage() {
                 console.log("Data loaded successfully from localStorage");
                 return true;
             } catch (error) {
-                console.error("Error loading from localStorage:", error);
+                logError("Load Error", "Failed to load data from localStorage", error);
+                showError("Failed to load your saved data. Using default settings instead.");
                 return false;
             }
         }
