@@ -1512,7 +1512,7 @@ function generateSchedule() {
             // Restore patients
             const patientInputs = document.getElementById('patientInputs');
             patientInputs.innerHTML = '';
-            patients.forEach(({ name, staffCount }) => {
+            patientNames.forEach((name, index) => {
                 const patientContainer = document.createElement('div');
                 patientContainer.className = 'patient-container';
                 
@@ -1542,18 +1542,12 @@ function generateSchedule() {
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
-                staffCountSelect.value = staffCount;
+                staffCountSelect.value = Math.min(index % 3 + 1, 3); // Values 1, 2, 3 cycling
                 
                 inputWrapper.appendChild(newInput);
                 inputWrapper.appendChild(staffCountSelect);
                 patientContainer.appendChild(inputWrapper);
                 patientInputs.appendChild(patientContainer);
-                
-                // Add event listeners to the new elements
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
-                
-                saveToLocalStorage();
             });
             
             // Restore security staff
@@ -1923,11 +1917,11 @@ window.onload = function() {
                 patientContainer.className = 'patient-container';
                 
                 const inputWrapper = document.createElement('div');
-                inputWrapper```html
                 inputWrapper.style.display = 'flex';
                 inputWrapper.style.alignItems = 'center';
                 inputWrapper.style.gap = '10px';
                 
+                const newInput = document```html
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.value = name;
