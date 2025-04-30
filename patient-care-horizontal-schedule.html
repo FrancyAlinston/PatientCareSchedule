@@ -1262,38 +1262,90 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         
         // Count existing manual assignments for each staff member
         staffList.forEach(s => {
-            const manualDutyCount
+            const manualDutyCount = Object.values(manualCleaningAssignments)
+                .filter(staffName => staffName === s).length;
+            staffDutyCount[s] = manualDutyCount;
         });
-    }
-
-    // Update window.onload to initialize the cleaning duties section
-    window.onload = function() {
-        // Set moon emoji for dark mode button
-        document.getElementById('toggleModeBtn').innerHTML = '🌙';
         
-        try {
-            // Load data from localStorage
-            loadFromLocalStorage();
+        // Assign duties - prioritize staff with more free slots
+        while (dutiesAssigned < dutiesList.length) {
+            // Sort staff by number of duties assigned (ascending)
+            const staffByAvailability = [...staffList].sort((a, b) => {
+                return staffDutyCount[a] - staffDutyCount[b]; // Staff with fewer duties first
+            });
             
-            // Make sure dark mode is correctly applied based on saved preference
-            // Existing dark mode code...
-            
-            // Show/hide cleaning duties section based on shift
-            document.getElementById('cleaningDutiesSection').style.display = isDayShift ? 'none' : 'block';
-            
-            // If in night shift mode, populate the cleaning duties table
-            if (!isDayShift) {
-                populateCleaningDutiesTable();
+            // Try to assign a duty to the first available staff
+            let assigned = false;
+            for (const s of staffByAvailability) {
+                // Skip if this staff member has reached their duty limit
+                if (staffDutyCount[s] >= maxDutiesPerStaff) continue;
+                
+                // Skip if no free slots
+                if (freeSlots[s].length === 0) continue;
+                
+                // Get the duty to assign
+                const duty = dutiesList[dutiesAssigned];
+                
+                // Try to find a good slot - prefer middle of shift when possible
+                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 3 && slot.timeIndex <= 8);
+                const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
+                
+                // Assign the duty
+                schedule[slot.time].staffBreaks[s] = duty;
+                
+                // Store cleaning duty in the staff stats
+                if (!staffStats[s].cleaningDuties) {
+                    staffStats[s].cleaningDuties = [];
+                }
+                staffStats[s].cleaningDuties.push({
+                    duty: duty,
+                    time: slot.time
+                });
+                
+                // Remove this slot from available slots
+                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
+                
+                // Update counters
+                staffDutyCount[s]++;
+                dutiesAssigned++;
+                assigned = true;
+                break;
             }
             
-            // Rest of existing onload code...
-        } catch (error) {
-            console.error("Error:", error);
-            showError("Something went wrong. Please try again.");
+            // If we couldn't assign any more duties, break the loop
+            if (!assigned || dutiesAssigned >= dutiesList.length) break;
         }
+    }
+}
 
-        // Rest of existing onload code...
-    };
+        // Update window.onload to initialize the cleaning duties section
+        window.onload = function() {
+            // Set moon emoji for dark mode button
+            document.getElementById('toggleModeBtn').innerHTML = '🌙';
+            
+            try {
+                // Load data from localStorage
+                loadFromLocalStorage();
+                
+                // Make sure dark mode is correctly applied based on saved preference
+                // Existing dark mode code...
+                
+                // Show/hide cleaning duties section based on shift
+                document.getElementById('cleaningDutiesSection').style.display = isDayShift ? 'none' : 'block';
+                
+                // If in night shift mode, populate the cleaning duties table
+                if (!isDayShift) {
+                    populateCleaningDutiesTable();
+                }
+                
+                // Rest of existing onload code...
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Something went wrong. Please try again.");
+            }
+
+            // Rest of existing onload code...
+        };
 </script>
 </body>
 </html>
