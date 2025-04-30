@@ -1291,6 +1291,31 @@ function generateSchedule() {
             document.getElementById('rotationStats').innerHTML = rotationHtml;
         }
 
+        // Add this to your window.onload function
+document.getElementById('toggleDebugBtn').addEventListener('click', function() {
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel.style.display === 'none') {
+        debugPanel.style.display = 'block';
+    } else {
+        debugPanel.style.display = 'none';
+    }
+});
+
+document.getElementById('clearDebugBtn').addEventListener('click', function() {
+    document.getElementById('debugOutput').innerHTML = '';
+});
+
+// Capture global errors
+window.onerror = function(message, source, lineno, colno, error) {
+    logError("Global Error", `${message} at line ${lineno}:${colno}`, error);
+    return false; // Let the default handler run as well
+};
+
+// Capture promise rejections
+window.onunhandledrejection = function(event) {
+    logError("Unhandled Promise Rejection", event.reason.message || "Unknown promise error", event.reason);
+};
+
         // Add this function near the top of your script section
 function logError(errorType, message, errorObject = null) {
     console.error(`[${errorType}] ${message}`);
