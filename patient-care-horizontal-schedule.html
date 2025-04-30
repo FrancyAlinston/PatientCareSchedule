@@ -1364,11 +1364,15 @@ closeDebugPanelBtn.style.top = '10px';
 closeDebugPanelBtn.style.cursor = 'pointer';
 closeDebugPanelBtn.style.fontSize = '16px';
 closeDebugPanelBtn.style.fontWeight = 'bold';
+closeDebugPanelBtn.style.color = '#ffffff'; // Ensure white text color for visibility
 closeDebugPanelBtn.title = 'Close Debug Console';
 
-// Add event listener to close the debug panel when clicked
-closeDebugPanelBtn.addEventListener('click', function() {
-    document.getElementById('debugPanel').style.display = 'none';
+// Add a hover effect for better UX
+closeDebugPanelBtn.addEventListener('mouseover', function() {
+    this.style.color = '#ff5555'; // Red on hover
+});
+closeDebugPanelBtn.addEventListener('mouseout', function() {
+    this.style.color = '#ffffff'; // Back to white
 });
 
 // Insert the close button after the heading
@@ -1962,3 +1966,4 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     </script>
 </body>
 </html>
+`
