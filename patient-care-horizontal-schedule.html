@@ -890,6 +890,753 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
     return timeIndex < 2 || timeIndex >= totalHours - 2;
 }
 
+// Add this comprehensive function to generate the schedule
+function generateSchedule() {
+    try {
+        // Validate inputs before generating schedule
+        if (!validateInputs()) {
+            return;
+        }
+
+        // Get current values
+        const staff = Array.from(document.querySelectorAll('.staff-name'))
+            .map(input => input.value.trim())
+            .filter(name => name); // Filter out empty names
+            
+        // Get security staff values
+        const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
+            .map(input => input.value.trim())
+            .filter(name => name);
+            
+        // Update global security staff array for use in other functions
+        securityStaff = [...securityStaffValues];
+        
+        // Get nurse in charge values
+        const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+        const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+        
+        // Add nurses in charge to the staff list if they're not empty
+        const allNurses = [];
+        if (nurseInCharge1) {
+            staff.push(nurseInCharge1);
+            allNurses.push(nurseInCharge1);
+        }
+        if (nurseInCharge2) {
+            staff.push(nurseInCharge2);
+            allNurses.push(nurseInCharge2);
+        }
+        
+        // Add security staff to the combined staff list
+        const allStaff = [...staff, ...securityStaff];
+        
+        // Get patient inputs
+        const patients = Array.from(document.querySelectorAll('.patient-container'))
+            .map(container => {
+                const name = container.querySelector('.patient-name').value.trim();
+                if (!name) return null;
+                
+                return {
+                    name,
+                    staffCount: parseInt(container.querySelector('.staff-count').value)
+                };
+            })
+            .filter(patient => patient !== null); // Filter out empty patients
+        
+        // Initialize schedule object with all time slots
+        schedule = {};
+        timeSlots.forEach(time => {
+            schedule[time] = {
+                patientAssignments: {},
+                staffBreaks: {}
+            };
+            
+            // Initialize patient assignments
+            patients.forEach(patient => {
+                schedule[time].patientAssignments[patient.name] = [];
+            });
+        });
+        
+        // Initialize staffPatientHistory if it doesn't exist
+        if (!staffPatientHistory) {
+            staffPatientHistory = {};
+        }
+        
+        // Make sure all staff and patients have entries in staffPatientHistory
+        staff.forEach(s => {
+            if (!staffPatientHistory[s]) {
+                staffPatientHistory[s] = {};
+            }
+            
+            patients.forEach(patient => {
+                if (!staffPatientHistory[s][patient.name]) {
+                    staffPatientHistory[s][patient.name] = 0;
+                }
+            });
+        });
+        
+        // Initialize stats object to track staff workload
+        const staffStats = {};
+        allStaff.forEach(s => {
+            staffStats[s] = {
+                workHours: 0,
+                breakTime: 0,
+                shortBreakTime: "",
+                secondBreakTime: ""
+            };
+        });
+        
+        // First, assign break times
+        assignBreaks(allStaff, staffStats);
+        
+        // Then, assign security duties for security staff (if any)
+        assignSecurityDuties(securityStaff, staffStats);
+        
+        // Next, assign cleaning duties for night shift (if applicable)
+        if (!isDayShift) {
+            assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats);
+        }
+        
+        // Finally, assign staff to patients using a fair algorithm
+        assignPatients(staff, patients, staffStats);
+        
+        // Render the schedule
+        renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
+        
+        // Render stats
+        renderStats(staffStats, allStaff, patients.map(p => p.name));
+        
+        // Render rotation stats
+        renderStaffRotationStats(
+            patients.map(p => p.name), 
+            staff.filter(s => !securityStaffValues.includes(s))
+        );
+        
+        // Save to localStorage
+        saveToLocalStorage();
+        
+        return true;
+    } catch (error) {
+        console.error("Error generating schedule:", error);
+        showError("An error occurred while generating the schedule. Please check your inputs and try again.");
+        return false;
+    }
+}
+
+// Sub-functions for generateSchedule
+
+function validateInputs() {
+    // Check if there are any staff members
+    const staffInputs = Array.from(document.querySelectorAll('.staff-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+        
+    if (staffInputs.length === 0) {
+        showError("Please add at least one Health Care Worker.");
+        return false;
+    }
+    
+    // Check if there are any patients
+    const patientInputs = Array.from(document.querySelectorAll('.patient-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+        
+    if (patientInputs.length === 0) {
+        showError("Please add at least one patient.");
+        return false;
+    }
+    
+    // Check for duplicate staff names
+    const allStaffInputs = [
+        ...Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()),
+        ...Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim()),
+        document.getElementById('nurseInChargeInput').value.trim(),
+        document.getElementById('nurseInCharge2Input').value.trim()
+    ].filter(name => name);
+    
+    const uniqueStaff = new Set(allStaffInputs);
+    if (uniqueStaff.size !== allStaffInputs.length) {
+        showError("Each staff member must have a unique name. Please remove duplicates.");
+        return false;
+    }
+    
+    // Check for duplicate patient names
+    const patientNames = Array.from(document.querySelectorAll('.patient-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+        
+    const uniquePatients = new Set(patientNames);
+    if (uniquePatients.size !== patientNames.length) {
+        showError("Each patient must have a unique name. Please remove duplicates.");
+        return false;
+    }
+    
+    return true;
+}
+
+function assignBreaks(allStaff, staffStats) {
+    allStaff.forEach(s => {
+        if (isDayShift) {
+            // Day shift: 30-min break and 1-hour 2nd break
+            // Assign 30-min break to a random hour between 9:00 and 13:00
+            const shortBreakHour = Math.floor(Math.random() * 4) + 1; // 1 to 4 (9:00 to 13:00)
+            schedule[timeSlots[shortBreakHour]].staffBreaks[s] = "30-MIN BREAK";
+            staffStats[s].breakTime += 0.5;
+            staffStats[s].shortBreakTime = timeSlots[shortBreakHour];
+            
+            // Assign 1-hour 2nd break to a random hour between 14:00 and 17:00
+            const secondBreakHour = Math.floor(Math.random() * 4) + 6; // 6 to 9 (14:00 to 17:00)
+            schedule[timeSlots[secondBreakHour]].staffBreaks[s] = "2ND BREAK";
+            staffStats[s].breakTime += 1;
+            staffStats[s].secondBreakTime = timeSlots[secondBreakHour];
+        } else {
+            // Night shift: 2-hour continuous break
+            // Choose a random starting hour between 23:00 and 3:00
+            const breakStartHour = Math.floor(Math.random() * 5) + 3; // 3 to 7 (23:00 to 3:00)
+            
+            // Assign the 2-hour break (spanning 2 continuous time slots)
+            schedule[timeSlots[breakStartHour]].staffBreaks[s] = "NIGHT BREAK";
+            schedule[timeSlots[breakStartHour + 1]].staffBreaks[s] = "NIGHT BREAK";
+            
+            staffStats[s].breakTime += 2;
+            staffStats[s].shortBreakTime = timeSlots[breakStartHour];
+            staffStats[s].secondBreakTime = timeSlots[breakStartHour + 1];
+        }
+    });
+}
+
+function assignSecurityDuties(securityStaff, staffStats) {
+    // Assign security duties for the first 2 and last 2 hours of the shift
+    securityStaff.forEach(s => {
+        const totalHours = timeSlots.length;
+        for (let i = 0; i < totalHours; i++) {
+            if (isSecurityRestrictedHour(i, totalHours)) {
+                schedule[timeSlots[i]].staffBreaks[s] = "SECURITY DUTY";
+            }
+        }
+    });
+}
+
+function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats) {
+    // Find regular staff (not security staff and not nurse in charge)
+    const regularStaff = staff.filter(s => 
+        !securityStaff.includes(s) && 
+        s !== nurseInCharge1 && 
+        s !== nurseInCharge2
+    );
+    
+    if (regularStaff.length > 0) {
+        // Create a map to track available free slots for each staff member
+        const freeSlots = {};
+        regularStaff.forEach(s => {
+            freeSlots[s] = [];
+            
+            // Find all free time slots for this staff member
+            timeSlots.forEach((time, timeIndex) => {
+                // Skip if on break
+                if (schedule[time].staffBreaks[s]) {
+                    return;
+                }
+                
+                // Skip security restricted hours
+                if (isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
+                    return;
+                }
+                
+                // This is a free slot
+                freeSlots[s].push({ time, timeIndex });
+            });
+        });
+        
+        // Try to distribute duties fairly
+        let dutiesAssigned = 0;
+        const maxDutiesPerStaff = Math.ceil(cleaningDuties.length / regularStaff.length);
+        const staffDutyCount = {};
+        regularStaff.forEach(s => { staffDutyCount[s] = 0; });
+        
+        // Assign duties - prioritize staff with more free slots
+        while (dutiesAssigned < cleaningDuties.length) {
+            // Sort staff by number of duties assigned (ascending)
+            const staffByAvailability = [...regularStaff].sort((a, b) => {
+                return staffDutyCount[a] - staffDutyCount[b]; // Staff with fewer duties first
+            });
+            
+            // Try to assign a duty to the first available staff
+            let assigned = false;
+            for (const s of staffByAvailability) {
+                // Skip if this staff member has reached their duty limit
+                if (staffDutyCount[s] >= maxDutiesPerStaff) continue;
+                
+                // Skip if no free slots
+                if (freeSlots[s].length === 0) continue;
+                
+                // Get the duty to assign
+                const duty = cleaningDuties[dutiesAssigned];
+                
+                // Try to find a good slot - prefer middle of shift when possible
+                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 3 && slot.timeIndex <= 8);
+                const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
+                
+                // Assign the duty
+                schedule[slot.time].staffBreaks[s] = duty;
+                
+                // Store cleaning duty in the staff stats
+                if (!staffStats[s].cleaningDuties) {
+                    staffStats[s].cleaningDuties = [];
+                }
+                staffStats[s].cleaningDuties.push({
+                    duty: duty,
+                    time: slot.time
+                });
+                
+                // Remove this slot from available slots
+                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
+                
+                // Update counters
+                staffDutyCount[s]++;
+                dutiesAssigned++;
+                assigned = true;
+                break;
+            }
+            
+            // If we couldn't assign any more duties, break the loop
+            if (!assigned || dutiesAssigned >= cleaningDuties.length) break;
+        }
+    }
+}
+
+function assignPatients(staff, patients, staffStats) {
+    // Create a list of all time slots
+    timeSlots.forEach(time => {
+        // Get available staff for this time slot (those not on break)
+        const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+        
+        if (availableStaff.length === 0) {
+            // No staff available for this time slot, all patients will be unassigned
+            return;
+        }
+        
+        // Sort patients by staffCount (highest first) to prioritize higher needs
+        const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
+        
+        // For each patient, assign the required number of staff
+        for (const patient of sortedPatients) {
+            // Calculate how many staff we can assign to this patient
+            const staffNeeded = Math.min(patient.staffCount, availableStaff.length);
+            
+            if (staffNeeded === 0) {
+                // No staff available for this patient
+                continue;
+            }
+            
+            // Find the best staff for this patient based on rotation history
+            const bestStaff = findBestStaffForPatient(availableStaff, patient.name, staffNeeded);
+            
+            // Assign the staff to this patient
+            bestStaff.forEach(s => {
+                schedule[time].patientAssignments[patient.name].push(s);
+                
+                // Update rotation history
+                staffPatientHistory[s][patient.name]++;
+                
+                // Update stats
+                staffStats[s].workHours++;
+                
+                // Remove this staff from available staff for this time slot
+                const index = availableStaff.indexOf(s);
+                if (index !== -1) {
+                    availableStaff.splice(index, 1);
+                }
+            });
+        }
+    });
+}
+
+function findBestStaffForPatient(availableStaff, patientName, count) {
+    // Sort staff by how many times they've worked with this patient (ascending)
+    const sorted = [...availableStaff].sort((a, b) => {
+        const countA = staffPatientHistory[a][patientName] || 0;
+        const countB = staffPatientHistory[b][patientName] || 0;
+        return countA - countB;
+    });
+    
+    // Return the top 'count' staff
+    return sorted.slice(0, count);
+}
+
+function renderSchedule(schedule, staff, patients, staffStats) {
+    // Clear previous schedule
+    const scheduleHeader = document.getElementById('scheduleHeader');
+    const scheduleBody = document.getElementById('scheduleBody');
+    const staffHeader = document.getElementById('staffHeader');
+    const staffBody = document.getElementById('staffBody');
+    const breakHoursTable = document.getElementById('breakHoursTable').querySelector('tbody');
+    
+    scheduleHeader.innerHTML = '';
+    scheduleBody.innerHTML = '';
+    staffHeader.innerHTML = '';
+    staffBody.innerHTML = '';
+    breakHoursTable.innerHTML = '';
+    
+    // Create header for the patient schedule
+    const headerRow = document.createElement('tr');
+    
+    // Add blank cell for the corner
+    const cornerCell = document.createElement('th');
+    headerRow.appendChild(cornerCell);
+    
+    // Add time slots as headers
+    timeSlots.forEach(time => {
+        const th = document.createElement('th');
+        th.textContent = time;
+        headerRow.appendChild(th);
+    });
+    
+    scheduleHeader.appendChild(headerRow);
+    
+    // Create rows for each patient
+    patients.forEach(patient => {
+        const row = document.createElement('tr');
+        
+        // Add patient name as row header
+        const nameCell = document.createElement('td');
+        nameCell.textContent = patient;
+        nameCell.className = 'row-header';
+        row.appendChild(nameCell);
+        
+        // Add cells for each time slot
+        timeSlots.forEach(time => {
+            const cell = document.createElement('td');
+            const assignedStaff = schedule[time].patientAssignments[patient];
+            
+            if (assignedStaff.length === 0) {
+                cell.textContent = "UNASSIGNED";
+                cell.className = 'staff-unassigned';
+                cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
+                cell.style.color = "#000000"; // Black text for contrast
+            } else {
+                // Use initials instead of full names
+                const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
+                cell.textContent = staffInitials;
+                
+                // Add a title attribute for hover tooltip showing full names
+                cell.title = assignedStaff.join(", ");
+                
+                // Color the cell based on the first assigned staff member's color
+                if (assignedStaff.length > 0) {
+                    // Generate a color based on the staff name
+                    const staffName = assignedStaff[0];
+                    const hash = staffName.split('').reduce((hash, char) => {
+                        return ((hash << 5) - hash) + char.charCodeAt(0);
+                    }, 0);
+                    
+                    const hue = Math.abs(hash) % 360;
+                    const bgColor = `hsl(${hue}, 70%, 85%)`;
+                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+                    
+                    cell.style.backgroundColor = bgColor;
+                    cell.style.color = textColor;
+                } else {
+                    cell.style.backgroundColor = "#f8f9fa";
+                    cell.style.color = "#000000";
+                }
+            }
+            
+            row.appendChild(cell);
+        });
+        
+        scheduleBody.appendChild(row);
+    });
+    
+    // Create header for the staff schedule
+    const staffHeaderRow = document.createElement('tr');
+    
+    // Add blank cell for the corner
+    const staffCornerCell = document.createElement('th');
+    staffHeaderRow.appendChild(staffCornerCell);
+    
+    // Add time slots as headers
+    timeSlots.forEach(time => {
+        const th = document.createElement('th');
+        th.textContent = time;
+        staffHeaderRow.appendChild(th);
+    });
+    
+    staffHeader.appendChild(staffHeaderRow);
+    
+    // Create a map of staff colors for consistent coloring
+    const staffColors = {};
+    staff.forEach(s => {
+        // Generate a color based on the staff name
+        const hash = s.split('').reduce((hash, char) => {
+            return ((hash << 5) - hash) + char.charCodeAt(0);
+        }, 0);
+        
+        const hue = Math.abs(hash) % 360;
+        const bgColor = `hsl(${hue}, 70%, 85%)`;
+        const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+        
+        staffColors[s] = { bgColor, textColor };
+    });
+    
+    // Create rows for each staff member
+    staff.forEach(s => {
+        const row = document.createElement('tr');
+        
+        // Add staff name cell with initials
+        const staffCell = document.createElement('td');
+        staffCell.textContent = getInitials(s);
+        staffCell.title = s; // Add full name as tooltip
+        staffCell.className = 'row-header';
+        
+        // Check if this is security staff
+        if (securityStaff.includes(s)) {
+            // Special styling for security staff name cell
+            staffCell.style.backgroundColor = "#ff9800"; // Orange background
+            staffCell.style.color = "#000000"; // Black text for contrast
+            staffCell.style.fontWeight = "bold";
+            staffCell.title = s + " (Security)"; // Add explicit label
+        } else if (staffColors[s]) {
+            // Regular staff with their assigned color
+            const { bgColor, textColor } = staffColors[s];
+            staffCell.style.backgroundColor = bgColor;
+            staffCell.style.color = textColor;
+        } else {
+            // Fallback colors
+            staffCell.style.backgroundColor = "#f8f9fa";
+            staffCell.style.color = "#000000";
+        }
+        
+        row.appendChild(staffCell);
+        
+        // Add cells for each time slot
+        timeSlots.forEach(time => {
+            const cell = document.createElement('td');
+            
+            // Check if the staff is on break during this time
+            const breakStatus = schedule[time].staffBreaks[s];
+            if (breakStatus === "30-MIN BREAK") {
+                cell.textContent = "BREAK";
+                cell.className = 'staff-break';
+            } else if (breakStatus === "2ND BREAK") {
+                cell.textContent = "2ND BREAK";
+                cell.className = 'staff-lunch';
+            } else if (breakStatus === "NIGHT BREAK") {
+                cell.textContent = "BREAK";
+                cell.style.backgroundColor = "#673ab7"; // Purple for night break
+                cell.style.color = "#ffffff";
+            } else if (breakStatus === "SECURITY DUTY") {
+                cell.textContent = "SECURITY";
+                cell.style.backgroundColor = "#ffccbc"; // Light orange for security duty
+                cell.style.color = "#000000";
+            } else if (breakStatus && cleaningDuties.includes(breakStatus)) {
+                // This is for cleaning duties
+                cell.textContent = breakStatus;
+                cell.style.backgroundColor = "#9c27b0"; // Purple for cleaning duties
+                cell.style.color = "#ffffff";
+            } else {
+                // Staff is not on break, find which patient they're assigned to
+                let assigned = false;
+                for (const patient of patients) {
+                    if (schedule[time].patientAssignments[patient] &&
+                        schedule[time].patientAssignments[patient].includes(s)) {
+                        cell.textContent = getInitials(patient);
+                        cell.title = patient; // Add patient name as tooltip
+                        
+                        // Use the same color as the staff name for consistency
+                        if (staffColors[s]) {
+                            const { bgColor, textColor } = staffColors[s];
+                            cell.style.backgroundColor = bgColor;
+                            cell.style.color = textColor;
+                        }
+                        assigned = true;
+                        break;
+                    }
+                }
+                
+                if (!assigned) {
+                    cell.textContent = "FREE";
+                    cell.style.backgroundColor = "#f8f9fa"; // Light gray for free time
+                    cell.style.color = "#000000";
+                }
+            }
+            
+            row.appendChild(cell);
+        });
+        
+        staffBody.appendChild(row);
+    });
+    
+    // Render break hours table
+    staff.forEach(s => {
+        const row = document.createElement('tr');
+        
+        // Staff name cell with initials
+        const staffCell = document.createElement('td');
+        staffCell.textContent = getInitials(s);
+        staffCell.title = s; // Add full name as tooltip
+        row.appendChild(staffCell);
+        
+        // Break time cells
+        const shortBreakCell = document.createElement('td');
+        shortBreakCell.textContent = staffStats[s].shortBreakTime || "N/A";
+        row.appendChild(shortBreakCell);
+        
+        const secondBreakCell = document.createElement('td');
+        secondBreakCell.textContent = staffStats[s].secondBreakTime || "N/A";
+        row.appendChild(secondBreakCell);
+        
+        breakHoursTable.appendChild(row);
+    });
+}
+
+function renderStats(staffStats, staff, patients) {
+    let statsHtml = '<h2>Health Care Worker (HCW) Work Summary</h2>';
+    statsHtml += '<table>';
+    
+    if (isDayShift) {
+        statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>30-min Break</th><th>1-hour 2nd Break</th></tr>';
+    } else {
+        statsHtml += '<tr><th>HCW</th><th>Work Hours</th><th>Break Time</th><th>Break Time</th><th>Cleaning Duties</th></tr>';
+    }
+    
+    staff.forEach(s => {
+        if (isDayShift) {
+            statsHtml += `<tr>
+                <td title="${s}">${getInitials(s)}</td>
+                <td>${staffStats[s].workHours} hours</td>
+                <td>${staffStats[s].breakTime} hours</td>
+                <td>${staffStats[s].shortBreakTime}</td>
+                <td>${staffStats[s].secondBreakTime}</td>
+            </tr>`;
+        } else {
+            // Display cleaning duties for night shift
+            let cleaningDutiesText = "None";
+            if (staffStats[s].cleaningDuties && staffStats[s].cleaningDuties.length > 0) {
+                cleaningDutiesText = staffStats[s].cleaningDuties
+                    .map(item => `${item.duty} (${item.time})`)
+                    .join(', ');
+            }
+            
+            statsHtml += `<tr>
+                <td title="${s}">${getInitials(s)}</td>
+                <td>${staffStats[s].workHours} hours</td>
+                <td>${staffStats[s].breakTime} hours</td>
+                <td>${staffStats[s].shortBreakTime} to ${staffStats[s].secondBreakTime}</td>
+                <td>${cleaningDutiesText}</td>
+            </tr>`;
+        }
+    });
+    
+    statsHtml += '</table>';
+    
+    // Add schedule coverage
+    statsHtml += '<h2>Schedule Coverage</h2>';
+    statsHtml += `<p>Total HCWs: ${staff.length}</p>`;
+    statsHtml += `<p>Total Patients: ${patients.length}</p>`;
+    
+    // Calculate patient-to-HCW ratio
+    const ratio = staff.length / patients.length;
+    statsHtml += `<p>HCW-to-Patient Ratio: ${ratio.toFixed(2)}:1</p>`;
+    
+    // Calculate workload balance metrics
+    const workHours = staff.map(s => staffStats[s].workHours);
+    const maxHours = Math.max(...workHours);
+    const minHours = Math.min(...workHours);
+    const avgHours = workHours.reduce((sum, hours) => sum + hours, 0) / staff.length;
+    const balanceScore = maxHours - minHours; // Lower is better
+    
+    statsHtml += '<h3>Work Balance Metrics</h3>';
+    statsHtml += `<p>Maximum Work Hours: ${maxHours}</p>`;
+    statsHtml += `<p>Minimum Work Hours: ${minHours}</p>`;
+    statsHtml += `<p>Average Work Hours: ${avgHours.toFixed(1)}</p>`;
+    statsHtml += `<p>Balance Score: ${balanceScore} (lower is better)</p>`;
+    
+    // Add this to the end of the renderStats function
+    if (!isDayShift) {
+        // Add a cleaning duties summary
+        statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
+        statsHtml += '<table>';
+        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th></tr>';
+        
+        // Create a map of duties to staff
+        const dutyAssignments = {};
+        staff.forEach(s => {
+            if (staffStats[s].cleaningDuties) {
+                staffStats[s].cleaningDuties.forEach(item => {
+                    dutyAssignments[item.duty] = {
+                        staff: s,
+                        time: item.time
+                    };
+                });
+            }
+        });
+        
+        // List all possible cleaning duties
+        cleaningDuties.forEach(duty => {
+            const assignment = dutyAssignments[duty];
+            if (assignment) {
+                statsHtml += `<tr>
+                    <td>${duty}</td>
+                    <td title="${assignment.staff}">${getInitials(assignment.staff)}</td>
+                    <td>${assignment.time}</td>
+                </tr>`;
+            } else {
+                statsHtml += `<tr>
+                    <td>${duty}</td>
+                    <td>Not Assigned</td>
+                    <td>N/A</td>
+                </tr>`;
+            }
+        });
+        
+        statsHtml += '</table>';
+    }
+    
+    // Set the HTML for the stats section
+    document.getElementById('stats').innerHTML = statsHtml;
+}
+
+function renderStaffRotationStats(patients, staff) {
+    // Generate a table showing how many times each staff member has worked with each patient
+    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+    rotationHtml += '<table class="rotation-table">';
+    
+    // Header row with patient initials
+    rotationHtml += '<tr><th>Staff</th>';
+    patients.forEach(patient => {
+        const patientName = typeof patient === 'object' ? patient.name : patient;
+        rotationHtml += `<th title="${patientName}">${getInitials(patientName)}</th>`;
+    });
+    rotationHtml += '</tr>';
+    
+    // Rows for each staff member with initials
+    staff.forEach(s => {
+        rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
+        
+        // For each patient, show the rotation count
+        patients.forEach(patient => {
+            const patientName = typeof patient === 'object' ? patient.name : patient;
+            const count = staffPatientHistory[s] && staffPatientHistory[s][patientName] ? 
+                staffPatientHistory[s][patientName] : 0;
+            
+            // Color the cell based on the count (darker for higher counts)
+            const bgColor = count === 0 ? 
+                '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
+            const textColor = count >= 5 ? '#ffffff' : '#000000';
+            
+            rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
+        });
+        
+        rotationHtml += '</tr>';
+    });
+    
+    rotationHtml += '</table>';
+    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+    
+    document.getElementById('rotationStats').innerHTML = rotationHtml;
+}
+
 // Initialize on window load
 window.onload = function() {
     // Set moon emoji for dark mode button
@@ -1114,4 +1861,3 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
-`
