@@ -543,6 +543,125 @@
             }
         }
 
+        // Add this function to populate the cleaning duties table
+        function populateCleaningDutiesTable() {
+            const tableBody = document.querySelector('#cleaningDutiesTable tbody');
+            tableBody.innerHTML = '';
+            
+            // Get all regular staff (not security and not nurse in charge)
+            const staffInputs = Array.from(document.querySelectorAll('.staff-name'))
+                .map(input => input.value.trim())
+                .filter(name => name);
+            
+            const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
+                .map(input => input.value.trim());
+            
+            const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+            const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+            
+            // Filter out nurses and security from regular staff
+            const regularStaff = staffInputs.filter(s => 
+                !securityStaffValues.includes(s) && 
+                s !== nurseInCharge1 && 
+                s !== nurseInCharge2
+            );
+            
+            // Create rows for each cleaning duty
+            cleaningDuties.forEach(duty => {
+                const row = document.createElement('tr');
+                
+                // Duty name cell
+                const dutyCell = document.createElement('td');
+                dutyCell.textContent = duty;
+                
+                // Special highlights for kitchen-related duties
+                if (duty === "KITCHEN") {
+                    dutyCell.style.fontWeight = 'bold';
+                    dutyCell.style.backgroundColor = '#e6f7ff';
+                }
+                
+                row.appendChild(dutyCell);
+                
+                // Staff assignment dropdown cell
+                const assignmentCell = document.createElement('td');
+                const select = document.createElement('select');
+                select.dataset.duty = duty;
+                select.className = 'duty-assignment';
+                
+                // Add empty option
+                const emptyOption = document.createElement('option');
+                emptyOption.value = "";
+                emptyOption.textContent = "-- Select Staff --";
+                select.appendChild(emptyOption);
+                
+                // Add staff options
+                regularStaff.forEach(staff => {
+                    const option = document.createElement('option');
+                    option.value = staff;
+                    option.textContent = staff;
+                    select.appendChild(option);
+                });
+                
+                // Check if there's a saved assignment
+                if (manualCleaningAssignments && manualCleaningAssignments[duty]) {
+                    select.value = manualCleaningAssignments[duty];
+                }
+                
+                assignmentCell.appendChild(select);
+                row.appendChild(assignmentCell);
+                
+                tableBody.appendChild(row);
+            });
+
+            // Add event listeners for the cleaning duties buttons if they don't already have them
+            if (!document.getElementById('saveCleaningDuties').hasEventListeners) {
+                document.getElementById('saveCleaningDuties').addEventListener('click', function() {
+                    // Collect assignments from the select dropdowns
+                    manualCleaningAssignments = {};
+                    document.querySelectorAll('.duty-assignment').forEach(select => {
+                        const duty = select.dataset.duty;
+                        const staff = select.value;
+                        
+                        if (staff) {
+                            manualCleaningAssignments[duty] = staff;
+                        }
+                    });
+                    
+                    // Save to localStorage
+                    saveToLocalStorage();
+                    
+                    // Show confirmation message
+                    const confirmationDiv = document.createElement('div');
+                    confirmationDiv.className = 'error-message';
+                    confirmationDiv.style.backgroundColor = '#4CAF50';
+                    confirmationDiv.textContent = "Cleaning duty assignments saved successfully!";
+                    document.body.appendChild(confirmationDiv);
+                    setTimeout(() => confirmationDiv.remove(), 3000);
+                    
+                    // Regenerate schedule if it exists
+                    if (Object.keys(schedule).length > 0) {
+                        generateSchedule();
+                    }
+                });
+                document.getElementById('saveCleaningDuties').hasEventListeners = true;
+                
+                document.getElementById('resetCleaningDuties').addEventListener('click', function() {
+                    manualCleaningAssignments = {};
+                    populateCleaningDutiesTable();
+                    saveToLocalStorage();
+                    
+                    // Show confirmation message
+                    const confirmationDiv = document.createElement('div');
+                    confirmationDiv.className = 'error-message';
+                    confirmationDiv.style.backgroundColor = '#4CAF50';
+                    confirmationDiv.textContent = "Cleaning duty assignments have been reset.";
+                    document.body.appendChild(confirmationDiv);
+                    setTimeout(() => confirmationDiv.remove(), 3000);
+                });
+                document.getElementById('resetCleaningDuties').hasEventListeners = true;
+            }
+        }
+
         // Global variables
         let schedule = {};
         let isDayShift = true;
@@ -1349,3 +1468,4 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
 </script>
 </body>
 </html>
+``` 
