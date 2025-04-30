@@ -859,6 +859,11 @@ function generateSchedule() {
         
         // Save to localStorage
         saveToLocalStorage();
+
+        // After schedule is generated, update debug panel if it's open
+        if (document.getElementById('debugPanel').style.display !== 'none') {
+            updateDebugPanelData();
+        }
     } catch (error) {
         logError("Schedule Generation Error", "Failed to generate schedule", error);
         showError("Failed to generate schedule. Please check your inputs and try again.");
@@ -1477,6 +1482,12 @@ function saveToLocalStorage() {
         };
         
         localStorage.setItem('patientCareData', JSON.stringify(data));
+
+        // After saving, update debug panel if it's open
+        if (document.getElementById('debugPanel').style.display !== 'none') {
+            updateDebugPanelData();
+        }
+        
         return true;
     } catch (error) {
         logError("Storage Error", "Failed to save data to localStorage", error);
@@ -1793,7 +1804,88 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
     return timeIndex < 2 || timeIndex >= totalHours - 2;
 }
 
-// Initialize on window load
+// Create a function to update the debug panel with live data
+function updateDebugPanelData() {
+    // Clear existing info messages (keep errors)
+    const debugOutput = document.getElementById('debugOutput');
+    const infoMessages = debugOutput.querySelectorAll('.error-entry div[style*="color: #55aaff"]');
+    infoMessages.forEach(msg => {
+        const parent = msg.closest('.error-entry');
+        if (parent) parent.remove();
+    });
+    
+    // Add current application state
+    logError("Info", `Current shift: ${isDayShift ? 'Day Shift' : 'Night Shift'}`);
+    logError("Info", `Dark mode: ${document.body.classList.contains('dark-mode') ? 'Enabled' : 'Disabled'}`);
+    
+    // Count staff and patients
+    const staffCount = document.querySelectorAll('.staff-container').length;
+    const patientCount = document.querySelectorAll('.patient-container').length;
+    const securityCount = document.querySelectorAll('.security-container').length;
+    logError("Info", `Staff count: ${staffCount} HCW, ${securityCount} Security`);
+    logError("Info", `Patient count: ${patientCount}`);
+    
+    // Schedule information
+    const scheduleExists = Object.keys(schedule).length > 0;
+    logError("Info", `Schedule: ${scheduleExists ? 'Generated' : 'Not generated'}`);
+    
+    // Show local storage usage
+    const storageUsed = new TextEncoder().encode(
+        JSON.stringify(localStorage.getItem('patientCareData'))
+    ).length;
+    logError("Info", `Local storage used: ${(storageUsed / 1024).toFixed(2)} KB`);
+    
+    // Show browser and screen info
+    logError("Info", `Browser: ${navigator.userAgent.match(/(?:Chrome|Firefox|Safari|Edge|MSIE)\/[\d.]+/)[0]}`);
+    logError("Info", `Screen: ${window.innerWidth}x${window.innerHeight}px`);
+    
+    // Time info
+    const now = new Date();
+    logError("Info", `Current time: ${now.toLocaleTimeString()} (${isDayShift ? 'Day hours' : 'Night hours'})`);
+}
+
+// Update the toggleDebugBtn click handler to refresh data
+document.getElementById('toggleDebugBtn').addEventListener('click', function() {
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel.style.display === 'none') {
+        debugPanel.style.display = 'block';
+        // Update with fresh data each time the panel is opened
+        updateDebugPanelData();
+    } else {
+        debugPanel.style.display = 'none';
+    }
+});
+
+// Add auto-refresh to debug panel
+let debugRefreshInterval;
+function startDebugAutoRefresh() {
+    // Clear any existing interval
+    if (debugRefreshInterval) clearInterval(debugRefreshInterval);
+    
+    // Set up auto-refresh every 5 seconds when panel is visible
+    debugRefreshInterval = setInterval(() => {
+        if (document.getElementById('debugPanel').style.display !== 'none') {
+            updateDebugPanelData();
+        }
+    }, 5000); // Update every 5 seconds
+}
+
+// Add a refresh button to the debug panel
+const refreshDebugBtn = document.createElement('button');
+refreshDebugBtn.innerHTML = '🔄';
+refreshDebugBtn.style.position = 'absolute';
+refreshDebugBtn.style.top = '10px';
+refreshDebugBtn.style.right = '70px';
+refreshDebugBtn.style.backgroundColor = '#007bff';
+refreshDebugBtn.style.color = 'white';
+refreshDebugBtn.style.border = 'none';
+refreshDebugBtn.style.borderRadius = '4px';
+refreshDebugBtn.style.padding = '5px';
+refreshDebugBtn.title = 'Refresh Debug Data';
+refreshDebugBtn.addEventListener('click', updateDebugPanelData);
+document.getElementById('debugPanel').appendChild(refreshDebugBtn);
+
+// Start auto-refresh when page loads
 window.onload = function() {
     // Set moon emoji for dark mode button
     document.getElementById('toggleModeBtn').innerHTML = '🌙';
@@ -1833,6 +1925,9 @@ window.onload = function() {
 
     // Initialize legend
     updateLegend();
+
+    // Start debug panel auto-refresh
+    startDebugAutoRefresh();
 };
 
 document.getElementById('resetRotationBtn').addEventListener('click', () => {
