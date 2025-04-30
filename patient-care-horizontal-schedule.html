@@ -1862,6 +1862,8 @@ window.onload = function() {
         
         document.getElementById('toggleModeBtn').addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
+            // Add text to the toggle mode button
+            document.getElementById('toggleModeBtn').textContent = "Toggle Dark Mode";
             saveToLocalStorage();
         });
         
@@ -1917,11 +1919,10 @@ window.onload = function() {
                 patientContainer.className = 'patient-container';
                 
                 const inputWrapper = document.createElement('div');
-                inputWrapper.style.display = 'flex';
+                inputWrapper.style.display = 'flex```html
                 inputWrapper.style.alignItems = 'center';
                 inputWrapper.style.gap = '10px';
                 
-                const newInput = document```html
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.value = name;
