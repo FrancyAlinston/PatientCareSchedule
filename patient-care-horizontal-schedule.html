@@ -1283,6 +1283,29 @@ function generateSchedule() {
             document.getElementById('rotationStats').innerHTML = rotationHtml;
         }
 
+        // Add this function near the top of your script section
+function logError(errorType, message, errorObject = null) {
+    console.error(`[${errorType}] ${message}`);
+    if (errorObject) {
+        console.error(errorObject);
+    }
+    
+    // Also log to a debug element if present
+    const debugElement = document.getElementById('debugOutput');
+    if (debugElement) {
+        const errorEntry = document.createElement('div');
+        errorEntry.className = 'error-entry';
+        errorEntry.innerHTML = `<strong>${errorType}:</strong> ${message}`;
+        debugElement.appendChild(errorEntry);
+    }
+}
+
+// Then modify your existing error handlers to use this function
+// For example, replace:
+// console.error("Error:", error);
+// With:
+// logError("Initialization Error", "Failed to initialize application", error);
+
         // Enhance the saveToLocalStorage function to explicitly save all UI state
 function saveToLocalStorage() {
     try {
@@ -1655,8 +1678,7 @@ window.onload = function() {
         
         // Rest of your onload code...
     } catch (error) {
-        console.error("Error:", error);
-        showError("Something went wrong. Please try again.");
+        logError("Initialization Error", "Failed to initialize application", error);
     }
 };
 
