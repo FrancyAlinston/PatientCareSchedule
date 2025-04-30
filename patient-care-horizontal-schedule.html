@@ -1777,6 +1777,119 @@ document.getElementById('resetRotationBtn').addEventListener('click', () => {
     }
 });
 
+        // Add these event listeners to your window.onload function
+document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+
+document.getElementById('resetBtn').addEventListener('click', function() {
+    clearAllData();
+    localStorage.removeItem('patientCareData');
+    addStaffInput();
+    addPatientInput();
+    addSecurityStaffInput();
+});
+
+document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+document.getElementById('removeStaffBtn').addEventListener('click', function() {
+    const staffInputs = document.getElementById('staffInputs');
+    if (staffInputs.lastChild) {
+        staffInputs.removeChild(staffInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+document.getElementById('removePatientBtn').addEventListener('click', function() {
+    const patientInputs = document.getElementById('patientInputs');
+    if (patientInputs.lastChild) {
+        patientInputs.removeChild(patientInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    if (securityStaffInputs.lastChild) {
+        securityStaffInputs.removeChild(securityStaffInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+    isDayShift = !isDayShift;
+    timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+    document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+    this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+    
+    // Update legend based on shift
+    updateLegend();
+    saveToLocalStorage();
+    
+    // If a schedule exists, regenerate it with the new shift type
+    if (Object.keys(schedule).length > 0) {
+        generateSchedule();
+    }
+});
+
+document.getElementById('toggleModeBtn').addEventListener('click', function() {
+    document.body.classList.toggle('dark-mode');
+    this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    saveToLocalStorage();
+});
+
+document.getElementById('debugFillBtn').addEventListener('click', function() {
+    // Mock data
+    const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee'];
+    const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+    const securityNames = ['Security Officer Jones'];
+    const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
+    
+    // Fill nurse in charge inputs
+    document.getElementById('nurseInChargeInput').value = nurseNames[0];
+    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+    
+    // Fill staff inputs
+    const staffInputs = document.getElementById('staffInputs');
+    staffInputs.innerHTML = '';
+    staffNames.forEach(name => {
+        const staffContainer = document.createElement('div');
+        staffContainer.className = 'staff-container';
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.value = name;
+        newInput.className = 'staff-name';
+        staffContainer.appendChild(newInput);
+        staffInputs.appendChild(staffContainer);
+        newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    });
+    
+    // Fill security staff
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    securityStaffInputs.innerHTML = '';
+    const securityContainer = document.createElement('div');
+    securityContainer.className = 'security-container';
+    const securityInput = document.createElement('input');
+    securityInput.type = 'text';
+    securityInput.value = securityNames[0];
+    securityInput.className = 'security-name';
+    securityContainer.appendChild(securityInput);
+    securityStaffInputs.appendChild(securityContainer);
+    securityInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    
+    // Fill patient inputs
+    const patientInputs = document.getElementById('patientInputs');
+    patientInputs.innerHTML = '';
+    patientNames```html
+.forEach((name, index) => {
+        addPatientInput();
+        const lastInput = patientInputs.lastChild.querySelector('.patient-name');
+        lastInput.value = name;
+        const staffCount = patientInputs.lastChild.querySelector('.staff-count');
+        staffCount.value = (index % 3) + 1;
+    });
+    
+    saveToLocalStorage();
+});
     </script>
 </body>
 </html>
