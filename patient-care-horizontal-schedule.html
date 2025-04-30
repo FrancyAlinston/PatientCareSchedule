@@ -1303,7 +1303,7 @@ function updateLegend() {
     } else {
         legendDiv.innerHTML = `
             <div class="legend-item">
-                <div class="legend-color legend-night-break"></div> 
+                <div class="legend-color legend-night-break"></div>
                 <div>2-hour Break</div>
             </div>
             <div class="legend-item">
@@ -1342,27 +1342,678 @@ function updateLegend() {
 
         // Add this to your window.onload function
 document.getElementById('toggleDebugBtn').addEventListener('click', function() {
-    // ...code...
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel.style.display === 'none') {
+        debugPanel.style.display = 'block';
+        
+        // Add current state information
+        logError("Info", `Current shift: ${isDayShift ? 'Day Shift' : 'Night Shift'}`);
+        logError("Info", `Dark mode: ${document.body.classList.contains('dark-mode') ? 'Enabled' : 'Disabled'}`);
+        logError("Info", `Staff count: ${document.querySelectorAll('.staff-container').length}`);
+        logError("Info", `Patient count: ${document.querySelectorAll('.patient-container').length}`);
+    } else {
+        debugPanel.style.display = 'none';
+    }
 });
 
 document.getElementById('clearDebugBtn').addEventListener('click', function() {
-    // ...code...
+    document.getElementById('debugOutput').innerHTML = '';
+});
+
+// Add a close button to the debug panel header
+const debugPanelHeader = document.querySelector('#debugPanel h3');
+const closeDebugPanelBtn = document.createElement('span');
+closeDebugPanelBtn.innerHTML = '✖';
+closeDebugPanelBtn.style.position = 'absolute';
+closeDebugPanelBtn.style.right = '40px';
+closeDebugPanelBtn.style.top = '10px';
+closeDebugPanelBtn.style.cursor = 'pointer';
+closeDebugPanelBtn.style.fontSize = '16px';
+closeDebugPanelBtn.style.fontWeight = 'bold';
+closeDebugPanelBtn.style.color = '#ffffff'; // Ensure white text color for visibility
+closeDebugPanelBtn.title = 'Close Debug Console';
+
+// Add a hover effect for better UX
+closeDebugPanelBtn.addEventListener('mouseover', function() {
+    this.style.color = '#ff5555'; // Red on hover
+});
+closeDebugPanelBtn.addEventListener('mouseout', function() {
+    this.style.color = '#ffffff'; // Back to white
+});
+
+// Insert the close button after the heading
+debugPanelHeader.after(closeDebugPanelBtn);
+
+// Capture global errors
+window.onerror = function(message, source, lineno, colno, error) {
+    logError("Global Error", `${message} at line ${lineno}:${colno}`, error);
+    return false; // Let the default handler run as well
+};
+
+// Capture promise rejections
+window.onunhandledrejection = function(event) {
+    logError("Unhandled Promise Rejection", event.reason.message || "Unknown promise error", event.reason);
+};
+
+        // Enhance the logError function to show more detailed information in the debug panel
+function logError(errorType, message, errorObject = null) {
+    console.error(`[${errorType}] ${message}`);
+    if (errorObject) {
+        console.error(errorObject);
+    }
+    
+    // Format timestamp
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString() + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    
+    // Also log to a debug element if present
+    const debugElement = document.getElementById('debugOutput');
+    if (debugElement) {
+        const errorEntry = document.createElement('div');
+        errorEntry.className = 'error-entry';
+        errorEntry.style.borderBottom = '1px solid #555';
+        errorEntry.style.paddingBottom = '8px';
+        errorEntry.style.marginBottom = '8px';
+        
+        // Add timestamp and error type with color coding
+        let errorColor = '#ff5555'; // Default red
+        if (errorType === 'Info') errorColor = '#55aaff';
+        if (errorType === 'Warning') errorColor = '#ffaa55';
+        
+        errorEntry.innerHTML = `<div style="color: #aaa; font-size: 11px;">[${timestamp}]</div>
+                               <div style="color: ${errorColor}; font-weight: bold;">${errorType}</div>
+                               <div>${message}</div>`;
+        
+        // Add error object details if present
+        if (errorObject && errorObject.stack) {
+            const stackDiv = document.createElement('div');
+            stackDiv.style.marginTop = '5px';
+            stackDiv.style.color = '#aaa';
+            stackDiv.style.fontSize = '11px';
+            stackDiv.style.fontFamily = 'monospace';
+            stackDiv.style.whiteSpace = 'pre-wrap';
+            stackDiv.textContent = errorObject.stack.split('\n').slice(0, 3).join('\n'); // Show first 3 lines
+            errorEntry.appendChild(stackDiv);
+        }
+        
+        // Add to the beginning so newest errors are at the top
+        debugElement.insertBefore(errorEntry, debugElement.firstChild);
+    }
+}
+
+// Add this to the window.onload to make the debug panel more informative from the start
+logError("Info", "Debug console initialized. Errors and warnings will appear here.");
+
+        // Enhance the saveToLocalStorage function to explicitly save all UI state
+function saveToLocalStorage() {
+    try {
+        // Get all current values
+        const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
+        const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+            return {
+                name: container.querySelector('.patient-name').value.trim(),
+                staffCount: parseInt(container.querySelector('.staff-count').value)
+            };
+        });
+        
+        const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+        const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
+        const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
+        
+        // Get UI state explicitly
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        const data = {
+            staff: staffInputs,
+            nurses: [nurseInCharge1, nurseInCharge2].filter(Boolean),
+            nurseInCharge1,
+            nurseInCharge2,
+            patients: patientInputs,
+            securityStaff: securityStaffValues,
+            schedule,
+            isDayShift,
+            isDarkMode: isDark,
+            staffPatientHistory: staffPatientHistory || {}
+        };
+        
+        localStorage.setItem('patientCareData', JSON.stringify(data));
+        return true;
+    } catch (error) {
+        logError("Storage Error", "Failed to save data to localStorage", error);
+        showError("Failed to save your changes. Your browser storage might be full or restricted.");
+        return false;
+    }
+}
+
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('patientCareData');
+                if (!savedData) {
+                    console.warn("No data found in localStorage.");
+                    // Add default data
+                    addStaffInput();
+                    addPatientInput();
+                    return false;
+                }
+                
+                const parsedData = JSON.parse(savedData);
+                
+                // Load shift type
+                isDayShift = parsedData.isDayShift !== undefined ? parsedData.isDayShift : true;
+                timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+                
+                // Update UI for shift type
+                document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+                document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+                
+                // Load dark mode setting
+                if (parsedData.isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('toggleModeBtn').textContent = '☀️';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    document.getElementById('toggleModeBtn').textContent = '🌙';
+                }
+                
+                // Load nurse in charge values
+                if (document.getElementById('nurseInChargeInput')) {
+                    document.getElementById('nurseInChargeInput').value = parsedData.nurseInCharge1 || '';
+                }
+                if (document.getElementById('nurseInCharge2Input')) {
+                    document.getElementById('nurseInCharge2Input').value = parsedData.nurseInCharge2 || '';
+                }
+                
+                // Load staff, patients, and security staff
+                loadStaffFromData(parsedData.staff || []);
+                loadPatientsFromData(parsedData.patients || []);
+                loadSecurityStaffFromData(parsedData.securityStaff || []);
+                
+                // Load rotation history
+                staffPatientHistory = parsedData.staffPatientHistory || {};
+                
+                // Load schedule
+                if (parsedData.schedule && Object.keys(parsedData.schedule).length > 0) {
+                    schedule = parsedData.schedule;
+                    
+                    // Render the schedule if it exists
+                    const staff = [
+                        ...(parsedData.staff || []), 
+                        ...(parsedData.securityStaff || []),
+                        parsedData.nurseInCharge1,
+                        parsedData.nurseInCharge2
+                    ].filter(Boolean);
+                    
+                    const patients = (parsedData.patients || []).map(p => p.name).filter(Boolean);
+                    
+                    // Create staffStats for rendering
+                    const staffStats = {};
+                    staff.forEach(s => {
+                        staffStats[s] = {
+                            workHours: 0,
+                            breakTime: 0,
+                            shortBreakTime: "",
+                            secondBreakTime: ""
+                        };
+                    });
+                    
+                    // Render the schedule
+                    renderSchedule(schedule, staff, patients, staffStats);
+                }
+                
+                console.log("Data loaded successfully from localStorage");
+                return true;
+            } catch (error) {
+                logError("Load Error", "Failed to load data from localStorage", error);
+                showError("Failed to load your saved data. Using default settings instead.");
+                return false;
+            }
+        }
+
+        // Helper functions for loadFromLocalStorage
+        function loadStaffFromData(staffData) {
+            const staffInputs = document.getElementById('staffInputs');
+            staffInputs.innerHTML = '';
+            
+            staffData.forEach(name => {
+                const staffContainer = document.createElement('div');
+                staffContainer.className = 'staff-container';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'staff-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                
+                staffContainer.appendChild(newInput);
+                staffInputs.appendChild(staffContainer);
+            });
+            
+            // Add at least one staff input if none were loaded
+            if (staffData.length === 0) {
+                addStaffInput();
+            }
+        }
+
+        function loadPatientsFromData(patientsData) {
+            const patientInputs = document.getElementById('patientInputs');
+            patientInputs.innerHTML = '';
+            
+            patientsData.forEach(({ name, staffCount }) => {
+                const patientContainer = document.createElement('div');
+                patientContainer.className = 'patient-container';
+                
+                const inputWrapper = document.createElement('div');
+                inputWrapper.style.display = 'flex';
+                inputWrapper.style.alignItems = 'center';
+                inputWrapper.style.gap = '10px';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'patient-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                
+                const staffCountSelect = document.createElement('select');
+                staffCountSelect.className = 'staff-count';
+                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+                
+                const option1 = document.createElement('option');
+                option1.value = 1;
+                option1.textContent = '1:1';
+                const option2 = document.createElement('option');
+                option2.value = 2;
+                option2.textContent = '2:1';
+                const option3 = document.createElement('option');
+                option3.value = 3;
+                option3.textContent = '3:1';
+                
+                staffCountSelect.appendChild(option1);
+                staffCountSelect.appendChild(option2);
+                staffCountSelect.appendChild(option3);
+                staffCountSelect.value = staffCount || 1;
+                
+                inputWrapper.appendChild(newInput);
+                inputWrapper.appendChild(staffCountSelect);
+                patientContainer.appendChild(inputWrapper);
+                patientInputs.appendChild(patientContainer);
+            });
+            
+            // Add at least one patient input if none were loaded
+            if (patientsData.length === 0) {
+                addPatientInput();
+            }
+        }
+
+        function loadSecurityStaffFromData(securityStaffData) {
+            const securityStaffInputs = document.getElementById('securityStaffInputs');
+            securityStaffInputs.innerHTML = '';
+            
+            // Reset the global array
+            securityStaff = [];
+            
+            securityStaffData.forEach(name => {
+                if (!securityStaff.includes(name)) {
+                    securityStaff.push(name);
+                }
+                
+                const securityContainer = document.createElement('div');
+                securityContainer.className = 'security-container';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.value = name;
+                newInput.className = 'security-name';
+                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                
+                securityContainer.appendChild(newInput);
+                securityStaffInputs.appendChild(securityContainer);
+            });
+        }
+
+        function clearAllData() {
+            // Clear all input containers
+            document.getElementById('staffInputs').innerHTML = '';
+            document.getElementById('patientInputs').innerHTML = '';
+            document.getElementById('securityStaffInputs').innerHTML = '';
+            document.getElementById('nurseInChargeInput').value = '';
+            document.getElementById('nurseInCharge2Input').value = '';
+
+            // Clear all display areas
+            document.getElementById('scheduleHeader').innerHTML = '';
+            document.getElementById('scheduleBody').innerHTML = '';
+            document.getElementById('staffHeader').innerHTML = '';
+            document.getElementById('staffBody').innerHTML = '';
+            document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
+            document.getElementById('stats').innerHTML = '';
+            
+            // Reset variables
+            schedule = {};
+            isDayShift = true;
+            timeSlots = [...dayShiftSlots];
+        }
+
+        // Function to add staff input
+function addStaffInput() {
+    const staffInputs = document.getElementById('staffInputs');
+    
+    const staffContainer = document.createElement('div');
+    staffContainer.className = 'staff-container';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter HCW Name';
+    newInput.className = 'staff-name';
+    
+    staffContainer.appendChild(newInput);
+    staffInputs.appendChild(staffContainer);
+    
+    // Add event listener to the new input
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to add patient input
+function addPatientInput() {
+    const patientInputs = document.getElementById('patientInputs');
+    
+    const patientContainer = document.createElement('div');
+    patientContainer.className = 'patient-container';
+    
+    const inputWrapper = document.createElement('div');
+    inputWrapper.style.display = 'flex';
+    inputWrapper.style.alignItems = 'center';
+    inputWrapper.style.gap = '10px';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter Patient Name';
+    newInput.className = 'patient-name';
+    
+    const staffCountSelect = document.createElement('select');
+    staffCountSelect.className = 'staff-count';
+    
+    const option1 = document.createElement('option');
+    option1.value = 1;
+    option1.textContent = '1:1';
+    const option2 = document.createElement('option');
+    option2.value = 2;
+    option2.textContent = '2:1';
+    const option3 = document.createElement('option');
+    option3.value = 3;
+    option3.textContent = '3:1';
+    
+    staffCountSelect.appendChild(option1);
+    staffCountSelect.appendChild(option2);
+    staffCountSelect.appendChild(option3);
+    staffCountSelect.value = 1; // Default to 1:1
+    
+    inputWrapper.appendChild(newInput);
+    inputWrapper.appendChild(staffCountSelect);
+    patientContainer.appendChild(inputWrapper);
+    patientInputs.appendChild(patientContainer);
+    
+    // Add event listeners to the new elements
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to add security staff input
+function addSecurityStaffInput() {
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    
+    // Check if we've reached the 1 security staff limit
+    if (securityStaffInputs.children.length >= 1) {
+        showError("Maximum of 1 security staff allowed");
+        return;
+    }
+    
+    const securityContainer = document.createElement('div');
+    securityContainer.className = 'security-container';
+    
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Enter Security Staff Name';
+    newInput.className = 'security-name';
+    
+    securityContainer.appendChild(newInput);
+    securityStaffInputs.appendChild(securityContainer);
+    
+    // Add event listener to the new input
+    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    
+    saveToLocalStorage();
+}
+
+// Function to check if time is restricted for security
+function isSecurityRestrictedHour(timeIndex, totalHours) {
+    // First 2 hours or last 2 hours
+    return timeIndex < 2 || timeIndex >= totalHours - 2;
+}
+
+// Initialize on window load
+window.onload = function() {
+    // Set moon emoji for dark mode button
+    document.getElementById('toggleModeBtn').innerHTML = '🌙';
+    
+    try {
+        // Load data from localStorage
+        loadFromLocalStorage();
+        
+        // Make sure dark mode is correctly applied based on saved preference
+        const savedData = localStorage.getItem('patientCareData');
+        if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            if (parsedData.isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('toggleModeBtn').textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('toggleModeBtn').textContent = '🌙';
+            }
+        }
+        
+        // Rest of your onload code...
+    } catch (error) {
+        logError("Initialization Error", "Failed to initialize application", error);
+    }
+
+    // Initialize inputs if none exist
+    if (document.getElementById('staffInputs').children.length === 0) {
+        addStaffInput();
+    }
+    if (document.getElementById('patientInputs').children.length === 0) {
+        addPatientInput();
+    }
+    if (document.getElementById('securityStaffInputs').children.length === 0) {
+        addSecurityStaffInput();
+    }
+
+    // Initialize legend
+    updateLegend();
+};
+
+document.getElementById('resetRotationBtn').addEventListener('click', () => {
+    // Get current staff and patients from inputs
+    const currentStaff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
+    
+    // Get security staff too
+    const currentSecurityStaff = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
+    
+    // Combine regular and security staff
+    const allStaff = [...currentStaff, ...currentSecurityStaff];
+    
+    // Get current patients
+    const currentPatients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+        return {
+            name: container.querySelector('.patient-name').value.trim(),
+            staffCount: parseInt(container.querySelector('.staff-count').value)
+        };
+    });
+    
+    // Reset staffPatientHistory
+    staffPatientHistory = {};
+    
+    // Initialize for current staff and patients
+    allStaff.forEach(s => {
+        if (s) { // Only process non-empty staff names
+            staffPatientHistory[s] = {};
+            currentPatients.forEach(patient => {
+                if (patient.name) { // Only process non-empty patient names
+                    staffPatientHistory[s][patient.name] = 0;
+                }
+            });
+        }
+    });
+    
+    // Save to localStorage
+    saveToLocalStorage();
+    
+    // Show confirmation
+    const confirmationDiv = document.createElement('div');
+    confirmationDiv.className = 'error-message'; // Using the existing error-message class
+    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+    confirmationDiv.textContent = "Staff rotation history has been reset.";
+    document.body.appendChild(confirmationDiv);
+    setTimeout(() => confirmationDiv.remove(), 3000);
+    
+    // Regenerate schedule if exists
+    if (Object.keys(schedule).length > 0) {
+        generateSchedule();
+    } else {
+        // If no schedule, just update the rotation stats display
+        renderStaffRotationStats(
+            currentPatients.map(p => p.name), 
+            allStaff.filter(s => s) // Filter out empty strings
+        );
+    }
+});
+
+        // Add these event listeners to your window.onload function
+document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+
+document.getElementById('resetBtn').addEventListener('click', function() {
+    clearAllData();
+    localStorage.removeItem('patientCareData');
+    addStaffInput();
+    addPatientInput();
+    addSecurityStaffInput();
+});
+
+document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+document.getElementById('removeStaffBtn').addEventListener('click', function() {
+    const staffInputs = document.getElementById('staffInputs');
+    if (staffInputs.lastChild) {
+        staffInputs.removeChild(staffInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+document.getElementById('removePatientBtn').addEventListener('click', function() {
+    const patientInputs = document.getElementById('patientInputs');
+    if (patientInputs.lastChild) {
+        patientInputs.removeChild(patientInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
+    const securityStaffInputs = document.getElementById('securityStaffInputs');
+    if (securityStaffInputs.lastChild) {
+        securityStaffInputs.removeChild(securityStaffInputs.lastChild);
+        saveToLocalStorage();
+    }
+});
+
+document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+    isDayShift = !isDayShift;
+    timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+    document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+    this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+    
+    // Update legend based on shift
+    updateLegend();
+    saveToLocalStorage();
+    
+    // If a schedule exists, regenerate it with the new shift type
+    if (Object.keys(schedule).length > 0) {
+        generateSchedule();
+    }
+});
+
+document.getElementById('toggleModeBtn').addEventListener('click', function() {
+    document.body.classList.toggle('dark-mode');
+    this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    saveToLocalStorage();
 });
 
 document.getElementById('debugFillBtn').addEventListener('click', function() {
-    // ...code...
+    // Mock data
+    const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee'];
+    const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+    const securityNames = ['Security Officer Jones'];
+    const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
+    
+    // Fill nurse in charge inputs
+    document.getElementById('nurseInChargeInput').value = nurseNames[0];
+    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+    
+    // Fill existing staff inputs without changing structure
+    const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+    staffInputs.forEach((input, index) => {
+        input.value = index < staffNames.length ? staffNames[index] : `Staff ${index + 1}`;
+    });
+    
+    // Fill existing security staff inputs without changing structure
+    const securityStaffInputs = document.querySelectorAll('.security-container .security-name');
+    securityStaffInputs.forEach((input, index) => {
+        input.value = index < securityNames.length ? securityNames[index] : `Security ${index + 1}`;
+    });
+    
+    // Fill existing patient inputs without changing structure
+    const patientContainers = document.querySelectorAll('.patient-container');
+    patientContainers.forEach((container, index) => {
+        const nameInput = container.querySelector('.patient-name');
+        const staffCountSelect = container.querySelector('.staff-count');
+        
+        nameInput.value = index < patientNames.length ? patientNames[index] : `Patient ${index + 1}`;
+        staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+    });
+    
+    // Show confirmation message
+    const confirmationDiv = document.createElement('div');
+    confirmationDiv.className = 'error-message';
+    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+    confirmationDiv.textContent = "Debug data filled successfully!";
+    document.body.appendChild(confirmationDiv);
+    setTimeout(() => confirmationDiv.remove(), 3000);
+    
+    // Save to localStorage
+    saveToLocalStorage();
 });
 
-// Remove the document click handler for closing the debug panel
+// Add event listener to document to close debug panel when clicking outside
 document.addEventListener('click', function(event) {
-    // ...code...
+    const debugPanel = document.getElementById('debugPanel');
+    const toggleButton = document.getElementById('toggleDebugBtn');
+    
+    // If debug panel is visible
+    if (debugPanel.style.display !== 'none') {
+        // Check if click was outside debug panel and not on the toggle button
+        if (!debugPanel.contains(event.target) && event.target !== toggleButton) {
+            debugPanel.style.display = 'none';
+        }
+    }
 });
 
-// Remove the click event listener that prevents bubbling
+// Prevent clicks inside the debug panel from bubbling to document
 document.getElementById('debugPanel').addEventListener('click', function(event) {
-    // ...code...
+    event.stopPropagation();
 });
-
     </script>
 </body>
 </html>
