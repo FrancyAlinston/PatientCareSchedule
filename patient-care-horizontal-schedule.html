@@ -996,17 +996,21 @@ function generateSchedule() {
                         cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
                         cell.style.color = "#000000"; // Black text for contrast
                     } else {
-                        cell.textContent = assignedStaff.join(", ");
+                        // Use initials instead of full names
+                        const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
+                        cell.textContent = staffInitials;
                         
-                        // Add a check to ensure assignedStaff[0] exists and is in staffColors
+                        // Add a title attribute for hover tooltip showing full names
+                        cell.title = assignedStaff.join(", ");
+                        
+                        // Rest of your styling code remains the same
                         if (assignedStaff.length > 0 && staffColors[assignedStaff[0]]) {
-                            const { bgColor, textColor } = staffColors[assignedStaff[0]]; // Use the first staff's color
+                            const { bgColor, textColor } = staffColors[assignedStaff[0]];
                             cell.style.backgroundColor = bgColor;
-                            cell.style.color = textColor; // Set text color for contrast
+                            cell.style.color = textColor;
                         } else {
-                            // Fallback colors if no valid staff color is found
-                            cell.style.backgroundColor = "#f8f9fa"; // Light gray background
-                            cell.style.color = "#000000"; // Black text for contrast
+                            cell.style.backgroundColor = "#f8f9fa";
+                            cell.style.color = "#000000";
                         }
                     }
                     
@@ -1026,9 +1030,10 @@ function generateSchedule() {
             staff.forEach(s => {
                 const row = document.createElement('tr');
                 
-                // Add staff name cell
+                // Add staff name cell with initials
                 const staffCell = document.createElement('td');
-                staffCell.textContent = s;
+                staffCell.textContent = getInitials(s);
+                staffCell.title = s; // Add full name as tooltip
                 staffCell.className = 'row-header';
 
                 // Check if this is security staff
@@ -1037,7 +1042,7 @@ function generateSchedule() {
                     staffCell.style.backgroundColor = "#ff9800"; // Orange background
                     staffCell.style.color = "#000000"; // Black text for contrast
                     staffCell.style.fontWeight = "bold";
-                    staffCell.textContent = s + " (Security)"; // Add explicit label
+                    staffCell.textContent = getInitials(s) + " (Security)"; // Add explicit label
                 } else if (staffColors[s]) {
                     // Regular staff with their assigned color
                     const { bgColor, textColor } = staffColors[s];
@@ -1083,7 +1088,8 @@ function generateSchedule() {
                         let assigned = false;
                         for (const patient in schedule[time].patientAssignments) {
                             if (schedule[time].patientAssignments[patient].includes(s)) {
-                                cell.textContent = patient;
+                                cell.textContent = getInitials(patient);
+                                cell.title = patient; // Add full name as tooltip
                                 
                                 // Add safety check for staff colors
                                 if (staffColors[s]) {
