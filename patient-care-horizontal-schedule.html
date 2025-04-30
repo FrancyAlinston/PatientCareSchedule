@@ -1763,6 +1763,20 @@ window.onload = function() {
     } catch (error) {
         logError("Initialization Error", "Failed to initialize application", error);
     }
+
+    // Initialize inputs if none exist
+    if (document.getElementById('staffInputs').children.length === 0) {
+        addStaffInput();
+    }
+    if (document.getElementById('patientInputs').children.length === 0) {
+        addPatientInput();
+    }
+    if (document.getElementById('securityStaffInputs').children.length === 0) {
+        addSecurityStaffInput();
+    }
+
+    // Initialize legend
+    updateLegend();
 };
 
 document.getElementById('resetRotationBtn').addEventListener('click', () => {
