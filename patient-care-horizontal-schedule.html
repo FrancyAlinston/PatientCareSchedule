@@ -1682,6 +1682,77 @@ function renderStaffRotationStats(patients, staff) {
     document.getElementById('rotationStats').innerHTML = rotationHtml;
 }
 
+// Add this function to populate the cleaning duties table
+function populateCleaningDutiesTable() {
+    const tableBody = document.querySelector('#cleaningDutiesTable tbody');
+    tableBody.innerHTML = '';
+    
+    // Get all regular staff (not security and not nurse in charge)
+    const staffInputs = Array.from(document.querySelectorAll('.staff-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+    
+    const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
+        .map(input => input.value.trim());
+    
+    const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+    const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+    
+    // Filter out nurses and security from regular staff
+    const regularStaff = staffInputs.filter(s => 
+        !securityStaffValues.includes(s) && 
+        s !== nurseInCharge1 && 
+        s !== nurseInCharge2
+    );
+    
+    // Create rows for each cleaning duty
+    cleaningDuties.forEach(duty => {
+        const row = document.createElement('tr');
+        
+        // Duty name cell
+        const dutyCell = document.createElement('td');
+        dutyCell.textContent = duty;
+        
+        // Special highlights for kitchen-related duties
+        if (duty === "KITCHEN") {
+            dutyCell.style.fontWeight = 'bold';
+            dutyCell.style.backgroundColor = '#e6f7ff';
+        }
+        
+        row.appendChild(dutyCell);
+        
+        // Staff assignment dropdown cell
+        const assignmentCell = document.createElement('td');
+        const select = document.createElement('select');
+        select.dataset.duty = duty;
+        select.className = 'duty-assignment';
+        
+        // Add empty option
+        const emptyOption = document.createElement('option');
+        emptyOption.value = "";
+        emptyOption.textContent = "-- Select Staff --";
+        select.appendChild(emptyOption);
+        
+        // Add staff options
+        regularStaff.forEach(staff => {
+            const option = document.createElement('option');
+            option.value = staff;
+            option.textContent = staff;
+            select.appendChild(option);
+        });
+        
+        // Check if there's a saved assignment
+        if (manualCleaningAssignments && manualCleaningAssignments[duty]) {
+            select.value = manualCleaningAssignments[duty];
+        }
+        
+        assignmentCell.appendChild(select);
+        row.appendChild(assignmentCell);
+        
+        tableBody.appendChild(row);
+    });
+}
+
 // Initialize on window load
 window.onload = function() {
     // Set moon emoji for dark mode button
@@ -1914,4 +1985,3 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
-`
