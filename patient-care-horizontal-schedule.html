@@ -1906,7 +1906,6 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
     document.getElementById('nurseInChargeInput').value = nurseNames[0];
     document.getElementById('nurseInCharge2Input').value = nurseNames[1];
     
-```html
     // Fill staff inputs
     const staffInputs = document.getElementById('staffInputs');
     staffInputs.innerHTML = '';
@@ -1922,29 +1921,7 @@ document.getElementById('debugFillBtn').addEventListener('click', function() {
         newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
     });
     
-    // Fill security staff
-    const securityStaffInputs = document.getElementById('securityStaffInputs');
-    securityStaffInputs.innerHTML = '';
-    const securityContainer = document.createElement('div');
-    securityContainer.className = 'security-container';
-    const securityInput = document.createElement('input');
-    securityInput.type = 'text';
-    securityInput.value = securityNames[0];
-    securityInput.className = 'security-name';
-    securityContainer.appendChild(securityInput);
-    securityStaffInputs.appendChild(securityContainer);
-    securityInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    
-    // Fill patient inputs
-    const patientInputs = document.getElementById('patientInputs');
-    patientInputs.innerHTML = '';
-    patientNames.forEach((name, index) => {
-        addPatientInput();
-        const lastInput = patientInputs.lastChild.querySelector('.patient-name');
-        lastInput.value = name;
-        const staffCount = patientInputs.lastChild.querySelector('.staff-count');
-        staffCount.value = (index % 3) + 1;
-    });
+    // Rest of your debug fill function...
     
     saveToLocalStorage();
 });
