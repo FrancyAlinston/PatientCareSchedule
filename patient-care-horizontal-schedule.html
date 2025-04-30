@@ -438,6 +438,25 @@
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
     <script>
+        // Add this function near the top of your script section with other utility functions
+        function getInitials(fullName) {
+            if (!fullName) return '';
+            
+            // Split the name by spaces
+            const nameParts = fullName.trim().split(' ');
+            
+            // If it's a single name, return first 2 letters
+            if (nameParts.length === 1) {
+                return nameParts[0].substring(0, 2).toUpperCase();
+            }
+            
+            // Otherwise return first letter of first name + first letter of last name
+            const firstInitial = nameParts[0][0] || '';
+            const lastInitial = nameParts[nameParts.length - 1][0] || '';
+            
+            return (firstInitial + lastInitial).toUpperCase();
+        }
+
         // Global variables
         let schedule = {};
         let isDayShift = true;
