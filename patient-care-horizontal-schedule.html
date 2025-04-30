@@ -361,6 +361,29 @@
             <button id="addPatientBtn">Add Patient</button>
             <button id="removePatientBtn">Remove Patient</button>
 
+            <!-- Add this cleaning duties assignment section before the Generate/Reset buttons -->
+            <div id="cleaningDutiesSection" class="setup-section" style="display: none; margin-top: 20px;">
+                <h2>Night Shift Cleaning Duties Assignment</h2>
+                <p>Assign cleaning duties to staff members. You can assign multiple duties to one staff member.</p>
+                
+                <table id="cleaningDutiesTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Duty</th>
+                            <th>Staff Assignment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated dynamically -->
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 15px;">
+                    <button id="saveCleaningDuties" style="background-color: #4CAF50;">Save Assignments</button>
+                    <button id="resetCleaningDuties" style="background-color: #f44336;">Reset Assignments</button>
+                </div>
+            </div>
+
             <!-- Buttons for generating and resetting the schedule -->
             <button id="generateBtn">Generate Schedule</button>
             <button id="resetBtn">Reset</button>
@@ -1883,4 +1906,3 @@ document.getElementById('debugPanel').addEventListener('click', function(event) 
     </script>
 </body>
 </html>
-`
