@@ -1682,36 +1682,24 @@ window.onload = function() {
     document.getElementById('nurseInChargeInput').value = nurseNames[0];
     document.getElementById('nurseInCharge2Input').value = nurseNames[1];
     
-    // Make sure we have at least minimum required staff inputs
-    while (document.querySelectorAll('.staff-container').length < staffNames.length) {
-        addStaffInput();
-    }
-    
-    // Fill the staff inputs
-    document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+    // Fill only existing staff inputs (no creation)
+    const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+    staffInputs.forEach((input, index) => {
+        // Only fill if we have a name for this index
         if (index < staffNames.length) {
             input.value = staffNames[index];
         }
     });
     
-    // Make sure we have a security staff input
-    if (document.querySelectorAll('.security-container').length === 0) {
-        addSecurityStaffInput();
-    }
-    
-    // Fill security staff inputs
-    document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+    // Fill only existing security staff inputs (no creation)
+    const securityInputs = document.querySelectorAll('.security-container .security-name');
+    securityInputs.forEach((input, index) => {
         if (index < securityNames.length) {
             input.value = securityNames[index];
         }
     });
     
-    // Make sure we have at least the required number of patient inputs
-    while (document.querySelectorAll('.patient-container').length < patientNames.length) {
-        addPatientInput();
-    }
-    
-    // Fill patient inputs
+    // Fill only existing patient inputs (no creation)
     const patientContainers = document.querySelectorAll('.patient-container');
     patientContainers.forEach((container, index) => {
         if (index < patientNames.length) {
