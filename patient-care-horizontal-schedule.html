@@ -1603,6 +1603,46 @@ function renderStats(staffStats, staff, patients) {
     statsDiv.innerHTML = statsHtml;
 }
 
+// Add this function to render staff rotation statistics
+function renderStaffRotationStats(patients, staff) {
+    // Generate a table showing how many times each staff member has worked with each patient
+    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+    rotationHtml += '<table class="rotation-table">';
+    
+    // Header row with patient initials
+    rotationHtml += '<tr><th>Staff</th>';
+    patients.forEach(patient => {
+        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
+    });
+    rotationHtml += '</tr>';
+    
+    // Rows for each staff member with initials
+    staff.forEach(s => {
+        rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
+        
+        // For each patient, show the rotation count
+        patients.forEach(patient => {
+            const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ? 
+                staffPatientHistory[s][patient] : 0;
+            
+            // Color the cell based on the count (darker for higher counts)
+            const bgColor = count === 0 ? 
+                '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
+            const textColor = count >= 5 ? '#ffffff' : '#000000';
+            
+            rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
+        });
+        
+        rotationHtml += '</tr>';
+    });
+    
+    rotationHtml += '</table>';
+    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+    
+    document.getElementById('rotationStats').innerHTML = rotationHtml;
+}
+
 // Add this window.onload function at the end of your script section
 window.onload = function() {
     // Set moon emoji for dark mode button
