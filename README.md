@@ -23,6 +23,24 @@ The Patient Care Schedule Generator is a web-based application designed to autom
 - **IMPORTANT**: Kitchen and kitchen-related duties can be assigned to one person
 - **IMPORTANT**: Security staff handles specific security duties during restricted hours
 
+## Features
+
+### Day Shift Scheduling
+- Automatic 30-minute break assignment between 9:00-13:00
+- Automatic 1-hour second break assignment between 14:00-17:00
+- Fair distribution of patient assignments
+
+### Night Shift Scheduling
+- Automatic 2-hour continuous break assignments
+- Cleaning duty distribution among available staff
+- Security duty assignments during critical hours (first and last 2 hours)
+
+### Statistics and Reporting
+- Staff workload analysis
+- Break scheduling summary
+- Patient care coverage tracking
+- Staff rotation history visualization
+
 ## How to Use
 
 1. Enter healthcare worker names, patient names, and security staff information
@@ -44,33 +62,15 @@ The Patient Care Schedule Generator is a web-based application designed to autom
 
 No installation required. Simply open the HTML file in a web browser to use the application.
 
-```
-git clone https://github.com/yourusername/PatientCareSchedule.git
-cd PatientCareSchedule
-open patient-care-horizontal-schedule.html
-```
-
-## Features
-
-### Day Shift Scheduling
-- Automatic 30-minute break assignment between 9:00-13:00
-- Automatic 1-hour second break assignment between 14:00-17:00
-- Fair distribution of patient assignments
-
-### Night Shift Scheduling
-- Automatic 2-hour continuous break assignments
-- Cleaning duty distribution among available staff
-- Security duty assignments during critical hours (first and last 2 hours)
-
-### Statistics and Reporting
-- Staff workload analysis
-- Break scheduling summary
-- Patient care coverage tracking
-- Staff rotation history visualization
-
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License - Copyright (c) 2025 FrancyAlinston
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Acknowledgments
 
