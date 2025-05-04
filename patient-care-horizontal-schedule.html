@@ -1650,3 +1650,83 @@ function renderStats(staffStats, staff, patients) {
     const hasInterruptedBreaks = staff.some(s => staffStats[s].shortBreakInterrupted || staffStats[s].secondBreakInterrupted);
     
     if (hasInterruptedBreaks || hasEmergencyAssignments) {
+        statsHtml += '<h3>Special Notes</h3>';
+        statsHtml += '<ul>';
+        
+        if (hasInterruptedBreaks) {
+            statsHtml += '<li>Some breaks were interrupted due to staffing shortages.</li>';
+        }
+        
+        if (hasEmergencyAssignments) {
+            statsHtml += '<li>Emergency assignments were made to cover critical needs.</li>';
+        }
+        
+        statsHtml += '</ul>';
+    }
+
+    // Add this to renderStats function, in the section for night shift
+    if (!isDayShift) {
+        // Add a cleaning duties summary
+        statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
+        statsHtml += '<table>';
+        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th><th>Status</th></tr>';
+        
+        // Track duties
+        const dutyAssignments = {};
+        
+        // Collect all assigned duties
+        staff.forEach(s => {
+            if (staffStats[s].cleaningDuties && staffStats[s].cleaningDuties.length > 0) {
+                staffStats[s].cleaningDuties.forEach(item => {
+                    dutyAssignments[item.duty] = {
+                        staff: s,
+                        time: item.time
+                    };
+                });
+            }
+        });
+        
+        // List all cleaning duties and who they're assigned to
+        cleaningDuties.forEach(duty => {
+            const assignment = dutyAssignments[duty];
+            if (assignment) {
+                statsHtml += `<tr>
+                    <td>${duty}</td>
+                    <td title="${assignment.staff}">${getInitials(assignment.staff)}</td>
+                    <td>${assignment.time}</td>
+                    <td style="color: green;">✓ Assigned</td>
+                </tr>`;
+            } else {
+                statsHtml += `<tr>
+                    <td>${duty}</td>
+                    <td>Not Assigned</td>
+                    <td>N/A</td>
+                    <td style="color: red;">⚠ Unassigned</td>
+                </tr>`;
+            }
+        });
+        
+        // Show summary of staff without duties
+        const staffWithoutDuties = staff.filter(s => 
+            !securityStaff.includes(s) && 
+            s !== nurseInCharge1 && 
+            s !== nurseInCharge2 && 
+            (!staffStats[s].cleaningDuties || staffStats[s].cleaningDuties.length === 0)
+        );
+        
+        if (staffWithoutDuties.length > 0) {
+            statsHtml += `<tr style="background-color: #fff3cd;">
+                <td colspan="4">
+                    <strong>Staff without cleaning duties:</strong> ${staffWithoutDuties.join(', ')}
+                </td>
+            </tr>`;
+        }
+        
+        statsHtml += '</table>';
+    }
+
+    statsDiv.innerHTML = statsHtml;
+}
+    </script>
+</body>
+</html>
