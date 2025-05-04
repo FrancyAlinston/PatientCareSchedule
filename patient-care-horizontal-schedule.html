@@ -1142,6 +1142,12 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                     return;
                 }
                 
+                // Skip first 2 hours and last 2 hours of shift for night duties
+                // Only allow cleaning duties between hours 2-10 of the 12-hour shift
+                if (timeIndex < 2 || timeIndex >= timeSlots.length - 2) {
+                    return;
+                }
+                
                 // This is a free slot
                 freeSlots[s].push({ time, timeIndex });
             });
@@ -1173,7 +1179,8 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                 const duty = cleaningDuties[dutiesAssigned];
                 
                 // Try to find a good slot - prefer middle of shift when possible
-                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 3 && slot.timeIndex <= 8);
+                // Focus on the allowed time window (hours 2-10)
+                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 4 && slot.timeIndex <= 7);
                 const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
                 
                 // Assign the duty
@@ -1200,6 +1207,12 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             
             // If we couldn't assign any more duties, break the loop
             if (!assigned || dutiesAssigned >= cleaningDuties.length) break;
+        }
+        
+        // Add information about remaining unassigned duties to the stats
+        const remainingDuties = cleaningDuties.slice(dutiesAssigned);
+        if (remainingDuties.length > 0) {
+            console.log(`Warning: ${remainingDuties.length} cleaning duties could not be assigned: ${remainingDuties.join(', ')}`);
         }
     }
 }
