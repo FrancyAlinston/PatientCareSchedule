@@ -529,6 +529,8 @@
             "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
             "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
         ];
+        let nurseInCharge1 = '';
+        let nurseInCharge2 = '';
 
         // Time slots for day and night shifts
         const dayShiftSlots = [
@@ -911,9 +913,9 @@ function generateSchedule() {
         // Update global security staff array for use in other functions
         securityStaff = [...securityStaffValues];
         
-        // Get nurse in charge values
-        const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
-        const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+        // Get nurse in charge values and update globals
+        nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+        nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
         
         // Add nurses in charge to the staff list if they're not empty
         const allNurses = [];
@@ -1907,3 +1909,4 @@ window.onload = function() {
     </script>
 </body>
 </html>
+`
