@@ -335,11 +335,11 @@
                 <div>
                     <h2>Nursing Staff</h2>
                     <div style="margin-bottom: 15px;">
-                        <label for="nurseInChargeInput"><strong>Nurse in Charge 1:</strong></label>
+                        <label for="nurseInChargeInput"><strong>NIC:</strong></label>
                         <input type="text" id="nurseInChargeInput" placeholder="Enter First Nurse in Charge" style="width: 250px; margin-bottom: 15px;">
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label for="nurseInCharge2Input"><strong>Nurse in Charge 2:</strong></label>
+                        <label for="nurseInCharge2Input"><strong>NIC 2:</strong></label>
                         <input type="text" id="nurseInCharge2Input" placeholder="Enter Second Nurse in Charge" style="width: 250px; margin-bottom: 15px;">
                     </div>
                 </div>
@@ -2043,6 +2043,10 @@ window.onload = function() {
     
     // Set up legend based on shift type
     updateLegend();
+    
+    // Update labels for Nurse in Charge
+    document.querySelector('label[for="nurseInChargeInput"]').innerHTML = "<strong>NIC:</strong>";
+    document.querySelector('label[for="nurseInCharge2Input"]').innerHTML = "<strong>NIC 2:</strong>";
 };
     </script>
 </body>
