@@ -1727,6 +1727,183 @@ function renderStats(staffStats, staff, patients) {
 
     statsDiv.innerHTML = statsHtml;
 }
+
+// Add this window.onload function at the end of your script
+window.onload = function() {
+    // Set moon emoji for dark mode button
+    document.getElementById('toggleModeBtn').innerHTML = '🌙';
+    
+    // Load data from localStorage
+    loadFromLocalStorage();
+    
+    // Add event listeners for all buttons
+    document.getElementById('toggleModeBtn').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        saveToLocalStorage();
+    });
+    
+    document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+        isDayShift = !isDayShift;
+        timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+        document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+        this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+        updateLegend();
+        saveToLocalStorage();
+    });
+    
+    document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+    
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        clearAllData();
+        localStorage.removeItem('patientCareData');
+        addStaffInput();
+        addPatientInput();
+        addSecurityStaffInput();
+    });
+    
+    document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+    document.getElementById('removeStaffBtn').addEventListener('click', function() {
+        const staffInputs = document.getElementById('staffInputs');
+        if (staffInputs.children.length > 1) {
+            staffInputs.removeChild(staffInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+    document.getElementById('removePatientBtn').addEventListener('click', function() {
+        const patientInputs = document.getElementById('patientInputs');
+        if (patientInputs.children.length > 1) {
+            patientInputs.removeChild(patientInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+    document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
+        const securityStaffInputs = document.getElementById('securityStaffInputs');
+        if (securityStaffInputs.children.length > 0) {
+            securityStaffInputs.removeChild(securityStaffInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('resetRotationBtn').addEventListener('click', function() {
+        staffPatientHistory = {};
+        showError("Rotation history has been reset!");
+        saveToLocalStorage();
+    });
+    
+    // Debug button functionality
+    document.getElementById('debugFillBtn').addEventListener('click', function() {
+        // Mock data
+        const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee'];
+        const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+        const securityNames = ['Security Officer Jones'];
+        const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
+        
+        // Fill nurse in charge inputs
+        document.getElementById('nurseInChargeInput').value = nurseNames[0];
+        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        
+        // Fill only existing staff inputs (no creation)
+        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+        staffInputs.forEach((input, index) => {
+            // Only fill if we have a name for this index
+            if (index < staffNames.length) {
+                input.value = staffNames[index];
+            }
+        });
+        
+        // Fill only existing security staff inputs (no creation)
+        const securityInputs = document.querySelectorAll('.security-container .security-name');
+        securityInputs.forEach((input, index) => {
+            if (index < securityNames.length) {
+                input.value = securityNames[index];
+            }
+        });
+        
+        // Fill only existing patient inputs (no creation)
+        const patientContainers = document.querySelectorAll('.patient-container');
+        patientContainers.forEach((container, index) => {
+            if (index < patientNames.length) {
+                const nameInput = container.querySelector('.patient-name');
+                const staffCountSelect = container.querySelector('.staff-count');
+                
+                nameInput.value = patientNames[index];
+                staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+            }
+        });
+        
+        // Show confirmation message
+        const confirmationDiv = document.createElement('div');
+        confirmationDiv.className = 'error-message';
+        confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+        confirmationDiv.textContent = "Debug data filled successfully!";
+        document.body.appendChild(confirmationDiv);
+        setTimeout(() => confirmationDiv.remove(), 3000);
+        
+        // Save to localStorage
+        saveToLocalStorage();
+    });
+    
+    // Debug panel toggle button
+    document.getElementById('toggleDebugBtn').addEventListener('click', function() {
+        const debugPanel = document.getElementById('debugPanel');
+        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Debug panel clear button
+    document.getElementById('clearDebugBtn').addEventListener('click', function() {
+        document.getElementById('debugOutput').innerHTML = '';
+    });
+    
+    // Add renderStaffRotationStats function if it's missing
+    if (typeof renderStaffRotationStats !== 'function') {
+        window.renderStaffRotationStats = function(patients, staff) {
+            // Generate a table showing how many times each staff member has worked with each patient
+            let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+            rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+            rotationHtml += '<table class="rotation-table">';
+            
+            // Header row with patient initials
+            rotationHtml += '<tr><th>Staff</th>';
+            patients.forEach(patient => {
+                rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
+            });
+            rotationHtml += '</tr>';
+            
+            // Rows for each staff member with initials
+            staff.forEach(s => {
+                rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
+                
+                // For each patient, show the rotation count
+                patients.forEach(patient => {
+                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ? 
+                        staffPatientHistory[s][patient] : 0;
+                    
+                    // Color the cell based on the count (darker for higher counts)
+                    const bgColor = count === 0 ? 
+                        '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
+                    const textColor = count >= 5 ? '#ffffff' : '#000000';
+                    
+                    rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
+                });
+                
+                rotationHtml += '</tr>';
+            });
+            
+            rotationHtml += '</table>';
+            rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+            
+            document.getElementById('rotationStats').innerHTML = rotationHtml;
+        };
+    }
+    
+    // Set up legend based on shift type
+    updateLegend();
+};
     </script>
 </body>
 </html>
