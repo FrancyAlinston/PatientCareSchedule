@@ -892,6 +892,129 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
     return timeIndex < 2 || timeIndex >= totalHours - 2;
 }
 
+// Debug button functionality
+document.getElementById('debugFillBtn').addEventListener('click', async function() {
+    try {
+        // Show loading message
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'error-message';
+        loadingDiv.style.backgroundColor = '#3498db';
+        loadingDiv.textContent = "Fetching random names...";
+        document.body.appendChild(loadingDiv);
+        
+        // Fetch random names from online API - specify English results only
+        const staffResponse = await fetch('https://randomuser.me/api/?results=5&nat=us,gb');
+        const patientResponse = await fetch('https://randomuser.me/api/?results=4&nat=us,gb');
+        const securityResponse = await fetch('https://randomuser.me/api/?results=1&nat=us,gb');
+        const nurseResponse = await fetch('https://randomuser.me/api/?results=2&nat=us,gb');
+        
+        // Parse the responses
+        const staffData = await staffResponse.json();
+        const patientData = await patientResponse.json();
+        const securityData = await securityResponse.json();
+        const nurseData = await nurseResponse.json();
+        
+        // Extract names from the API responses
+        const staffNames = staffData.results.map(user => 
+            `${user.name.first} ${user.name.last}`
+        );
+        const patientNames = patientData.results.map((user, index) => 
+            `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
+        );
+        const securityNames = securityData.results.map(user => 
+            // Don't add "Security Officer" prefix
+            `${user.name.first} ${user.name.last}`
+        );
+        const nurseNames = nurseData.results.map(user => 
+            // Don't add "Charge Nurse" prefix
+            `${user.name.first} ${user.name.last}`
+        );
+        
+        // Remove loading message
+        loadingDiv.remove();
+        
+        // Fill nurse in charge inputs
+        document.getElementById('nurseInChargeInput').value = nurseNames[0];
+        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        
+        // Fill only existing staff inputs (no creation)
+        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+        staffInputs.forEach((input, index) => {
+            // Only fill if we have a name for this index
+            if (index < staffNames.length) {
+                input.value = staffNames[index];
+            }
+        });
+        
+        // Fill only existing security staff inputs (no creation)
+        const securityInputs = document.querySelectorAll('.security-container .security-name');
+        securityInputs.forEach((input, index) => {
+            if (index < securityNames.length) {
+                input.value = securityNames[index];
+            }
+        });
+        
+        // Fill only existing patient inputs (no creation)
+        const patientContainers = document.querySelectorAll('.patient-container');
+        patientContainers.forEach((container, index) => {
+            if (index < patientNames.length) {
+                const nameInput = container.querySelector('.patient-name');
+                const staffCountSelect = container.querySelector('.staff-count');
+                
+                nameInput.value = patientNames[index];
+                staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+            }
+        });
+        
+        // Show confirmation message
+        const confirmationDiv = document.createElement('div');
+        confirmationDiv.className = 'error-message';
+        confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+        confirmationDiv.textContent = "Debug data filled successfully with random names!";
+        document.body.appendChild(confirmationDiv);
+        setTimeout(() => confirmationDiv.remove(), 3000);
+        
+        // Save to localStorage
+        saveToLocalStorage();
+    } catch (error) {
+        console.error("Error fetching random names:", error);
+        
+        // Show error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 5000);
+        
+        // Fallback to basic generic names if the API fails
+        const staffNames = ['Emma Johnson', 'James Smith', 'Michael Brown', 'Sarah Davis', 'Robert Wilson'];
+        const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+        const securityNames = ['Thomas Williams'];
+        const nurseNames = ['Elizabeth Taylor', 'Richard Moore'];
+        
+        // Fill with fallback names
+        document.getElementById('nurseInChargeInput').value = nurseNames[0];
+        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        
+        document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+            if (index < staffNames.length) input.value = staffNames[index];
+        });
+        
+        document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+            if (index < securityNames.length) input.value = securityNames[index];
+        });
+        
+        document.querySelectorAll('.patient-container').forEach((container, index) => {
+            if (index < patientNames.length) {
+                container.querySelector('.patient-name').value = patientNames[index];
+                container.querySelector('.staff-count').value = (index % 3) + 1;
+            }
+        });
+        
+        saveToLocalStorage();
+    }
+});
+
 // Add this comprehensive function to generate the schedule
 function generateSchedule() {
     try {
