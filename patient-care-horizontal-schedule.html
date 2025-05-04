@@ -1360,7 +1360,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     const scheduleBody = document.getElementById('scheduleBody');
     const staffHeader = document.getElementById('staffHeader');
     const staffBody = document.getElementById('staffBody');
-    const breakHoursTable = document.getElementById('breakHoursTable tbody');
+    const breakHoursTable = document.getElementById('breakHoursTable').querySelector('tbody');
     
     scheduleHeader.innerHTML = '';
     scheduleBody.innerHTML = '';
@@ -1368,38 +1368,183 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     staffBody.innerHTML = '';
     breakHoursTable.innerHTML = '';
     
-    // Render schedule header
+    // Create header for the patient schedule
     const headerRow = document.createElement('tr');
-    headerRow.innerHTML = `<th>Time</th>${patients.map(p => `<th>${p}</th>`).join('')}`;
+    
+    // Add blank cell for the corner
+    const cornerCell = document.createElement('th');
+    headerRow.appendChild(cornerCell);
+    
+    // Add time slots as headers
+    timeSlots.forEach(time => {
+        const th = document.createElement('th');
+        th.textContent = time;
+        headerRow.appendChild(th);
+    });
+    
     scheduleHeader.appendChild(headerRow);
     
-    // Render schedule body
-    Object.keys(schedule).forEach(time => {
+    // Create rows for each patient
+    patients.forEach(patient => {
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${time}</td>${patients.map(p => `<td>${schedule[time].patientAssignments[p].join(', ') || '-'}</td>`).join('')}`;
+        
+        // Add patient name as row header
+        const nameCell = document.createElement('td');
+        nameCell.textContent = patient;
+        nameCell.className = 'row-header';
+        row.appendChild(nameCell);
+        
+        // Add cells for each time slot
+        timeSlots.forEach(time => {
+            const cell = document.createElement('td');
+            const assignedStaff = schedule[time].patientAssignments[patient];
+            
+            if (!assignedStaff || assignedStaff.length === 0) {
+                cell.textContent = "UNASSIGNED";
+                cell.className = 'staff-unassigned';
+                cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
+                cell.style.color = "#000000"; // Black text for contrast
+            } else {
+                // Use initials instead of full names
+                const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
+                cell.textContent = staffInitials;
+                
+                // Add a title attribute for hover tooltip showing full names
+                cell.title = assignedStaff.join(", ");
+                
+                // Color the cell based on the first assigned staff member
+                if (assignedStaff.length > 0) {
+                    // Generate a color based on the staff name
+                    const staffName = assignedStaff[0];
+                    const hash = staffName.split('').reduce((hash, char) => {
+                        return ((hash << 5) - hash) + char.charCodeAt(0);
+                    }, 0);
+                    
+                    const hue = Math.abs(hash) % 360;
+                    const bgColor = `hsl(${hue}, 70%, 85%)`;
+                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+                    
+                    cell.style.backgroundColor = bgColor;
+                    cell.style.color = textColor;
+                }
+            }
+            
+            row.appendChild(cell);
+        });
+        
         scheduleBody.appendChild(row);
     });
     
-    // Render staff header
+    // Create header for the staff schedule
     const staffHeaderRow = document.createElement('tr');
-    staffHeaderRow.innerHTML = `<th>Time</th>${staff.map(s => `<th>${s}</th>`).join('')}`;
+    
+    // Add blank cell for the corner
+    const staffCornerCell = document.createElement('th');
+    staffHeaderRow.appendChild(staffCornerCell);
+    
+    // Add time slots as headers
+    timeSlots.forEach(time => {
+        const th = document.createElement('th');
+        th.textContent = time;
+        staffHeaderRow.appendChild(th);
+    });
+    
     staffHeader.appendChild(staffHeaderRow);
     
-    // Render staff body
-    Object.keys(schedule).forEach(time => {
+    // Create rows for each staff member
+    staff.forEach(s => {
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${time}</td>${staff.map(s => `<td>${schedule[time].staffBreaks[s] || '-'}</td>`).join('')}`;
+        
+        // Add staff name cell with initials
+        const staffCell = document.createElement('td');
+        staffCell.textContent = getInitials(s);
+        staffCell.title = s; // Add full name as tooltip
+        staffCell.className = 'row-header';
+        row.appendChild(staffCell);
+        
+        // Add cells for each time slot
+        timeSlots.forEach(time => {
+            const cell = document.createElement('td');
+            
+            // Check if the staff is on break during this time
+            const breakStatus = schedule[time].staffBreaks[s];
+            if (breakStatus === "30-MIN BREAK") {
+                cell.textContent = "BREAK";
+                cell.className = 'staff-break';
+            } else if (breakStatus === "2ND BREAK") {
+                cell.textContent = "2ND BREAK";
+                cell.className = 'staff-lunch';
+            } else if (breakStatus === "NIGHT BREAK") {
+                cell.textContent = "BREAK";
+                cell.style.backgroundColor = "#673ab7"; // Purple for night break
+                cell.style.color = "#ffffff";
+            } else if (breakStatus === "SECURITY DUTY") {
+                cell.textContent = "SECURITY";
+                cell.style.backgroundColor = "#ffccbc"; // Light orange for security duty
+                cell.style.color = "#000000";
+            } else if (breakStatus && cleaningDuties.includes(breakStatus)) {
+                // This is for cleaning duties
+                cell.textContent = breakStatus;
+                cell.style.backgroundColor = "#9c27b0"; // Purple for cleaning duties
+                cell.style.color = "#ffffff";
+            } else {
+                // Staff is not on break, find which patient they're assigned to
+                let assigned = false;
+                for (const patient of patients) {
+                    if (schedule[time].patientAssignments[patient] &&
+                        schedule[time].patientAssignments[patient].includes(s)) {
+                        cell.textContent = getInitials(patient);
+                        cell.title = patient; // Add patient name as tooltip
+                        
+                        // Use consistent color based on staff
+                        const hash = s.split('').reduce((hash, char) => {
+                            return ((hash << 5) - hash) + char.charCodeAt(0);
+                        }, 0);
+                        
+                        const hue = Math.abs(hash) % 360;
+                        const bgColor = `hsl(${hue}, 70%, 85%)`;
+                        const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+                        
+                        cell.style.backgroundColor = bgColor;
+                        cell.style.color = textColor;
+                        
+                        assigned = true;
+                        break;
+                    }
+                }
+                
+                if (!assigned) {
+                    cell.textContent = "FREE";
+                    cell.style.backgroundColor = "#f8f9fa"; // Light gray for free time
+                    cell.style.color = "#000000";
+                }
+            }
+            
+            row.appendChild(cell);
+        });
+        
         staffBody.appendChild(row);
     });
     
     // Render break hours table
     staff.forEach(s => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${s}</td>
-            <td>${staffStats[s].shortBreakTime || '-'}</td>
-            <td>${staffStats[s].secondBreakTime || '-'}</td>
-        `;
+        
+        // Staff name cell with initials
+        const staffCell = document.createElement('td');
+        staffCell.textContent = getInitials(s);
+        staffCell.title = s; // Add full name as tooltip
+        row.appendChild(staffCell);
+        
+        // Break time cells
+        const shortBreakCell = document.createElement('td');
+        shortBreakCell.textContent = staffStats[s].shortBreakTime || "N/A";
+        row.appendChild(shortBreakCell);
+        
+        const secondBreakCell = document.createElement('td');
+        secondBreakCell.textContent = staffStats[s].secondBreakTime || "N/A";
+        row.appendChild(secondBreakCell);
+        
         breakHoursTable.appendChild(row);
     });
 }
