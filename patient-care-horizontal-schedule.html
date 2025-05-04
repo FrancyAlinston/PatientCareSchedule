@@ -1257,63 +1257,25 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
     );
     
     if (regularStaff.length > 0) {
-        // Create a map to track available free slots for each staff member
-        const freeSlots = {};
-        regularStaff.forEach(s => {
-            freeSlots[s] = [];
-            
-            // Find all free time slots for this staff member
-            timeSlots.forEach((time, timeIndex) => {
-                // Skip if on break
-                if (schedule[time].staffBreaks[s]) {
-                    return;
-                }
-                
-                // Skip security restricted hours
-                if (isSecurityRestrictedHour(timeIndex, timeSlots.length)) {
-                    return;
-                }
-                
-                // Skip first 2 hours and last 2 hours of shift for night duties
-                // Only allow cleaning duties between hours 2-10 of the 12-hour shift
-                if (timeIndex < 2 || timeIndex >= timeSlots.length - 2) {
-                    return;
-                }
-                
-                // This is a free slot
-                freeSlots[s].push({ time, timeIndex });
-            });
-        });
-        
-        // First, assign at least one duty to each staff member if possible
-        const staffWithDuties = new Set();
+        // Simplified approach: just assign duties to staff without time slots
         const dutyAssignments = [];
+        
+        // First, try to give at least one duty to each staff member
+        const staffWithDuties = new Set();
+        let dutyIndex = 0;
         
         // First pass: try to give at least one duty to each staff member
         regularStaff.forEach(s => {
-            if (freeSlots[s].length > 0 && dutyAssignments.length < cleaningDuties.length) {
-                // Get the next duty to assign
-                const dutyIndex = dutyAssignments.length;
+            if (dutyIndex < cleaningDuties.length) {
                 const duty = cleaningDuties[dutyIndex];
-                
-                // Try to find a good slot in the middle of the shift if possible
-                const middleSlots = freeSlots[s].filter(slot => slot.timeIndex >= 4 && slot.timeIndex <= 7);
-                const slot = middleSlots.length > 0 ? middleSlots[0] : freeSlots[s][0];
-                
-                // Assign the duty
-                schedule[slot.time].staffBreaks[s] = duty;
                 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
                     staffStats[s].cleaningDuties = [];
                 }
                 staffStats[s].cleaningDuties.push({
-                    duty: duty,
-                    time: slot.time
+                    duty: duty
                 });
-                
-                // Remove this slot from available slots
-                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
                 
                 // Mark that this staff has at least one duty
                 staffWithDuties.add(s);
@@ -1321,14 +1283,15 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                 // Add to duty assignments
                 dutyAssignments.push({
                     duty: duty,
-                    staff: s,
-                    time: slot.time
+                    staff: s
                 });
+                
+                dutyIndex++;
             }
         });
         
         // Second pass: distribute any remaining duties, prioritizing staff with fewer duties
-        while (dutyAssignments.length < cleaningDuties.length) {
+        while (dutyIndex < cleaningDuties.length) {
             // Calculate current duty count per staff
             const staffDutyCount = {};
             regularStaff.forEach(s => {
@@ -1345,48 +1308,28 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             });
             
             // Try to assign a duty to the staff with fewest duties
-            let assigned = false;
-            for (const s of staffByDutyCount) {
-                // Skip if no free slots
-                if (freeSlots[s].length === 0) continue;
-                
-                // Get the next duty to assign
-                const dutyIndex = dutyAssignments.length;
-                if (dutyIndex >= cleaningDuties.length) break;
-                
+            if (staffByDutyCount.length > 0) {
+                const s = staffByDutyCount[0];
                 const duty = cleaningDuties[dutyIndex];
-                
-                // Get a slot
-                const slot = freeSlots[s][0];
-                
-                // Assign the duty
-                schedule[slot.time].staffBreaks[s] = duty;
                 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
                     staffStats[s].cleaningDuties = [];
                 }
                 staffStats[s].cleaningDuties.push({
-                    duty: duty,
-                    time: slot.time
+                    duty: duty
                 });
-                
-                // Remove this slot from available slots
-                freeSlots[s] = freeSlots[s].filter(fs => fs.time !== slot.time);
                 
                 // Add to duty assignments
                 dutyAssignments.push({
                     duty: duty,
-                    staff: s,
-                    time: slot.time
+                    staff: s
                 });
                 
-                assigned = true;
-                break;
+                dutyIndex++;
+            } else {
+                break; // No staff available for more duties
             }
-            
-            // If we couldn't assign any more duties, break the loop
-            if (!assigned || dutyAssignments.length >= cleaningDuties.length) break;
         }
         
         // Check if any staff still don't have duties
