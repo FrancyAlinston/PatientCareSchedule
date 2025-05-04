@@ -1744,7 +1744,7 @@ function renderStats(staffStats, staff, patients) {
         // Add a cleaning duties summary
         statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
         statsHtml += '<table>';
-        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Time</th><th>Status</th></tr>';
+        statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Status</th></tr>';
         
         // Track duties
         const dutyAssignments = {};
@@ -1754,8 +1754,7 @@ function renderStats(staffStats, staff, patients) {
             if (staffStats[s].cleaningDuties && staffStats[s].cleaningDuties.length > 0) {
                 staffStats[s].cleaningDuties.forEach(item => {
                     dutyAssignments[item.duty] = {
-                        staff: s,
-                        time: item.time
+                        staff: s
                     };
                 });
             }
@@ -1767,15 +1766,13 @@ function renderStats(staffStats, staff, patients) {
             if (assignment) {
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td title="${assignment.staff}">${getInitials(assignment.staff)}</td>
-                    <td>${assignment.time}</td>
+                    <td title="${assignment.staff}">${getInitials(assignment.staff)} (${assignment.staff})</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
                 statsHtml += `<tr>
                     <td>${duty}</td>
                     <td>Not Assigned</td>
-                    <td>N/A</td>
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
             }
@@ -1791,7 +1788,7 @@ function renderStats(staffStats, staff, patients) {
         
         if (staffWithoutDuties.length > 0) {
             statsHtml += `<tr style="background-color: #fff3cd;">
-                <td colspan="4">
+                <td colspan="3">
                     <strong>Staff without cleaning duties:</strong> ${staffWithoutDuties.join(', ')}
                 </td>
             </tr>`;
