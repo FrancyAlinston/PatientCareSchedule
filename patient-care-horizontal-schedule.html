@@ -307,6 +307,28 @@
             color: var(--table-header-text-color);
             font-weight: 600;
         }
+
+        .nurse-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .nurse-input-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .nurse-input-row label {
+            width: 80px; /* Fixed width for labels */
+            text-align: right;
+            margin-right: 15px;
+        }
+
+        .nurse-input-row input {
+            width: 250px;
+        }
     </style>
 </head>
 <body>
@@ -334,13 +356,15 @@
                 <!-- Combined Nurses Section -->
                 <div>
                     <h2>Nursing Staff</h2>
-                    <div style="margin-bottom: 15px;">
-                        <label for="nurseInChargeInput"><strong>NIC:</strong></label>
-                        <input type="text" id="nurseInChargeInput" placeholder="Enter First Nurse in Charge" style="width: 250px; margin-bottom: 15px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label for="nurseInCharge2Input"><strong>NIC 2:</strong></label>
-                        <input type="text" id="nurseInCharge2Input" placeholder="Enter Second Nurse in Charge" style="width: 250px; margin-bottom: 15px;">
+                    <div class="nurse-inputs">
+                        <div class="nurse-input-row">
+                            <label for="nurseInChargeInput"><strong>NIC:</strong></label>
+                            <input type="text" id="nurseInChargeInput" placeholder="Enter First Nurse in Charge">
+                        </div>
+                        <div class="nurse-input-row">
+                            <label for="nurseInCharge2Input"><strong>NIC 2:</strong></label>
+                            <input type="text" id="nurseInCharge2Input" placeholder="Enter Second Nurse in Charge">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1944,110 +1968,3 @@ window.onload = function() {
             confirmationDiv.className = 'error-message';
             confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
             confirmationDiv.textContent = "Debug data filled successfully with random names!";
-            document.body.appendChild(confirmationDiv);
-            setTimeout(() => confirmationDiv.remove(), 3000);
-            
-            // Save to localStorage
-            saveToLocalStorage();
-        } catch (error) {
-            console.error("Error fetching random names:", error);
-            
-            // Show error message
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
-            document.body.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
-            
-            // Fallback to basic generic names if the API fails
-            const staffNames = ['Staff Member 1', 'Staff Member 2', 'Staff Member 3', 'Staff Member 4', 'Staff Member 5'];
-            const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
-            const securityNames = ['Security Officer'];
-            const nurseNames = ['Charge Nurse 1', 'Charge Nurse 2'];
-            
-            // Fill with fallback names
-            document.getElementById('nurseInChargeInput').value = nurseNames[0];
-            document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-            
-            document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
-                if (index < staffNames.length) input.value = staffNames[index];
-            });
-            
-            document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
-                if (index < securityNames.length) input.value = securityNames[index];
-            });
-            
-            document.querySelectorAll('.patient-container').forEach((container, index) => {
-                if (index < patientNames.length) {
-                    container.querySelector('.patient-name').value = patientNames[index];
-                    container.querySelector('.staff-count').value = (index % 3) + 1;
-                }
-            });
-            
-            saveToLocalStorage();
-        }
-    });
-    
-    // Debug panel toggle button
-    document.getElementById('toggleDebugBtn').addEventListener('click', function() {
-        const debugPanel = document.getElementById('debugPanel');
-        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-    });
-    
-    // Debug panel clear button
-    document.getElementById('clearDebugBtn').addEventListener('click', function() {
-        document.getElementById('debugOutput').innerHTML = '';
-    });
-    
-    // Add renderStaffRotationStats function if it's missing
-    if (typeof renderStaffRotationStats !== 'function') {
-        window.renderStaffRotationStats = function(patients, staff) {
-            // Generate a table showing how many times each staff member has worked with each patient
-            let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
-            rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
-            rotationHtml += '<table class="rotation-table">';
-            
-            // Header row with patient initials
-            rotationHtml += '<tr><th>Staff</th>';
-            patients.forEach(patient => {
-                rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
-            });
-            rotationHtml += '</tr>';
-            
-            // Rows for each staff member with initials
-            staff.forEach(s => {
-                rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
-                
-                // For each patient, show the rotation count
-                patients.forEach(patient => {
-                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ? 
-                        staffPatientHistory[s][patient] : 0;
-                    
-                    // Color the cell based on the count (darker for higher counts)
-                    const bgColor = count === 0 ? 
-                        '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
-                    const textColor = count >= 5 ? '#ffffff' : '#000000';
-                    
-                    rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
-                });
-                
-                rotationHtml += '</tr>';
-            });
-            
-            rotationHtml += '</table>';
-            rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
-            
-            document.getElementById('rotationStats').innerHTML = rotationHtml;
-        };
-    }
-    
-    // Set up legend based on shift type
-    updateLegend();
-    
-    // Update labels for Nurse in Charge
-    document.querySelector('label[for="nurseInChargeInput"]').innerHTML = "<strong>NIC:</strong>";
-    document.querySelector('label[for="nurseInCharge2Input"]').innerHTML = "<strong>NIC 2:</strong>";
-};
-    </script>
-</body>
-</html>
