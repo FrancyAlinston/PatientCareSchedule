@@ -1672,71 +1672,68 @@ window.onload = function() {
     
     // Debug button functionality
     document.getElementById('debugFillBtn').addEventListener('click', function() {
-        // Mock data
-        const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee'];
-        const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
-        const securityNames = ['Security Officer Jones'];
-        const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
-        
-        // Fill nurse in charge inputs
-        document.getElementById('nurseInChargeInput').value = nurseNames[0];
-        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-        
-        // Fill existing staff inputs without changing structure
-        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
-        
-        // Add more staff inputs if needed
-        while (staffInputs.length < staffNames.length) {
-            addStaffInput();
+    // Mock data
+    const staffNames = ['John Smith', 'Maria Rodriguez', 'Robert Johnson', 'Sarah Brown', 'David Lee'];
+    const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+    const securityNames = ['Security Officer Jones'];
+    const nurseNames = ['Charge Nurse Wilson', 'Charge Nurse Thompson'];
+    
+    // Fill nurse in charge inputs
+    document.getElementById('nurseInChargeInput').value = nurseNames[0];
+    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+    
+    // Make sure we have at least minimum required staff inputs
+    while (document.querySelectorAll('.staff-container').length < staffNames.length) {
+        addStaffInput();
+    }
+    
+    // Fill the staff inputs
+    document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+        if (index < staffNames.length) {
+            input.value = staffNames[index];
         }
-        
-        // Now fill the staff inputs
-        document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
-            if (index < staffNames.length) {
-                input.value = staffNames[index];
-            }
-        });
-        
-        // Add security staff if none exists
-        if (document.querySelectorAll('.security-container').length === 0) {
-            addSecurityStaffInput();
-        }
-        
-        // Fill security staff inputs
-        document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
-            if (index < securityNames.length) {
-                input.value = securityNames[index];
-            }
-        });
-        
-        // Add patient inputs if needed
-        while (document.querySelectorAll('.patient-container').length < patientNames.length) {
-            addPatientInput();
-        }
-        
-        // Fill patient inputs
-        const patientContainers = document.querySelectorAll('.patient-container');
-        patientContainers.forEach((container, index) => {
-            if (index < patientNames.length) {
-                const nameInput = container.querySelector('.patient-name');
-                const staffCountSelect = container.querySelector('.staff-count');
-                
-                nameInput.value = patientNames[index];
-                staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
-            }
-        });
-        
-        // Show confirmation message
-        const confirmationDiv = document.createElement('div');
-        confirmationDiv.className = 'error-message';
-        confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
-        confirmationDiv.textContent = "Debug data filled successfully!";
-        document.body.appendChild(confirmationDiv);
-        setTimeout(() => confirmationDiv.remove(), 3000);
-        
-        // Save to localStorage
-        saveToLocalStorage();
     });
+    
+    // Make sure we have a security staff input
+    if (document.querySelectorAll('.security-container').length === 0) {
+        addSecurityStaffInput();
+    }
+    
+    // Fill security staff inputs
+    document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+        if (index < securityNames.length) {
+            input.value = securityNames[index];
+        }
+    });
+    
+    // Make sure we have at least the required number of patient inputs
+    while (document.querySelectorAll('.patient-container').length < patientNames.length) {
+        addPatientInput();
+    }
+    
+    // Fill patient inputs
+    const patientContainers = document.querySelectorAll('.patient-container');
+    patientContainers.forEach((container, index) => {
+        if (index < patientNames.length) {
+            const nameInput = container.querySelector('.patient-name');
+            const staffCountSelect = container.querySelector('.staff-count');
+            
+            nameInput.value = patientNames[index];
+            staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+        }
+    });
+    
+    // Show confirmation message
+    const confirmationDiv = document.createElement('div');
+    confirmationDiv.className = 'error-message';
+    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+    confirmationDiv.textContent = "Debug data filled successfully!";
+    document.body.appendChild(confirmationDiv);
+    setTimeout(() => confirmationDiv.remove(), 3000);
+    
+    // Save to localStorage
+    saveToLocalStorage();
+});
     
     // Debug panel toggle button
     document.getElementById('toggleDebugBtn').addEventListener('click', function() {
