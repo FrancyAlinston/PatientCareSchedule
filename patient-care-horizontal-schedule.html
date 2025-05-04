@@ -1011,34 +1011,36 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 5000);
         
-        // Generate enough fallback names based on input counts
-        const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
-        const patientInputCount = document.querySelectorAll('.patient-container').length;
-        const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
+        // Use fallback names
+        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+        const staffNames = ['Emma Johnson', 'James Smith', 'Michael Brown', 'Sarah Davis', 'Robert Wilson'];
         
-        // Create dynamic fallback names
-        const staffNames = Array.from({length: staffInputCount}, (_, i) => `Staff Member ${i+1}`);
-        const patientNames = Array.from({length: patientInputCount}, (_, i) => 
-            `Patient ${String.fromCharCode(65 + i)}`);
-        const securityNames = Array.from({length: securityInputCount}, (_, i) => `Security ${i+1}`);
-        const nurseNames = ['Head Nurse 1', 'Head Nurse 2'];
+        const patientInputs = document.querySelectorAll('.patient-container');
+        const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+        
+        const securityInputs = document.querySelectorAll('.security-container .security-name');
+        const securityNames = ['Thomas Williams'];
+        
+        const nurseNames = ['Elizabeth Taylor', 'Richard Moore'];
         
         // Fill with fallback names
-        document.getElementById('nurseInChargeInput').value = nurseNames[0];
-        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        document.getElementById('nurseInChargeInput').value = nurseNames[0] || "";
+        document.getElementById('nurseInCharge2Input').value = nurseNames[1] || "";
         
-        document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+        staffInputs.forEach((input, index) => {
             if (index < staffNames.length) input.value = staffNames[index];
         });
         
-        document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+        securityInputs.forEach((input, index) => {
             if (index < securityNames.length) input.value = securityNames[index];
         });
         
-        document.querySelectorAll('.patient-container').forEach((container, index) => {
+        patientInputs.forEach((container, index) => {
             if (index < patientNames.length) {
-                container.querySelector('.patient-name').value = patientNames[index];
-                container.querySelector('.staff-count').value = (index % 3) + 1;
+                const nameInput = container.querySelector('.patient-name');
+                const staffCountSelect = container.querySelector('.staff-count');
+                if (nameInput) nameInput.value = patientNames[index];
+                if (staffCountSelect) staffCountSelect.value = (index % 3) + 1;
             }
         });
         
