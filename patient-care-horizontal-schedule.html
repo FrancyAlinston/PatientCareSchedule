@@ -902,11 +902,18 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         loadingDiv.textContent = "Fetching random names...";
         document.body.appendChild(loadingDiv);
         
+        // Count how many inputs we need to fill
+        const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
+        const patientInputCount = document.querySelectorAll('.patient-container').length;
+        const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
+        const nurseInputCount = 2; // We always have 2 nurse in charge inputs
+        
         // Fetch random names from online API - specify English results only
-        const staffResponse = await fetch('https://randomuser.me/api/?results=5&nat=us,gb');
-        const patientResponse = await fetch('https://randomuser.me/api/?results=4&nat=us,gb');
-        const securityResponse = await fetch('https://randomuser.me/api/?results=1&nat=us,gb');
-        const nurseResponse = await fetch('https://randomuser.me/api/?results=2&nat=us,gb');
+        // Request exactly the number of names we need
+        const staffResponse = await fetch(`https://randomuser.me/api/?results=${staffInputCount}&nat=us,gb`);
+        const patientResponse = await fetch(`https://randomuser.me/api/?results=${patientInputCount}&nat=us,gb`);
+        const securityResponse = await fetch(`https://randomuser.me/api/?results=${securityInputCount}&nat=us,gb`);
+        const nurseResponse = await fetch(`https://randomuser.me/api/?results=${nurseInputCount}&nat=us,gb`);
         
         // Parse the responses
         const staffData = await staffResponse.json();
@@ -922,11 +929,9 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
             `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
         );
         const securityNames = securityData.results.map(user => 
-            // Don't add "Security Officer" prefix
             `${user.name.first} ${user.name.last}`
         );
         const nurseNames = nurseData.results.map(user => 
-            // Don't add "Charge Nurse" prefix
             `${user.name.first} ${user.name.last}`
         );
         
@@ -934,29 +939,25 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         loadingDiv.remove();
         
         // Fill nurse in charge inputs
-        document.getElementById('nurseInChargeInput').value = nurseNames[0];
-        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        if (nurseNames.length >= 1) document.getElementById('nurseInChargeInput').value = nurseNames[0];
+        if (nurseNames.length >= 2) document.getElementById('nurseInCharge2Input').value = nurseNames[1];
         
-        // Fill only existing staff inputs (no creation)
-        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
-        staffInputs.forEach((input, index) => {
-            // Only fill if we have a name for this index
+        // Fill all existing staff inputs
+        document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
             if (index < staffNames.length) {
                 input.value = staffNames[index];
             }
         });
         
-        // Fill only existing security staff inputs (no creation)
-        const securityInputs = document.querySelectorAll('.security-container .security-name');
-        securityInputs.forEach((input, index) => {
+        // Fill all existing security staff inputs
+        document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
             if (index < securityNames.length) {
                 input.value = securityNames[index];
             }
         });
         
-        // Fill only existing patient inputs (no creation)
-        const patientContainers = document.querySelectorAll('.patient-container');
-        patientContainers.forEach((container, index) => {
+        // Fill all existing patient inputs
+        document.querySelectorAll('.patient-container').forEach((container, index) => {
             if (index < patientNames.length) {
                 const nameInput = container.querySelector('.patient-name');
                 const staffCountSelect = container.querySelector('.staff-count');
@@ -986,11 +987,17 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 5000);
         
-        // Fallback to basic generic names if the API fails
-        const staffNames = ['Emma Johnson', 'James Smith', 'Michael Brown', 'Sarah Davis', 'Robert Wilson'];
-        const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
-        const securityNames = ['Thomas Williams'];
-        const nurseNames = ['Elizabeth Taylor', 'Richard Moore'];
+        // Generate enough fallback names based on input counts
+        const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
+        const patientInputCount = document.querySelectorAll('.patient-container').length;
+        const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
+        
+        // Create dynamic fallback names
+        const staffNames = Array.from({length: staffInputCount}, (_, i) => `Staff Member ${i+1}`);
+        const patientNames = Array.from({length: patientInputCount}, (_, i) => 
+            `Patient ${String.fromCharCode(65 + i)}`);
+        const securityNames = Array.from({length: securityInputCount}, (_, i) => `Security ${i+1}`);
+        const nurseNames = ['Head Nurse 1', 'Head Nurse 2'];
         
         // Fill with fallback names
         document.getElementById('nurseInChargeInput').value = nurseNames[0];
