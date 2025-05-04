@@ -1360,4 +1360,103 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     const scheduleBody = document.getElementById('scheduleBody');
     const staffHeader = document.getElementById('staffHeader');
     const staffBody = document.getElementById('staffBody');
-    const breakHoursTable = document.getElementById('breakHours
+    const breakHoursTable = document.getElementById('breakHoursTable tbody');
+    
+    scheduleHeader.innerHTML = '';
+    scheduleBody.innerHTML = '';
+    staffHeader.innerHTML = '';
+    staffBody.innerHTML = '';
+    breakHoursTable.innerHTML = '';
+    
+    // Render schedule header
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `<th>Time</th>${patients.map(p => `<th>${p}</th>`).join('')}`;
+    scheduleHeader.appendChild(headerRow);
+    
+    // Render schedule body
+    Object.keys(schedule).forEach(time => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${time}</td>${patients.map(p => `<td>${schedule[time].patientAssignments[p].join(', ') || '-'}</td>`).join('')}`;
+        scheduleBody.appendChild(row);
+    });
+    
+    // Render staff header
+    const staffHeaderRow = document.createElement('tr');
+    staffHeaderRow.innerHTML = `<th>Time</th>${staff.map(s => `<th>${s}</th>`).join('')}`;
+    staffHeader.appendChild(staffHeaderRow);
+    
+    // Render staff body
+    Object.keys(schedule).forEach(time => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${time}</td>${staff.map(s => `<td>${schedule[time].staffBreaks[s] || '-'}</td>`).join('')}`;
+        staffBody.appendChild(row);
+    });
+    
+    // Render break hours table
+    staff.forEach(s => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${s}</td>
+            <td>${staffStats[s].shortBreakTime || '-'}</td>
+            <td>${staffStats[s].secondBreakTime || '-'}</td>
+        `;
+        breakHoursTable.appendChild(row);
+    });
+}
+
+function renderStats(staffStats, staff, patients) {
+    const statsDiv = document.getElementById('stats');
+    statsDiv.innerHTML = '';
+    
+    let statsHtml = '<h2>Staff Statistics</h2>';
+    statsHtml += '<table>';
+    statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th></tr>';
+    
+    staff.forEach(s => {
+        statsHtml += `<tr>
+            <td>${s}</td>
+            <td>${staffStats[s].workHours}</td>
+            <td>${staffStats[s].breakTime}</td>
+        </tr>`;
+    });
+    
+    statsHtml += '</table>';
+    
+    // Add a special section for interrupted breaks and emergency assignments
+    const hasEmergencyAssignments = staff.some(s => staffStats[s].emergencyAssignments);
+    const hasInterruptedBreaks = staff.some(s => staffStats[s].shortBreakInterrupted || staffStats[s].secondBreakInterrupted);
+    
+    if (hasInterruptedBreaks || hasEmergencyAssignments) {
+        statsHtml += '<h3 style="color: #c0392b;">⚠️ Break Interruptions and Emergency Assignments</h3>';
+        statsHtml += '<table style="border: 2px solid #c0392b;">';
+        statsHtml += '<tr><th>Staff</th><th>Issue</th><th>Details</th></tr>';
+        
+        staff.forEach(s => {
+            if (staffStats[s].shortBreakInterrupted || staffStats[s].secondBreakInterrupted) {
+                statsHtml += `<tr>
+                    <td title="${s}">${getInitials(s)}</td>
+                    <td>Interrupted Break</td>
+                    <td>${staffStats[s].shortBreakInterrupted ? '30-min Break interrupted, ' : ''}${staffStats[s].secondBreakInterrupted ? '2nd Break interrupted' : ''}</td>
+                </tr>`;
+            }
+            
+            if (staffStats[s].emergencyAssignments) {
+                staffStats[s].emergencyDetails.forEach(detail => {
+                    statsHtml += `<tr>
+                        <td title="${s}">${getInitials(s)}</td>
+                        <td>Emergency Assignment</td>
+                        <td>Reassigned from ${detail.originalDuty} to Patient ${detail.patient} at ${detail.time}</td>
+                    </tr>`;
+                });
+            }
+        });
+        
+        statsHtml += '</table>';
+        statsHtml += '<p><em>Note: Emergency assignments and break interruptions occur when there are not enough staff available to cover all patients.</em></p>';
+    }
+    
+    statsDiv.innerHTML = statsHtml;
+}
+    </script>
+</body>
+</html>
