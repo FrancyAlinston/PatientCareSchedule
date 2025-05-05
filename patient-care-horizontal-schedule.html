@@ -926,18 +926,11 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         loadingDiv.textContent = "Fetching random names...";
         document.body.appendChild(loadingDiv);
         
-        // Count how many inputs we need to fill
-        const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
-        const patientInputCount = document.querySelectorAll('.patient-container').length;
-        const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
-        const nurseInputCount = 2; // We always have 2 nurse in charge inputs
-        
-        // Fetch random names from online API - specify English results only
-        // Request exactly the number of names we need
-        const staffResponse = await fetch(`https://randomuser.me/api/?results=${staffInputCount}&nat=us,gb`);
-        const patientResponse = await fetch(`https://randomuser.me/api/?results=${patientInputCount}&nat=us,gb`);
-        const securityResponse = await fetch(`https://randomuser.me/api/?results=${securityInputCount}&nat=us,gb`);
-        const nurseResponse = await fetch(`https://randomuser.me/api/?results=${nurseInputCount}&nat=us,gb`);
+        // Fetch random names from online API
+        const staffResponse = await fetch('https://randomuser.me/api/?results=5');
+        const patientResponse = await fetch('https://randomuser.me/api/?results=4');
+        const securityResponse = await fetch('https://randomuser.me/api/?results=1');
+        const nurseResponse = await fetch('https://randomuser.me/api/?results=2');
         
         // Parse the responses
         const staffData = await staffResponse.json();
@@ -953,35 +946,39 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
             `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
         );
         const securityNames = securityData.results.map(user => 
-            `${user.name.first} ${user.name.last}`
+            `Security Officer ${user.name.last}`
         );
         const nurseNames = nurseData.results.map(user => 
-            `${user.name.first} ${user.name.last}`
+            `Charge Nurse ${user.name.last}`
         );
         
         // Remove loading message
         loadingDiv.remove();
         
         // Fill nurse in charge inputs
-        if (nurseNames.length >= 1) document.getElementById('nurseInChargeInput').value = nurseNames[0];
-        if (nurseNames.length >= 2) document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+        document.getElementById('nurseInChargeInput').value = nurseNames[0];
+        document.getElementById('nurseInCharge2Input').value = nurseNames[1];
         
-        // Fill all existing staff inputs
-        document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+        // Fill only existing staff inputs (no creation)
+        const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+        staffInputs.forEach((input, index) => {
+            // Only fill if we have a name for this index
             if (index < staffNames.length) {
                 input.value = staffNames[index];
             }
         });
         
-        // Fill all existing security staff inputs
-        document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+        // Fill only existing security staff inputs (no creation)
+        const securityInputs = document.querySelectorAll('.security-container .security-name');
+        securityInputs.forEach((input, index) => {
             if (index < securityNames.length) {
                 input.value = securityNames[index];
             }
         });
         
-        // Fill all existing patient inputs
-        document.querySelectorAll('.patient-container').forEach((container, index) => {
+        // Fill only existing patient inputs (no creation)
+        const patientContainers = document.querySelectorAll('.patient-container');
+        patientContainers.forEach((container, index) => {
             if (index < patientNames.length) {
                 const nameInput = container.querySelector('.patient-name');
                 const staffCountSelect = container.querySelector('.staff-count');
@@ -1826,6 +1823,46 @@ function renderStats(staffStats, staff, patients) {
     statsDiv.innerHTML = statsHtml;
 }
 
+// Fix for the renderStaffRotationStats function that's missing
+function renderStaffRotationStats(patients, staff) {
+    // Generate a table showing how many times each staff member has worked with each patient
+    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+    rotationHtml += '<table class="rotation-table">';
+    
+    // Header row with patient initials
+    rotationHtml += '<tr><th>Staff</th>';
+    patients.forEach(patient => {
+        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
+    });
+    rotationHtml += '</tr>';
+    
+    // Rows for each staff member with initials
+    staff.forEach(s => {
+        rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
+        
+        // For each patient, show the rotation count
+        patients.forEach(patient => {
+            const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ? 
+                staffPatientHistory[s][patient] : 0;
+            
+            // Color the cell based on the count (darker for higher counts)
+            const bgColor = count === 0 ? 
+                '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
+            const textColor = count >= 5 ? '#ffffff' : '#000000';
+            
+            rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
+        });
+        
+        rotationHtml += '</tr>';
+    });
+    
+    rotationHtml += '</table>';
+    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+    
+    document.getElementById('rotationStats').innerHTML = rotationHtml;
+}
+
 // Add this window.onload function at the end of your script
 window.onload = function() {
     // Set moon emoji for dark mode button
@@ -1970,3 +2007,58 @@ window.onload = function() {
             confirmationDiv.className = 'error-message';
             confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
             confirmationDiv.textContent = "Debug data filled successfully with random names!";
+            document.body.appendChild(confirmationDiv);
+            setTimeout(() => confirmationDiv.remove(), 3000);
+            
+            // Save to localStorage
+            saveToLocalStorage();
+        } catch (error) {
+            console.error("Error fetching random names:", error);
+            
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+            
+            // Use fallback names
+            const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+            const staffNames = ['Emma Johnson', 'James Smith', 'Michael Brown', 'Sarah Davis', 'Robert Wilson'];
+            
+            const patientInputs = document.querySelectorAll('.patient-container');
+            const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+            
+            const securityInputs = document.querySelectorAll('.security-container .security-name');
+            const securityNames = ['Thomas Williams'];
+            
+            const nurseNames = ['Elizabeth Taylor', 'Richard Moore'];
+            
+            // Fill with fallback names
+            document.getElementById('nurseInChargeInput').value = nurseNames[0] || "";
+            document.getElementById('nurseInCharge2Input').value = nurseNames[1] || "";
+            
+            staffInputs.forEach((input, index) => {
+                if (index < staffNames.length) input.value = staffNames[index];
+            });
+            
+            securityInputs.forEach((input, index) => {
+                if (index < securityNames.length) input.value = securityNames[index];
+            });
+            
+            patientInputs.forEach((container, index) => {
+                if (index < patientNames.length) {
+                    const nameInput = container.querySelector('.patient-name');
+                    const staffCountSelect = container.querySelector('.staff-count');
+                    if (nameInput) nameInput.value = patientNames[index];
+                    if (staffCountSelect) staffCountSelect.value = (index % 3) + 1;
+                }
+            });
+            
+            saveToLocalStorage();
+        }
+    });
+});
+    </script>
+</body>
+</html>
