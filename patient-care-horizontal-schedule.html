@@ -1221,9 +1221,8 @@ function assignBreaks(allStaff, staffStats) {
             staffStats[s].breakTime += 1;
             staffStats[s].secondBreakTime = timeSlots[secondBreakHour];
         } else {
-            // Night shift: 2-hour continuous break
-            // Choose a random starting hour between 23:00 and 3:00
-            const breakStartHour = Math.floor(Math.random() * 5) + 3; // 3 to 7 (23:00 to 3:00)
+            // Night shift: 2-hour continuous break starting at midnight
+            const breakStartHour = 4; // Index 4 is "00:00-01:00" in nightShiftSlots
             
             // Assign the 2-hour break (spanning 2 continuous time slots)
             schedule[timeSlots[breakStartHour]].staffBreaks[s] = "NIGHT BREAK";
