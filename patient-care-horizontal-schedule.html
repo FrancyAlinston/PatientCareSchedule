@@ -457,7 +457,7 @@
             return (firstInitial + lastInitial).toUpperCase();
         }
 
-        // Add this function to your JavaScript
+        // In the updateLegend function, update the night shift break hours table header
         function updateLegend() {
             // Update legend based on shift
             const legendDiv = document.querySelector('.legend');
@@ -514,8 +514,8 @@
                 breakHoursTableHead.innerHTML = `
                 <tr>
                     <th>Staff</th>
-                    <th>Break Start</th>
-                    <th>Break End</th>
+                    <th>Break Time</th>
+                    <th>Status</th>
                 </tr>`;
             }
         }
@@ -1206,9 +1206,9 @@ function validateInputs() {
 }
 
 function assignBreaks(allStaff, staffStats) {
-    allStaff.forEach(s => {
-        if (isDayShift) {
-            // Day shift: 30-min break and 1-hour 2nd break
+    if (isDayShift) {
+        // Day shift - keep existing logic
+        allStaff.forEach(s => {
             // Assign 30-min break to a random hour between 9:00 and 13:00
             const shortBreakHour = Math.floor(Math.random() * 4) + 1; // 1 to 4 (9:00 to 13:00)
             schedule[timeSlots[shortBreakHour]].staffBreaks[s] = "30-MIN BREAK";
@@ -1220,19 +1220,30 @@ function assignBreaks(allStaff, staffStats) {
             schedule[timeSlots[secondBreakHour]].staffBreaks[s] = "2ND BREAK";
             staffStats[s].breakTime += 1;
             staffStats[s].secondBreakTime = timeSlots[secondBreakHour];
-        } else {
-            // Night shift: 2-hour continuous break starting at midnight
-            const breakStartHour = 4; // Index 4 is "00:00-01:00" in nightShiftSlots
+        });
+    } else {
+        // Night shift - distribute breaks at 00:00, 02:00, and 04:00
+        
+        // Map time indexes to their corresponding times in nightShiftSlots
+        // Index 4 = "00:00-01:00", Index 6 = "02:00-03:00", Index 8 = "04:00-05:00"
+        const breakTimeSlots = [4, 6, 8]; // 00:00, 02:00, 04:00
+        
+        // Distribute staff evenly across the three break times
+        allStaff.forEach((s, index) => {
+            // Distribute staff in rotation across the three break times
+            const breakTimeIndex = breakTimeSlots[index % breakTimeSlots.length];
             
-            // Assign the 2-hour break (spanning 2 continuous time slots)
-            schedule[timeSlots[breakStartHour]].staffBreaks[s] = "NIGHT BREAK";
-            schedule[timeSlots[breakStartHour + 1]].staffBreaks[s] = "NIGHT BREAK";
+            // Assign the break
+            schedule[timeSlots[breakTimeIndex]].staffBreaks[s] = "NIGHT BREAK";
             
-            staffStats[s].breakTime += 2;
-            staffStats[s].shortBreakTime = timeSlots[breakStartHour];
-            staffStats[s].secondBreakTime = timeSlots[breakStartHour + 1];
-        }
-    });
+            // Update staff stats
+            staffStats[s].breakTime += 1;
+            staffStats[s].shortBreakTime = timeSlots[breakTimeIndex];
+            
+            // Clear the secondBreakTime field for night shift
+            staffStats[s].secondBreakTime = "N/A";
+        });
+    }
 }
 
 function assignSecurityDuties(securityStaff, staffStats) {
