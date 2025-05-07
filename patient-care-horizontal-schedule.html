@@ -1093,14 +1093,14 @@ function generateSchedule() {
             staffPatientHistory = {};
         }
         
-        // Make sure all staff and patients have entries in staffPatientHistory
-        staff.forEach(s => {
+        // Make sure all staff (including security) and patients have entries in staffPatientHistory
+        allStaff.forEach(s => {
             if (!staffPatientHistory[s]) {
                 staffPatientHistory[s] = {};
             }
             
             patients.forEach(patient => {
-                if (!staffPatientHistory[s][patient.name]) {
+                if (staffPatientHistory[s][patient.name] === undefined) {
                     staffPatientHistory[s][patient.name] = 0;
                 }
             });
@@ -1426,13 +1426,13 @@ function findBalancedStaffForPatient(availableStaff, patientName, count, staffSt
     // 2. Their current workload (lower is better)
     // 3. Whether they're security staff (regular staff preferred)
     const sorted = [...availableStaff].sort((a, b) => {
-        // Patient rotation history factor (lower is better)
-        const rotationA = staffPatientHistory[a][patientName] || 0;
-        const rotationB = staffPatientHistory[b][patientName] || 0;
+        // Safely get rotation history with fallbacks for undefined values
+        const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;
+        const rotationB = (staffPatientHistory[b] && staffPatientHistory[b][patientName]) || 0;
         
         // Workload balance factor (lower is better)
-        const workloadA = staffStats[a].workHours || 0;
-        const workloadB = staffStats[b].workHours || 0;
+        const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
+        const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
         
         // Security staff factor (regular staff preferred)
         const isSecurityA = securityStaff.includes(a) ? 1 : 0;
