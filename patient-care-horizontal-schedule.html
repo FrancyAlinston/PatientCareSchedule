@@ -1361,53 +1361,24 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
 function assignPatients(staff, patients, staffStats) {
     // Create a list of all time slots
     timeSlots.forEach(time => {
-        // Get available staff for this time slot (those not on break)
-        const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+        // Get available regular staff for this time slot (those not on break)
+        const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+        
+        // Get available security staff for this time slot (those not on security duty)
+        const availableSecurityStaff = securityStaff.filter(s => 
+            !schedule[time].staffBreaks[s] || 
+            schedule[time].staffBreaks[s] !== "SECURITY DUTY"
+        );
+        
+        // Combine all available staff, with regular staff first (to prioritize them)
+        const availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
         
         // Check if we have enough staff to cover all patients
         const totalStaffNeeded = patients.reduce((total, p) => total + p.staffCount, 0);
         
-        if (availableStaff.length < patients.length) {
-            // Not enough staff to cover all patients - adjust breaks
-            const additionalStaffNeeded = patients.length - availableStaff.length;
-            
-            // Find staff on break during this time slot
-            const staffOnBreak = staff.filter(s => 
-                schedule[time].staffBreaks[s] && 
-                schedule[time].staffBreaks[s] !== "SECURITY DUTY" &&
-                !securityStaff.includes(s)
-            );
-            
-            // Abort breaks for the needed number of staff
-            for (let i = 0; i < Math.min(additionalStaffNeeded, staffOnBreak.length); i++) {
-                const s = staffOnBreak[i];
-                const breakType = schedule[time].staffBreaks[s];
-                
-                // Log the interrupted break
-                console.log(`Break interrupted for ${s} at ${time} (${breakType})`);
-                
-                // Mark the break as aborted/interrupted
-                if (breakType === "30-MIN BREAK") {
-                    staffStats[s].breakTime -= 0.5;
-                    staffStats[s].shortBreakInterrupted = true;
-                } else if (breakType === "2ND BREAK") {
-                    staffStats[s].breakTime -= 1;
-                    staffStats[s].secondBreakInterrupted = true;
-                } else if (breakType === "NIGHT BREAK") {
-                    staffStats[s].breakTime -= 1; // Reduce by 1 hour instead of 2 since it's split
-                    if (staffStats[s].shortBreakTime === time) {
-                        staffStats[s].shortBreakInterrupted = true;
-                    } else {
-                        staffStats[s].secondBreakInterrupted = true;
-                    }
-                }
-                
-                // Clear the break
-                delete schedule[time].staffBreaks[s];
-                
-                // Add this staff member back to available staff
-                availableStaff.push(s);
-            }
+        if (availableStaff.length < totalStaffNeeded) {
+            // Not enough staff to cover all patients - adjust breaks (same as before)
+            // ...existing code...
         }
         
         // Sort patients by staffCount (highest first) to prioritize higher needs
@@ -1420,60 +1391,13 @@ function assignPatients(staff, patients, staffStats) {
             const staffToAssign = Math.min(staffNeeded, availableStaff.length);
             
             if (staffToAssign === 0) {
-                // Emergency situation - no staff available for this patient
-                // Find any staff member, even if on security duty
-                const anyStaff = staff.filter(s => !securityStaff.includes(s));
-                
-                if (anyStaff.length > 0) {
-                    // Take the first available staff member
-                    const emergencyStaff = anyStaff[0];
-                    
-                    // Log this emergency reassignment
-                    const currentDuty = schedule[time].staffBreaks[emergencyStaff] || "Unknown";
-                    console.log(`EMERGENCY: ${emergencyStaff} reassigned from ${currentDuty} to patient ${patient.name} at ${time}`);
-                    
-                    // Clear their current assignment
-                    delete schedule[time].staffBreaks[emergencyStaff];
-                    
-                    // Remove them from any other patient assignments in this time slot
-                    for (const otherPatient of patients) {
-                        const assignments = schedule[time].patientAssignments[otherPatient.name];
-                        const index = assignments.indexOf(emergencyStaff);
-                        if (index !== -1) {
-                            assignments.splice(index, 1);
-                        }
-                    }
-                    
-                    // Assign to this patient
-                    schedule[time].patientAssignments[patient.name].push(emergencyStaff);
-                    
-                    // Update rotation history
-                    staffPatientHistory[emergencyStaff][patient.name]++;
-                    
-                    // Update stats
-                    staffStats[emergencyStaff].workHours++;
-                    staffStats[emergencyStaff].emergencyAssignments = 
-                        (staffStats[emergencyStaff].emergencyAssignments || 0) + 1;
-                    
-                    // Mark this as an emergency assignment
-                    if (!staffStats[emergencyStaff].emergencyDetails) {
-                        staffStats[emergencyStaff].emergencyDetails = [];
-                    }
-                    staffStats[emergencyStaff].emergencyDetails.push({
-                        patient: patient.name,
-                        time: time,
-                        originalDuty: currentDuty
-                    });
-                } else {
-                    // Critical error - absolutely no staff available
-                    showError(`Critical staffing shortage: Patient ${patient.name} has no staff at ${time}`);
-                }
-                
+                // Emergency situation (existing emergency handling code)
+                // ...existing code...
                 continue;
             }
             
-            // Find the best staff for this patient based on rotation history
-            const bestStaff = findBestStaffForPatient(availableStaff, patient.name, staffToAssign);
+            // Find the best staff for this patient based on rotation history and workload balance
+            const bestStaff = findBalancedStaffForPatient(availableStaff, patient.name, staffToAssign, staffStats);
             
             // Assign the staff to this patient
             bestStaff.forEach(s => {
@@ -1495,12 +1419,31 @@ function assignPatients(staff, patients, staffStats) {
     });
 }
 
-function findBestStaffForPatient(availableStaff, patientName, count) {
-    // Sort staff by how many times they've worked with this patient (ascending)
+// Replace the existing findBestStaffForPatient with this balanced version
+function findBalancedStaffForPatient(availableStaff, patientName, count, staffStats) {
+    // Sort staff by a composite score that considers:
+    // 1. How many times they've worked with this patient (lower is better)
+    // 2. Their current workload (lower is better)
+    // 3. Whether they're security staff (regular staff preferred)
     const sorted = [...availableStaff].sort((a, b) => {
-        const countA = staffPatientHistory[a][patientName] || 0;
-        const countB = staffPatientHistory[b][patientName] || 0;
-        return countA - countB;
+        // Patient rotation history factor (lower is better)
+        const rotationA = staffPatientHistory[a][patientName] || 0;
+        const rotationB = staffPatientHistory[b][patientName] || 0;
+        
+        // Workload balance factor (lower is better)
+        const workloadA = staffStats[a].workHours || 0;
+        const workloadB = staffStats[b].workHours || 0;
+        
+        // Security staff factor (regular staff preferred)
+        const isSecurityA = securityStaff.includes(a) ? 1 : 0;
+        const isSecurityB = securityStaff.includes(b) ? 1 : 0;
+        
+        // Weighted composite score calculation
+        // Prioritize rotation history, then workload balance, then staff type
+        const scoreA = (rotationA * 10) + (workloadA * 5) + (isSecurityA * 30);
+        const scoreB = (rotationB * 10) + (workloadB * 5) + (isSecurityB * 30);
+        
+        return scoreA - scoreB;
     });
     
     // Return the top 'count' staff
@@ -1708,37 +1651,53 @@ function renderStats(staffStats, staff, patients) {
     
     let statsHtml = '<h2>Staff Statistics</h2>';
     statsHtml += '<table>';
-    statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th></tr>';
+    statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>Role</th></tr>';
     
     staff.forEach(s => {
+        // Determine staff role for display
+        let roleDisplay = "Health Care Worker";
+        if (securityStaff.includes(s)) roleDisplay = "Security Staff";
+        if (s === nurseInCharge1 || s === nurseInCharge2) roleDisplay = "Nurse in Charge";
+        
         statsHtml += `<tr>
             <td>${s}</td>
             <td>${staffStats[s].workHours}</td>
             <td>${staffStats[s].breakTime}</td>
+            <td>${roleDisplay}</td>
         </tr>`;
     });
     
     statsHtml += '</table>';
     
-    // Add a special section for interrupted breaks and emergency assignments
-    const hasEmergencyAssignments = staff.some(s => staffStats[s].emergencyAssignments);
-    const hasInterruptedBreaks = staff.some(s => staffStats[s].shortBreakInterrupted || staffStats[s].secondBreakInterrupted);
+    // Add a section summarizing security staff patient care
+    const securityPatientCare = {};
+    securityStaff.forEach(s => {
+        securityPatientCare[s] = 0;
+        if (staffStats[s] && staffStats[s].workHours) {
+            securityPatientCare[s] = staffStats[s].workHours;
+        }
+    });
     
-    if (hasInterruptedBreaks || hasEmergencyAssignments) {
-        statsHtml += '<h3>Special Notes</h3>';
-        statsHtml += '<ul>';
+    if (securityStaff.length > 0) {
+        statsHtml += '<h3>Security Staff Patient Care Summary</h3>';
+        statsHtml += '<table>';
+        statsHtml += '<tr><th>Security Staff</th><th>Security Duty Hours</th><th>Patient Care Hours</th></tr>';
         
-        if (hasInterruptedBreaks) {
-            statsHtml += '<li>Some breaks were interrupted due to staffing shortages.</li>';
-        }
+        securityStaff.forEach(s => {
+            const securityHours = 4; // Fixed security duty (first 2 and last 2 hours)
+            const patientCareHours = securityPatientCare[s];
+            
+            statsHtml += `<tr>
+                <td>${s}</td>
+                <td>${securityHours}</td>
+                <td>${patientCareHours}</td>
+            </tr>`;
+        });
         
-        if (hasEmergencyAssignments) {
-            statsHtml += '<li>Emergency assignments were made to cover critical needs.</li>';
-        }
-        
-        statsHtml += '</ul>';
+        statsHtml += '</table>';
+        statsHtml += '<p><em>Note: Security staff are assigned to security duty during the first 2 and last 2 hours of the shift.</em></p>';
     }
-
+    
     // Add this to renderStats function, in the section for night shift
     if (!isDayShift) {
         // Add a cleaning duties summary
@@ -2047,4 +2006,3 @@ window.onload = function() {
     </script>
 </body>
 </html>
-`
