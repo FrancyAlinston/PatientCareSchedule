@@ -1116,6 +1116,15 @@ function generateSchedule() {
                 secondBreakTime: ""
             };
         });
+
+        // Initialize continuous assignment tracker
+        const continuousAssignmentTracker = {};
+        allStaff.forEach(s => {
+            continuousAssignmentTracker[s] = {};
+            patients.forEach(patient => {
+                continuousAssignmentTracker[s][patient.name] = 0;
+            });
+        });
         
         // First, assign break times
         assignBreaks(allStaff, staffStats);
@@ -1129,13 +1138,13 @@ function generateSchedule() {
         }
         
         // Finally, assign staff to patients using a fair algorithm
-        assignPatients(staff, patients, staffStats);
+        assignPatients(staff, patients, staffStats, continuousAssignmentTracker);
         
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
         
         // Render stats
-        renderStats(staffStats, allStaff, patients.map(p => p.name));
+        renderStats(staffStats, allStaff, patients.map(p => p.name), continuousAssignmentTracker);
         
         // Render rotation stats
         renderStaffRotationStats(
@@ -1380,9 +1389,10 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
     }
 }
 
-function assignPatients(staff, patients, staffStats) {
-    // Create a list of all time slots
-    timeSlots.forEach(time => {
+// Replace the existing assignPatients function with this enhanced version
+function assignPatients(staff, patients, staffStats, continuousAssignmentTracker) {
+    // Process each time slot in sequence to track continuous assignments
+    timeSlots.forEach((time, timeIndex) => {
         // Get available regular staff for this time slot (those not on break)
         const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
         
@@ -1392,46 +1402,61 @@ function assignPatients(staff, patients, staffStats) {
             schedule[time].staffBreaks[s] !== "SECURITY DUTY"
         );
         
-        // Combine all available staff, with regular staff first (to prioritize them)
+        // Combine all available staff
         const availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
-        
-        // Check if we have enough staff to cover all patients
-        const totalStaffNeeded = patients.reduce((total, p) => total + p.staffCount, 0);
-        
-        if (availableStaff.length < totalStaffNeeded) {
-            // Not enough staff to cover all patients - adjust breaks (same as before)
-            // ...existing code...
-        }
         
         // Sort patients by staffCount (highest first) to prioritize higher needs
         const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
         
         // For each patient, assign the required number of staff
         for (const patient of sortedPatients) {
-            // Calculate how many staff we can assign to this patient
             const staffNeeded = patient.staffCount;
             const staffToAssign = Math.min(staffNeeded, availableStaff.length);
             
             if (staffToAssign === 0) {
-                // Emergency situation (existing emergency handling code)
-                // ...existing code...
                 continue;
             }
             
-            // Find the best staff for this patient based on rotation history and workload balance
-            const bestStaff = findBalancedStaffForPatient(availableStaff, patient.name, staffToAssign, staffStats);
+            // Find staff for this patient with continuity limits considered
+            const bestStaff = findStaffWithContinuityLimit(
+                availableStaff, 
+                patient.name, 
+                staffToAssign, 
+                staffStats,
+                continuousAssignmentTracker,
+                timeIndex
+            );
             
             // Assign the staff to this patient
             bestStaff.forEach(s => {
                 schedule[time].patientAssignments[patient.name].push(s);
                 
                 // Update rotation history
+                if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
+                if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
                 staffPatientHistory[s][patient.name]++;
                 
                 // Update stats
                 staffStats[s].workHours++;
                 
-                // Remove this staff from available staff for this time slot
+                // Update continuous assignment tracker
+                if (timeIndex > 0) {
+                    const prevTime = timeSlots[timeIndex - 1];
+                    const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
+                    
+                    if (prevAssignments.includes(s)) {
+                        // Staff is continuing with same patient
+                        continuousAssignmentTracker[s][patient.name]++;
+                    } else {
+                        // Staff is newly assigned to this patient
+                        continuousAssignmentTracker[s][patient.name] = 1;
+                    }
+                } else {
+                    // First hour of shift
+                    continuousAssignmentTracker[s][patient.name] = 1;
+                }
+                
+                // Remove from available staff
                 const index = availableStaff.indexOf(s);
                 if (index !== -1) {
                     availableStaff.splice(index, 1);
@@ -1441,33 +1466,35 @@ function assignPatients(staff, patients, staffStats) {
     });
 }
 
-// Update findBalancedStaffForPatient function to increase likelihood of security staff assignment
-function findBalancedStaffForPatient(availableStaff, patientName, count, staffStats) {
-    // Sort staff by a composite score that considers:
-    // 1. How many times they've worked with this patient (lower is better)
-    // 2. Their current workload (lower is better)
-    // 3. Whether they're security staff (slight preference for regular staff, not as strong)
+// Add this new function to find staff with continuity limits
+function findStaffWithContinuityLimit(availableStaff, patientName, count, staffStats, continuousTracker, timeIndex) {
+    // Sort staff based on multiple factors
     const sorted = [...availableStaff].sort((a, b) => {
-        // Safely get rotation history with fallbacks for undefined values
+        // Continuous hours working with this patient
+        const continuousHoursA = continuousTracker[a] ? (continuousTracker[a][patientName] || 0) : 0;
+        const continuousHoursB = continuousTracker[b] ? (continuousTracker[b][patientName] || 0) : 0;
+        
+        // Apply strong penalty for staff with 3+ continuous hours (to force rotation)
+        const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+        const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+        
+        // Other factors from original algorithm
         const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;
         const rotationB = (staffPatientHistory[b] && staffPatientHistory[b][patientName]) || 0;
         
-        // Workload balance factor (lower is better)
         const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
         const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
         
-        // Security staff factor (reduced weight to encourage assignment)
-        const isSecurityA = securityStaff.includes(a) ? 1 : 0;
-        const isSecurityB = securityStaff.includes(b) ? 1 : 0;
+        const isSecurityA = securityStaff.includes(a) ? 10 : 0;
+        const isSecurityB = securityStaff.includes(b) ? 10 : 0;
         
-        // Reduce security staff penalty from 30 to 10 to make them more likely to be assigned
-        const scoreA = (rotationA * 10) + (workloadA * 5) + (isSecurityA * 10);
-        const scoreB = (rotationB * 10) + (workloadB * 5) + (isSecurityB * 10);
+        // Combined score (lower is better for assignment)
+        const scoreA = continuityPenaltyA + (rotationA * 5) + (workloadA * 2) + isSecurityA;
+        const scoreB = continuityPenaltyB + (rotationB * 5) + (workloadB * 2) + isSecurityB;
         
         return scoreA - scoreB;
     });
     
-    // Return the top 'count' staff
     return sorted.slice(0, count);
 }
 
@@ -1666,7 +1693,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     });
 }
 
-function renderStats(staffStats, staff, patients) {
+function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     const statsDiv = document.getElementById('stats');
     statsDiv.innerHTML = '';
     
@@ -1776,6 +1803,52 @@ function renderStats(staffStats, staff, patients) {
         
         statsHtml += '</table>';
     }
+
+    // Add this to the renderStats function, after the security staff section
+    // Add a section showing continuous assignment tracking
+    statsHtml += '<h3>Staff Continuity Report</h3>';
+    statsHtml += '<p>This section shows the maximum number of continuous hours staff were assigned to the same patient.</p>';
+    statsHtml += '<table>';
+    statsHtml += '<tr><th>Staff</th><th>Patient</th><th>Max Continuous Hours</th><th>Status</th></tr>';
+
+    // Calculate max continuous hours for display
+    const maxContinuousHours = {};
+    staff.forEach(s => {
+        maxContinuousHours[s] = {};
+        patients.forEach(patient => {
+            const hours = continuousAssignmentTracker[s] ? 
+                (continuousAssignmentTracker[s][patient] || 0) : 0;
+            maxContinuousHours[s][patient] = hours;
+        });
+    });
+
+    // Display the longest continuous assignments
+    let hasLongAssignments = false;
+    staff.forEach(s => {
+        patients.forEach(patient => {
+            const hours = maxContinuousHours[s][patient];
+            if (hours >= 2) { // Only show assignments of 2+ hours
+                hasLongAssignments = true;
+                const status = hours > 3 ? 
+                    '<span style="color: red;">Exceeds Target</span>' : 
+                    '<span style="color: green;">Within Target</span>';
+                
+                statsHtml += `<tr>
+                    <td>${s}</td>
+                    <td>${patient}</td>
+                    <td>${hours}</td>
+                    <td>${status}</td>
+                </tr>`;
+            }
+        });
+    });
+
+    if (!hasLongAssignments) {
+        statsHtml += '<tr><td colspan="4">No staff assigned to the same patient for more than 2 continuous hours.</td></tr>';
+    }
+
+    statsHtml += '</table>';
+    statsHtml += '<p><em>Note: The target is to avoid assigning staff to the same patient for more than 3 continuous hours.</em></p>';
 
     statsDiv.innerHTML = statsHtml;
 }
