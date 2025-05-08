@@ -1441,12 +1441,12 @@ function assignPatients(staff, patients, staffStats) {
     });
 }
 
-// Replace the existing findBestStaffForPatient with this balanced version
+// Update findBalancedStaffForPatient function to increase likelihood of security staff assignment
 function findBalancedStaffForPatient(availableStaff, patientName, count, staffStats) {
     // Sort staff by a composite score that considers:
     // 1. How many times they've worked with this patient (lower is better)
     // 2. Their current workload (lower is better)
-    // 3. Whether they're security staff (regular staff preferred)
+    // 3. Whether they're security staff (slight preference for regular staff, not as strong)
     const sorted = [...availableStaff].sort((a, b) => {
         // Safely get rotation history with fallbacks for undefined values
         const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;
@@ -1456,14 +1456,13 @@ function findBalancedStaffForPatient(availableStaff, patientName, count, staffSt
         const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
         const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
         
-        // Security staff factor (regular staff preferred)
+        // Security staff factor (reduced weight to encourage assignment)
         const isSecurityA = securityStaff.includes(a) ? 1 : 0;
         const isSecurityB = securityStaff.includes(b) ? 1 : 0;
         
-        // Weighted composite score calculation
-        // Prioritize rotation history, then workload balance, then staff type
-        const scoreA = (rotationA * 10) + (workloadA * 5) + (isSecurityA * 30);
-        const scoreB = (rotationB * 10) + (workloadB * 5) + (isSecurityB * 30);
+        // Reduce security staff penalty from 30 to 10 to make them more likely to be assigned
+        const scoreA = (rotationA * 10) + (workloadA * 5) + (isSecurityA * 10);
+        const scoreB = (rotationB * 10) + (workloadB * 5) + (isSecurityB * 10);
         
         return scoreA - scoreB;
     });
