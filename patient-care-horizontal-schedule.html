@@ -88,7 +88,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-           
+
         }
         input, select {
             padding: 8px;
@@ -330,7 +330,7 @@
                     <button id="addSecurityStaffBtn">Add Security Staff</button>
                     <button id="removeSecurityStaffBtn">Remove Security Staff</button>
                 </div>
-                
+
                 <!-- Combined Nurses Section -->
                 <div>
                     <h2>Nursing Staff</h2>
@@ -441,19 +441,19 @@
         // Add this function near the top of your script section with other utility functions
         function getInitials(fullName) {
             if (!fullName) return '';
-            
+
             // Split the name by spaces
             const nameParts = fullName.trim().split(' ');
-            
+
             // If it's a single name, return first 2 letters
             if (nameParts.length === 1) {
                 return nameParts[0].substring(0, 2).toUpperCase();
             }
-            
+
             // Otherwise return first letter of first name + first letter of last name
             const firstInitial = nameParts[0][0] || '';
             const lastInitial = nameParts[nameParts.length - 1][0] || '';
-            
+
             return (firstInitial + lastInitial).toUpperCase();
         }
 
@@ -500,7 +500,7 @@
                     </div>
                 `;
             }
-            
+
             // Update break hours table header
             const breakHoursTableHead = document.querySelector('#breakHoursTable thead');
             if (isDayShift) {
@@ -544,19 +544,19 @@
             "00:00-01:00", "01:00-02:00", "02:00-03:00", "03:00-04:00",
             "04:00-05:00", "05:00-06:00", "06:00-07:00", "07:00-08:00"
         ];
-        
+
         // Current time slots (default to day shift)
         let timeSlots = [...dayShiftSlots];
-        
+
         // Helper functions
         function getInputValues(selector) {
             return Array.from(document.querySelectorAll(selector)).map(input => input.value.trim());
         }
-        
+
         function getElement(id) {
             return document.getElementById(id);
         }
-        
+
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -564,7 +564,7 @@
                 timeout = setTimeout(() => func.apply(this, args), wait);
             }
         }
-        
+
         function showError(message) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
@@ -584,11 +584,11 @@
                         staffCount: parseInt(container.querySelector('.staff-count').value)
                     };
                 });
-                
+
                 const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
                 const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
                 const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
-                
+
                 // Save only essential data: names, preferences, and input fields
                 const data = {
                     staff: staffInputs,
@@ -599,7 +599,7 @@
                     isDayShift, // Day/night shift toggle
                     isDarkMode: document.body.classList.contains('dark-mode') // Dark/light mode toggle
                 };
-                
+
                 localStorage.setItem('patientCareData', JSON.stringify(data));
                 return true;
             } catch (error) {
@@ -620,17 +620,17 @@
                     addPatientInput();
                     return false;
                 }
-                
+
                 const parsedData = JSON.parse(savedData);
-                
+
                 // Load shift type
                 isDayShift = parsedData.isDayShift !== undefined ? parsedData.isDayShift : true;
                 timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
-                
+
                 // Update UI for shift type
                 document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
                 document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
-                
+
                 // Load dark mode setting
                 if (parsedData.isDarkMode) {
                     document.body.classList.add('dark-mode');
@@ -639,7 +639,7 @@
                     document.body.classList.remove('dark-mode');
                     document.getElementById('toggleModeBtn').textContent = '🌙';
                 }
-                
+
                 // Load nurse in charge values
                 if (document.getElementById('nurseInChargeInput')) {
                     document.getElementById('nurseInChargeInput').value = parsedData.nurseInCharge1 || '';
@@ -647,18 +647,18 @@
                 if (document.getElementById('nurseInCharge2Input')) {
                     document.getElementById('nurseInCharge2Input').value = parsedData.nurseInCharge2 || '';
                 }
-                
+
                 // Load staff, patients, and security staff
                 loadStaffFromData(parsedData.staff || []);
                 loadPatientsFromData(parsedData.patients || []);
                 loadSecurityStaffFromData(parsedData.securityStaff || []);
-                
+
                 // Initialize empty schedule when loading (instead of loading saved schedule)
-                schedule = {}; 
-                
+                schedule = {};
+
                 // Set up legend based on shift type
                 updateLegend();
-                
+
                 console.log("Data loaded successfully from localStorage");
                 return true;
             } catch (error) {
@@ -672,21 +672,21 @@
         function loadStaffFromData(staffData) {
             const staffInputs = document.getElementById('staffInputs');
             staffInputs.innerHTML = '';
-            
+
             staffData.forEach(name => {
                 const staffContainer = document.createElement('div');
                 staffContainer.className = 'staff-container';
-                
+
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'staff-name';
                 newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-                
+
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
             });
-            
+
             // Add at least one staff input if none were loaded
             if (staffData.length === 0) {
                 addStaffInput();
@@ -696,26 +696,26 @@
         function loadPatientsFromData(patientsData) {
             const patientInputs = document.getElementById('patientInputs');
             patientInputs.innerHTML = '';
-            
+
             patientsData.forEach(({ name, staffCount }) => {
                 const patientContainer = document.createElement('div');
                 patientContainer.className = 'patient-container';
-                
+
                 const inputWrapper = document.createElement('div');
                 inputWrapper.style.display = 'flex';
                 inputWrapper.style.alignItems = 'center';
                 inputWrapper.style.gap = '10px';
-                
+
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'patient-name';
                 newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-                
+
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
                 staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
-                
+
                 const option1 = document.createElement('option');
                 option1.value = 1;
                 option1.textContent = '1:1';
@@ -725,18 +725,18 @@
                 const option3 = document.createElement('option');
                 option3.value = 3;
                 option3.textContent = '3:1';
-                
+
                 staffCountSelect.appendChild(option1);
                 staffCountSelect.appendChild(option2);
                 staffCountSelect.appendChild(option3);
                 staffCountSelect.value = staffCount || 1;
-                
+
                 inputWrapper.appendChild(newInput);
                 inputWrapper.appendChild(staffCountSelect);
                 patientContainer.appendChild(inputWrapper);
                 patientInputs.appendChild(patientContainer);
             });
-            
+
             // Add at least one patient input if none were loaded
             if (patientsData.length === 0) {
                 addPatientInput();
@@ -746,24 +746,24 @@
         function loadSecurityStaffFromData(securityStaffData) {
             const securityStaffInputs = document.getElementById('securityStaffInputs');
             securityStaffInputs.innerHTML = '';
-            
+
             // Reset the global array
             securityStaff = [];
-            
+
             securityStaffData.forEach(name => {
                 if (!securityStaff.includes(name)) {
                     securityStaff.push(name);
                 }
-                
+
                 const securityContainer = document.createElement('div');
                 securityContainer.className = 'security-container';
-                
+
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'security-name';
                 newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-                
+
                 securityContainer.appendChild(newInput);
                 securityStaffInputs.appendChild(securityContainer);
             });
@@ -784,7 +784,7 @@
             document.getElementById('staffBody').innerHTML = '';
             document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
             document.getElementById('stats').innerHTML = '';
-            
+
             // Reset variables
             schedule = {};
             isDayShift = true;
@@ -794,44 +794,44 @@
         // Function to add staff input
 function addStaffInput() {
     const staffInputs = document.getElementById('staffInputs');
-    
+
     const staffContainer = document.createElement('div');
     staffContainer.className = 'staff-container';
-    
+
     const newInput = document.createElement('input');
     newInput.type = 'text';
     newInput.placeholder = 'Enter HCW Name';
     newInput.className = 'staff-name';
-    
+
     staffContainer.appendChild(newInput);
     staffInputs.appendChild(staffContainer);
-    
+
     // Add event listener to the new input
     newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    
+
     saveToLocalStorage();
 }
 
 // Function to add patient input
 function addPatientInput() {
     const patientInputs = document.getElementById('patientInputs');
-    
+
     const patientContainer = document.createElement('div');
     patientContainer.className = 'patient-container';
-    
+
     const inputWrapper = document.createElement('div');
     inputWrapper.style.display = 'flex';
     inputWrapper.style.alignItems = 'center';
     inputWrapper.style.gap = '10px';
-    
+
     const newInput = document.createElement('input');
     newInput.type = 'text';
     newInput.placeholder = 'Enter Patient Name';
     newInput.className = 'patient-name';
-    
+
     const staffCountSelect = document.createElement('select');
     staffCountSelect.className = 'staff-count';
-    
+
     const option1 = document.createElement('option');
     option1.value = 1;
     option1.textContent = '1:1';
@@ -841,48 +841,48 @@ function addPatientInput() {
     const option3 = document.createElement('option');
     option3.value = 3;
     option3.textContent = '3:1';
-    
+
     staffCountSelect.appendChild(option1);
     staffCountSelect.appendChild(option2);
     staffCountSelect.appendChild(option3);
     staffCountSelect.value = 1; // Default to 1:1
-    
+
     inputWrapper.appendChild(newInput);
     inputWrapper.appendChild(staffCountSelect);
     patientContainer.appendChild(inputWrapper);
     patientInputs.appendChild(patientContainer);
-    
+
     // Add event listeners to the new elements
     newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
     staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
-    
+
     saveToLocalStorage();
 }
 
 // Function to add security staff input
 function addSecurityStaffInput() {
     const securityStaffInputs = document.getElementById('securityStaffInputs');
-    
+
     // Check if we've reached the 1 security staff limit
     if (securityStaffInputs.children.length >= 1) {
         showError("Maximum of 1 security staff allowed");
         return;
     }
-    
+
     const securityContainer = document.createElement('div');
     securityContainer.className = 'security-container';
-    
+
     const newInput = document.createElement('input');
     newInput.type = 'text';
     newInput.placeholder = 'Enter Security Staff Name';
     newInput.className = 'security-name';
-    
+
     securityContainer.appendChild(newInput);
     securityStaffInputs.appendChild(securityContainer);
-    
+
     // Add event listener to the new input
     newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    
+
     saveToLocalStorage();
 }
 
@@ -901,72 +901,72 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         loadingDiv.style.backgroundColor = '#3498db';
         loadingDiv.textContent = "Fetching random names...";
         document.body.appendChild(loadingDiv);
-        
+
         // Count how many inputs we need to fill
         const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
         const patientInputCount = document.querySelectorAll('.patient-container').length;
         const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
         const nurseInputCount = 2; // We always have 2 nurse in charge inputs
-        
+
         // Fetch random names from online API - specify English results only
         // Request exactly the number of names we need
         const staffResponse = await fetch(`https://randomuser.me/api/?results=${staffInputCount}&nat=us,gb`);
         const patientResponse = await fetch(`https://randomuser.me/api/?results=${patientInputCount}&nat=us,gb`);
         const securityResponse = await fetch(`https://randomuser.me/api/?results=${securityInputCount}&nat=us,gb`);
         const nurseResponse = await fetch(`https://randomuser.me/api/?results=${nurseInputCount}&nat=us,gb`);
-        
+
         // Parse the responses
         const staffData = await staffResponse.json();
         const patientData = await patientResponse.json();
         const securityData = await securityResponse.json();
         const nurseData = await nurseResponse.json();
-        
+
         // Extract names from the API responses
-        const staffNames = staffData.results.map(user => 
+        const staffNames = staffData.results.map(user =>
             `${user.name.first} ${user.name.last}`
         );
-        const patientNames = patientData.results.map((user, index) => 
+        const patientNames = patientData.results.map((user, index) =>
             `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
         );
-        const securityNames = securityData.results.map(user => 
+        const securityNames = securityData.results.map(user =>
             `${user.name.first} ${user.name.last}`
         );
-        const nurseNames = nurseData.results.map(user => 
+        const nurseNames = nurseData.results.map(user =>
             `${user.name.first} ${user.name.last}`
         );
-        
+
         // Remove loading message
         loadingDiv.remove();
-        
+
         // Fill nurse in charge inputs
         if (nurseNames.length >= 1) document.getElementById('nurseInChargeInput').value = nurseNames[0];
         if (nurseNames.length >= 2) document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-        
+
         // Fill all existing staff inputs
         document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
             if (index < staffNames.length) {
                 input.value = staffNames[index];
             }
         });
-        
+
         // Fill all existing security staff inputs
         document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
             if (index < securityNames.length) {
                 input.value = securityNames[index];
             }
         });
-        
+
         // Fill all existing patient inputs
         document.querySelectorAll('.patient-container').forEach((container, index) => {
             if (index < patientNames.length) {
                 const nameInput = container.querySelector('.patient-name');
                 const staffCountSelect = container.querySelector('.staff-count');
-                
+
                 nameInput.value = patientNames[index];
                 staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
             }
         });
-        
+
         // Show confirmation message
         const confirmationDiv = document.createElement('div');
         confirmationDiv.className = 'error-message';
@@ -974,50 +974,50 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         confirmationDiv.textContent = "Debug data filled successfully with random names!";
         document.body.appendChild(confirmationDiv);
         setTimeout(() => confirmationDiv.remove(), 3000);
-        
+
         // Save to localStorage
         saveToLocalStorage();
     } catch (error) {
         console.error("Error fetching random names:", error);
-        
+
         // Show error message
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 5000);
-        
+
         // Generate enough fallback names based on input counts
         const staffInputCount = document.querySelectorAll('.staff-container .staff-name').length;
         const patientInputCount = document.querySelectorAll('.patient-container').length;
         const securityInputCount = document.querySelectorAll('.security-container .security-name').length;
-        
+
         // Create dynamic fallback names
         const staffNames = Array.from({length: staffInputCount}, (_, i) => `Staff Member ${i+1}`);
-        const patientNames = Array.from({length: patientInputCount}, (_, i) => 
+        const patientNames = Array.from({length: patientInputCount}, (_, i) =>
             `Patient ${String.fromCharCode(65 + i)}`);
         const securityNames = Array.from({length: securityInputCount}, (_, i) => `Security ${i+1}`);
         const nurseNames = ['Head Nurse 1', 'Head Nurse 2'];
-        
+
         // Fill with fallback names
         document.getElementById('nurseInChargeInput').value = nurseNames[0];
         document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-        
+
         document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
             if (index < staffNames.length) input.value = staffNames[index];
         });
-        
+
         document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
             if (index < securityNames.length) input.value = securityNames[index];
         });
-        
+
         document.querySelectorAll('.patient-container').forEach((container, index) => {
             if (index < patientNames.length) {
                 container.querySelector('.patient-name').value = patientNames[index];
                 container.querySelector('.staff-count').value = (index % 3) + 1;
             }
         });
-        
+
         saveToLocalStorage();
     }
 });
@@ -1034,19 +1034,19 @@ function generateSchedule() {
         const staff = Array.from(document.querySelectorAll('.staff-name'))
             .map(input => input.value.trim())
             .filter(name => name); // Filter out empty names
-            
+
         // Get security staff values
         const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
             .map(input => input.value.trim())
             .filter(name => name);
-            
+
         // Update global security staff array for use in other functions
         securityStaff = [...securityStaffValues];
-        
+
         // Get nurse in charge values and update globals
         nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
         nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
-        
+
         // Add nurses in charge to the staff list if they're not empty
         const allNurses = [];
         if (nurseInCharge1) {
@@ -1057,23 +1057,23 @@ function generateSchedule() {
             staff.push(nurseInCharge2);
             allNurses.push(nurseInCharge2);
         }
-        
+
         // Add security staff to the combined staff list
         const allStaff = [...staff, ...securityStaff];
-        
+
         // Get patient inputs
         const patients = Array.from(document.querySelectorAll('.patient-container'))
             .map(container => {
                 const name = container.querySelector('.patient-name').value.trim();
                 if (!name) return null;
-                
+
                 return {
                     name,
                     staffCount: parseInt(container.querySelector('.staff-count').value)
                 };
             })
             .filter(patient => patient !== null); // Filter out empty patients
-        
+
         // Initialize schedule object with all time slots
         schedule = {};
         timeSlots.forEach(time => {
@@ -1081,31 +1081,31 @@ function generateSchedule() {
                 patientAssignments: {},
                 staffBreaks: {}
             };
-            
+
             // Initialize patient assignments
             patients.forEach(patient => {
                 schedule[time].patientAssignments[patient.name] = [];
             });
         });
-        
+
         // Initialize staffPatientHistory if it doesn't exist
         if (!staffPatientHistory) {
             staffPatientHistory = {};
         }
-        
+
         // Make sure all staff (including security) and patients have entries in staffPatientHistory
         allStaff.forEach(s => {
             if (!staffPatientHistory[s]) {
                 staffPatientHistory[s] = {};
             }
-            
+
             patients.forEach(patient => {
                 if (staffPatientHistory[s][patient.name] === undefined) {
                     staffPatientHistory[s][patient.name] = 0;
                 }
             });
         });
-        
+
         // Initialize stats object to track staff workload
         const staffStats = {};
         allStaff.forEach(s => {
@@ -1125,36 +1125,36 @@ function generateSchedule() {
                 continuousAssignmentTracker[s][patient.name] = 0;
             });
         });
-        
+
         // First, assign break times
         assignBreaks(allStaff, staffStats);
-        
+
         // Then, assign security duties for security staff (if any)
         assignSecurityDuties(securityStaff, staffStats);
-        
+
         // Next, assign cleaning duties for night shift (if applicable)
         if (!isDayShift) {
             assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats);
         }
-        
+
         // Finally, assign staff to patients using a fair algorithm
         assignPatients(staff, patients, staffStats, continuousAssignmentTracker);
-        
+
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
-        
+
         // Render stats
         renderStats(staffStats, allStaff, patients.map(p => p.name), continuousAssignmentTracker);
-        
+
         // Render rotation stats
         renderStaffRotationStats(
-            patients.map(p => p.name), 
+            patients.map(p => p.name),
             staff.filter(s => !securityStaffValues.includes(s))
         );
-        
+
         // Save to localStorage
         saveToLocalStorage();
-        
+
         return true;
     } catch (error) {
         console.error("Error generating schedule:", error);
@@ -1170,22 +1170,22 @@ function validateInputs() {
     const staffInputs = Array.from(document.querySelectorAll('.staff-name'))
         .map(input => input.value.trim())
         .filter(name => name);
-        
+
     if (staffInputs.length === 0) {
         showError("Please add at least one Health Care Worker.");
         return false;
     }
-    
+
     // Check if there are any patients
     const patientInputs = Array.from(document.querySelectorAll('.patient-name'))
         .map(input => input.value.trim())
         .filter(name => name);
-        
+
     if (patientInputs.length === 0) {
         showError("Please add at least one patient.");
         return false;
     }
-    
+
     // Check for duplicate staff names
     const allStaffInputs = [
         ...Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()),
@@ -1193,24 +1193,24 @@ function validateInputs() {
         document.getElementById('nurseInChargeInput').value.trim(),
         document.getElementById('nurseInCharge2Input').value.trim()
     ].filter(name => name);
-    
+
     const uniqueStaff = new Set(allStaffInputs);
     if (uniqueStaff.size !== allStaffInputs.length) {
         showError("Each staff member must have a unique name. Please remove duplicates.");
         return false;
     }
-    
+
     // Check for duplicate patient names
     const patientNames = Array.from(document.querySelectorAll('.patient-name'))
         .map(input => input.value.trim())
         .filter(name => name);
-        
+
     const uniquePatients = new Set(patientNames);
     if (uniquePatients.size !== patientNames.length) {
         showError("Each patient must have a unique name. Please remove duplicates.");
         return false;
     }
-    
+
     return true;
 }
 
@@ -1223,7 +1223,7 @@ function assignBreaks(allStaff, staffStats) {
             schedule[timeSlots[shortBreakHour]].staffBreaks[s] = "30-MIN BREAK";
             staffStats[s].breakTime += 0.5;
             staffStats[s].shortBreakTime = timeSlots[shortBreakHour];
-            
+
             // Assign 1-hour 2nd break to a random hour between 14:00 and 17:00
             const secondBreakHour = Math.floor(Math.random() * 4) + 6; // 6 to 9 (14:00 to 17:00)
             schedule[timeSlots[secondBreakHour]].staffBreaks[s] = "2ND BREAK";
@@ -1232,32 +1232,32 @@ function assignBreaks(allStaff, staffStats) {
         });
     } else {
         // Night shift - 2-hour continuous breaks at 00:00, 02:00, and 04:00
-        
+
         // Break starting time slots (00:00, 02:00, 04:00)
         const breakStartSlots = [4, 6, 8]; // Indexes in nightShiftSlots
-        
+
         // Group staff into 3 relatively equal groups
         const staffGroups = [[], [], []];
         allStaff.forEach((s, index) => {
             const groupIndex = index % 3;
             staffGroups[groupIndex].push(s);
         });
-        
+
         // Assign 2-hour breaks to each group
         staffGroups.forEach((group, groupIndex) => {
             const breakStartIndex = breakStartSlots[groupIndex];
-            
+
             // Assign breaks to all staff in this group
             group.forEach(s => {
                 // First hour of break
                 schedule[timeSlots[breakStartIndex]].staffBreaks[s] = "NIGHT BREAK";
-                
+
                 // Second hour of break (consecutive)
                 schedule[timeSlots[breakStartIndex + 1]].staffBreaks[s] = "NIGHT BREAK";
-                
+
                 // Update staff stats
                 staffStats[s].breakTime = 2; // Total break time is 2 hours
-                
+
                 // Store break time info for display
                 const breakTimeDisplay = `${timeSlots[breakStartIndex]} to ${timeSlots[breakStartIndex + 1]}`;
                 staffStats[s].shortBreakTime = breakTimeDisplay;
@@ -1281,25 +1281,25 @@ function assignSecurityDuties(securityStaff, staffStats) {
 
 function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats) {
     // Find regular staff (not security staff and not nurse in charge)
-    const regularStaff = staff.filter(s => 
-        !securityStaff.includes(s) && 
-        s !== nurseInCharge1 && 
+    const regularStaff = staff.filter(s =>
+        !securityStaff.includes(s) &&
+        s !== nurseInCharge1 &&
         s !== nurseInCharge2
     );
-    
+
     if (regularStaff.length > 0) {
         // Simplified approach: just assign duties to staff without time slots
         const dutyAssignments = [];
-        
+
         // First, try to give at least one duty to each staff member
         const staffWithDuties = new Set();
         let dutyIndex = 0;
-        
+
         // First pass: try to give at least one duty to each staff member
         regularStaff.forEach(s => {
             if (dutyIndex < cleaningDuties.length) {
                 const duty = cleaningDuties[dutyIndex];
-                
+
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
                     staffStats[s].cleaningDuties = [];
@@ -1307,20 +1307,20 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                 staffStats[s].cleaningDuties.push({
                     duty: duty
                 });
-                
+
                 // Mark that this staff has at least one duty
                 staffWithDuties.add(s);
-                
+
                 // Add to duty assignments
                 dutyAssignments.push({
                     duty: duty,
                     staff: s
                 });
-                
+
                 dutyIndex++;
             }
         });
-        
+
         // Second pass: distribute any remaining duties, prioritizing staff with fewer duties
         while (dutyIndex < cleaningDuties.length) {
             // Calculate current duty count per staff
@@ -1328,21 +1328,21 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             regularStaff.forEach(s => {
                 staffDutyCount[s] = 0;
             });
-            
+
             dutyAssignments.forEach(assignment => {
                 staffDutyCount[assignment.staff]++;
             });
-            
+
             // Sort staff by number of duties assigned (ascending)
             const staffByDutyCount = [...regularStaff].sort((a, b) => {
                 return staffDutyCount[a] - staffDutyCount[b];
             });
-            
+
             // Try to assign a duty to the staff with fewest duties
             if (staffByDutyCount.length > 0) {
                 const s = staffByDutyCount[0];
                 const duty = cleaningDuties[dutyIndex];
-                
+
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
                     staffStats[s].cleaningDuties = [];
@@ -1350,24 +1350,24 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                 staffStats[s].cleaningDuties.push({
                     duty: duty
                 });
-                
+
                 // Add to duty assignments
                 dutyAssignments.push({
                     duty: duty,
                     staff: s
                 });
-                
+
                 dutyIndex++;
             } else {
                 break; // No staff available for more duties
             }
         }
-        
+
         // Check if any staff still don't have duties
         const staffWithoutDuties = regularStaff.filter(s => !staffWithDuties.has(s));
         if (staffWithoutDuties.length > 0) {
             console.log(`The following staff have no cleaning duties assigned: ${staffWithoutDuties.join(', ')}`);
-            
+
             // Store this information in staff stats
             staffWithoutDuties.forEach(s => {
                 if (!staffStats[s].cleaningDuties) {
@@ -1376,13 +1376,13 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
                 staffStats[s].noDutiesAssigned = true;
             });
         }
-        
+
         // Add information about remaining unassigned duties to the stats
         const assignedDutyCount = dutyAssignments.length;
         const remainingDuties = cleaningDuties.slice(assignedDutyCount);
         if (remainingDuties.length > 0) {
             console.log(`Warning: ${remainingDuties.length} cleaning duties could not be assigned: ${remainingDuties.join(', ')}`);
-            
+
             // Store this information
             staffStats.remainingDuties = remainingDuties;
         }
@@ -1395,55 +1395,55 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
     timeSlots.forEach((time, timeIndex) => {
         // Get available regular staff for this time slot (those not on break)
         const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
-        
+
         // Get available security staff for this time slot (those not on security duty)
-        const availableSecurityStaff = securityStaff.filter(s => 
-            !schedule[time].staffBreaks[s] || 
+        const availableSecurityStaff = securityStaff.filter(s =>
+            !schedule[time].staffBreaks[s] ||
             schedule[time].staffBreaks[s] !== "SECURITY DUTY"
         );
-        
+
         // Combine all available staff
         const availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
-        
+
         // Sort patients by staffCount (highest first) to prioritize higher needs
         const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
-        
+
         // For each patient, assign the required number of staff
         for (const patient of sortedPatients) {
             const staffNeeded = patient.staffCount;
             const staffToAssign = Math.min(staffNeeded, availableStaff.length);
-            
+
             if (staffToAssign === 0) {
                 continue;
             }
-            
+
             // Find staff for this patient with continuity limits considered
             const bestStaff = findStaffWithContinuityLimit(
-                availableStaff, 
-                patient.name, 
-                staffToAssign, 
+                availableStaff,
+                patient.name,
+                staffToAssign,
                 staffStats,
                 continuousAssignmentTracker,
                 timeIndex
             );
-            
+
             // Assign the staff to this patient
             bestStaff.forEach(s => {
                 schedule[time].patientAssignments[patient.name].push(s);
-                
+
                 // Update rotation history
                 if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
                 if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
                 staffPatientHistory[s][patient.name]++;
-                
+
                 // Update stats
                 staffStats[s].workHours++;
-                
+
                 // Update continuous assignment tracker
                 if (timeIndex > 0) {
                     const prevTime = timeSlots[timeIndex - 1];
                     const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
-                    
+
                     if (prevAssignments.includes(s)) {
                         // Staff is continuing with same patient
                         continuousAssignmentTracker[s][patient.name]++;
@@ -1455,7 +1455,7 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                     // First hour of shift
                     continuousAssignmentTracker[s][patient.name] = 1;
                 }
-                
+
                 // Remove from available staff
                 const index = availableStaff.indexOf(s);
                 if (index !== -1) {
@@ -1473,28 +1473,28 @@ function findStaffWithContinuityLimit(availableStaff, patientName, count, staffS
         // Continuous hours working with this patient
         const continuousHoursA = continuousTracker[a] ? (continuousTracker[a][patientName] || 0) : 0;
         const continuousHoursB = continuousTracker[b] ? (continuousTracker[b][patientName] || 0) : 0;
-        
+
         // Apply strong penalty for staff with 3+ continuous hours (to force rotation)
         const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
         const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
-        
+
         // Other factors from original algorithm
         const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;
         const rotationB = (staffPatientHistory[b] && staffPatientHistory[b][patientName]) || 0;
-        
+
         const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
         const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
-        
+
         const isSecurityA = securityStaff.includes(a) ? 10 : 0;
         const isSecurityB = securityStaff.includes(b) ? 10 : 0;
-        
+
         // Combined score (lower is better for assignment)
         const scoreA = continuityPenaltyA + (rotationA * 5) + (workloadA * 2) + isSecurityA;
         const scoreB = continuityPenaltyB + (rotationB * 5) + (workloadB * 2) + isSecurityB;
-        
+
         return scoreA - scoreB;
     });
-    
+
     return sorted.slice(0, count);
 }
 
@@ -1505,44 +1505,44 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     const staffHeader = document.getElementById('staffHeader');
     const staffBody = document.getElementById('staffBody');
     const breakHoursTable = document.getElementById('breakHoursTable').querySelector('tbody');
-    
+
     scheduleHeader.innerHTML = '';
     scheduleBody.innerHTML = '';
     staffHeader.innerHTML = '';
     staffBody.innerHTML = '';
     breakHoursTable.innerHTML = '';
-    
+
     // Create header for the patient schedule
     const headerRow = document.createElement('tr');
-    
+
     // Add blank cell for the corner
     const cornerCell = document.createElement('th');
     headerRow.appendChild(cornerCell);
-    
+
     // Add time slots as headers
     timeSlots.forEach(time => {
         const th = document.createElement('th');
         th.textContent = time;
         headerRow.appendChild(th);
     });
-    
+
     scheduleHeader.appendChild(headerRow);
-    
+
     // Create rows for each patient
     patients.forEach(patient => {
         const row = document.createElement('tr');
-        
+
         // Add patient name as row header
         const nameCell = document.createElement('td');
         nameCell.textContent = patient;
         nameCell.className = 'row-header';
         row.appendChild(nameCell);
-        
+
         // Add cells for each time slot
         timeSlots.forEach(time => {
             const cell = document.createElement('td');
             const assignedStaff = schedule[time].patientAssignments[patient];
-            
+
             if (!assignedStaff || assignedStaff.length === 0) {
                 cell.textContent = "UNASSIGNED";
                 cell.className = 'staff-unassigned';
@@ -1552,10 +1552,10 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 // Use initials instead of full names
                 const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
                 cell.textContent = staffInitials;
-                
+
                 // Add a title attribute for hover tooltip showing full names
                 cell.title = assignedStaff.join(", ");
-                
+
                 // Color the cell based on the first assigned staff member
                 if (assignedStaff.length > 0) {
                     // Generate a color based on the staff name
@@ -1563,53 +1563,53 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                     const hash = staffName.split('').reduce((hash, char) => {
                         return ((hash << 5) - hash) + char.charCodeAt(0);
                     }, 0);
-                    
+
                     const hue = Math.abs(hash) % 360;
                     const bgColor = `hsl(${hue}, 70%, 85%)`;
                     const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-                    
+
                     cell.style.backgroundColor = bgColor;
                     cell.style.color = textColor;
                 }
             }
-            
+
             row.appendChild(cell);
         });
-        
+
         scheduleBody.appendChild(row);
     });
-    
+
     // Create header for the staff schedule
     const staffHeaderRow = document.createElement('tr');
-    
+
     // Add blank cell for the corner
     const staffCornerCell = document.createElement('th');
     staffHeaderRow.appendChild(staffCornerCell);
-    
+
     // Add time slots as headers
     timeSlots.forEach(time => {
         const th = document.createElement('th');
         th.textContent = time;
         staffHeaderRow.appendChild(th);
     });
-    
+
     staffHeader.appendChild(staffHeaderRow);
-    
+
     // Create rows for each staff member
     staff.forEach(s => {
         const row = document.createElement('tr');
-        
+
         // Add staff name cell with initials
         const staffCell = document.createElement('td');
         staffCell.textContent = getInitials(s);
         staffCell.title = s; // Add full name as tooltip
         staffCell.className = 'row-header';
         row.appendChild(staffCell);
-        
+
         // Add cells for each time slot
         timeSlots.forEach(time => {
             const cell = document.createElement('td');
-            
+
             // Check if the staff is on break during this time
             const breakStatus = schedule[time].staffBreaks[s];
             if (breakStatus === "30-MIN BREAK") {
@@ -1639,56 +1639,56 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                         schedule[time].patientAssignments[patient].includes(s)) {
                         cell.textContent = getInitials(patient);
                         cell.title = patient; // Add patient name as tooltip
-                        
+
                         // Use consistent color based on staff
                         const hash = s.split('').reduce((hash, char) => {
                             return ((hash << 5) - hash) + char.charCodeAt(0);
                         }, 0);
-                        
+
                         const hue = Math.abs(hash) % 360;
                         const bgColor = `hsl(${hue}, 70%, 85%)`;
                         const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-                        
+
                         cell.style.backgroundColor = bgColor;
                         cell.style.color = textColor;
-                        
+
                         assigned = true;
                         break;
                     }
                 }
-                
+
                 if (!assigned) {
                     cell.textContent = "FREE";
                     cell.style.backgroundColor = "#f8f9fa"; // Light gray for free time
                     cell.style.color = "#000000";
                 }
             }
-            
+
             row.appendChild(cell);
         });
-        
+
         staffBody.appendChild(row);
     });
-    
+
     // Render break hours table
     staff.forEach(s => {
         const row = document.createElement('tr');
-        
+
         // Staff name cell with initials
         const staffCell = document.createElement('td');
         staffCell.textContent = getInitials(s);
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
-        
+
         // Break time cells
         const shortBreakCell = document.createElement('td');
         shortBreakCell.textContent = staffStats[s].shortBreakTime || "N/A";
         row.appendChild(shortBreakCell);
-        
+
         const secondBreakCell = document.createElement('td');
         secondBreakCell.textContent = staffStats[s].secondBreakTime || "N/A";
         row.appendChild(secondBreakCell);
-        
+
         breakHoursTable.appendChild(row);
     });
 }
@@ -1696,17 +1696,17 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     const statsDiv = document.getElementById('stats');
     statsDiv.innerHTML = '';
-    
+
     let statsHtml = '<h2>Staff Statistics</h2>';
     statsHtml += '<table>';
     statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>Role</th></tr>';
-    
+
     staff.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
         if (securityStaff.includes(s)) roleDisplay = "Security Staff";
         if (s === nurseInCharge1 || s === nurseInCharge2) roleDisplay = "Nurse in Charge";
-        
+
         statsHtml += `<tr>
             <td>${s}</td>
             <td>${staffStats[s].workHours}</td>
@@ -1714,9 +1714,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             <td>${roleDisplay}</td>
         </tr>`;
     });
-    
+
     statsHtml += '</table>';
-    
+
     // Add a section summarizing security staff patient care
     const securityPatientCare = {};
     securityStaff.forEach(s => {
@@ -1725,37 +1725,37 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             securityPatientCare[s] = staffStats[s].workHours;
         }
     });
-    
+
     if (securityStaff.length > 0) {
         statsHtml += '<h3>Security Staff Patient Care Summary</h3>';
         statsHtml += '<table>';
         statsHtml += '<tr><th>Security Staff</th><th>Security Duty Hours</th><th>Patient Care Hours</th></tr>';
-        
+
         securityStaff.forEach(s => {
             const securityHours = 4; // Fixed security duty (first 2 and last 2 hours)
             const patientCareHours = securityPatientCare[s];
-            
+
             statsHtml += `<tr>
                 <td>${s}</td>
                 <td>${securityHours}</td>
                 <td>${patientCareHours}</td>
             </tr>`;
         });
-        
+
         statsHtml += '</table>';
         statsHtml += '<p><em>Note: Security staff are assigned to security duty during the first 2 and last 2 hours of the shift.</em></p>';
     }
-    
+
     // Add this to renderStats function, in the section for night shift
     if (!isDayShift) {
         // Add a cleaning duties summary
         statsHtml += '<h3>Night Shift Cleaning Duties Summary</h3>';
         statsHtml += '<table>';
         statsHtml += '<tr><th>Duty</th><th>Assigned To</th><th>Status</th></tr>';
-        
+
         // Track duties
         const dutyAssignments = {};
-        
+
         // Collect all assigned duties
         staff.forEach(s => {
             if (staffStats[s].cleaningDuties && staffStats[s].cleaningDuties.length > 0) {
@@ -1766,7 +1766,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                 });
             }
         });
-        
+
         // List all cleaning duties and who they're assigned to
         cleaningDuties.forEach(duty => {
             const assignment = dutyAssignments[duty];
@@ -1784,15 +1784,15 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                 </tr>`;
             }
         });
-        
+
         // Show summary of staff without duties
-        const staffWithoutDuties = staff.filter(s => 
-            !securityStaff.includes(s) && 
-            s !== nurseInCharge1 && 
-            s !== nurseInCharge2 && 
+        const staffWithoutDuties = staff.filter(s =>
+            !securityStaff.includes(s) &&
+            s !== nurseInCharge1 &&
+            s !== nurseInCharge2 &&
             (!staffStats[s].cleaningDuties || staffStats[s].cleaningDuties.length === 0)
         );
-        
+
         if (staffWithoutDuties.length > 0) {
             statsHtml += `<tr style="background-color: #fff3cd;">
                 <td colspan="3">
@@ -1800,7 +1800,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                 </td>
             </tr>`;
         }
-        
+
         statsHtml += '</table>';
     }
 
@@ -1816,7 +1816,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     staff.forEach(s => {
         maxContinuousHours[s] = {};
         patients.forEach(patient => {
-            const hours = continuousAssignmentTracker[s] ? 
+            const hours = continuousAssignmentTracker[s] ?
                 (continuousAssignmentTracker[s][patient] || 0) : 0;
             maxContinuousHours[s][patient] = hours;
         });
@@ -1829,10 +1829,10 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             const hours = maxContinuousHours[s][patient];
             if (hours >= 2) { // Only show assignments of 2+ hours
                 hasLongAssignments = true;
-                const status = hours > 3 ? 
-                    '<span style="color: red;">Exceeds Target</span>' : 
+                const status = hours > 3 ?
+                    '<span style="color: red;">Exceeds Target</span>' :
                     '<span style="color: green;">Within Target</span>';
-                
+
                 statsHtml += `<tr>
                     <td>${s}</td>
                     <td>${patient}</td>
@@ -1857,17 +1857,17 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 window.onload = function() {
     // Set moon emoji for dark mode button
     document.getElementById('toggleModeBtn').innerHTML = '🌙';
-    
+
     // Load data from localStorage
     loadFromLocalStorage();
-    
+
     // Add event listeners for all buttons
     document.getElementById('toggleModeBtn').addEventListener('click', function() {
         document.body.classList.toggle('dark-mode');
         this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
         saveToLocalStorage();
     });
-    
+
     document.getElementById('toggleShiftBtn').addEventListener('click', function() {
         isDayShift = !isDayShift;
         timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
@@ -1876,9 +1876,9 @@ window.onload = function() {
         updateLegend();
         saveToLocalStorage();
     });
-    
+
     document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-    
+
     document.getElementById('resetBtn').addEventListener('click', function() {
         clearAllData();
         localStorage.removeItem('patientCareData');
@@ -1886,7 +1886,7 @@ window.onload = function() {
         addPatientInput();
         addSecurityStaffInput();
     });
-    
+
     document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
     document.getElementById('removeStaffBtn').addEventListener('click', function() {
         const staffInputs = document.getElementById('staffInputs');
@@ -1895,7 +1895,7 @@ window.onload = function() {
             saveToLocalStorage();
         }
     });
-    
+
     document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
     document.getElementById('removePatientBtn').addEventListener('click', function() {
         const patientInputs = document.getElementById('patientInputs');
@@ -1904,7 +1904,7 @@ window.onload = function() {
             saveToLocalStorage();
         }
     });
-    
+
     document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
     document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
         const securityStaffInputs = document.getElementById('securityStaffInputs');
@@ -1913,13 +1913,13 @@ window.onload = function() {
             saveToLocalStorage();
         }
     });
-    
+
     document.getElementById('resetRotationBtn').addEventListener('click', function() {
         staffPatientHistory = {};
         showError("Rotation history has been reset!");
         saveToLocalStorage();
     });
-    
+
     // Debug button functionality
     document.getElementById('debugFillBtn').addEventListener('click', async function() {
         try {
@@ -1929,40 +1929,40 @@ window.onload = function() {
             loadingDiv.style.backgroundColor = '#3498db';
             loadingDiv.textContent = "Fetching random names...";
             document.body.appendChild(loadingDiv);
-            
+
             // Fetch random names from online API
             const staffResponse = await fetch('https://randomuser.me/api/?results=5');
             const patientResponse = await fetch('https://randomuser.me/api/?results=4');
             const securityResponse = await fetch('https://randomuser.me/api/?results=1');
             const nurseResponse = await fetch('https://randomuser.me/api/?results=2');
-            
+
             // Parse the responses
             const staffData = await staffResponse.json();
             const patientData = await patientResponse.json();
             const securityData = await securityResponse.json();
             const nurseData = await nurseResponse.json();
-            
+
             // Extract names from the API responses
-            const staffNames = staffData.results.map(user => 
+            const staffNames = staffData.results.map(user =>
                 `${user.name.first} ${user.name.last}`
             );
-            const patientNames = patientData.results.map((user, index) => 
+            const patientNames = patientData.results.map((user, index) =>
                 `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
             );
-            const securityNames = securityData.results.map(user => 
+            const securityNames = securityData.results.map(user =>
                 `Security Officer ${user.name.last}`
             );
-            const nurseNames = nurseData.results.map(user => 
+            const nurseNames = nurseData.results.map(user =>
                 `Charge Nurse ${user.name.last}`
             );
-            
+
             // Remove loading message
             loadingDiv.remove();
-            
+
             // Fill nurse in charge inputs
             document.getElementById('nurseInChargeInput').value = nurseNames[0];
             document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-            
+
             // Fill only existing staff inputs (no creation)
             const staffInputs = document.querySelectorAll('.staff-container .staff-name');
             staffInputs.forEach((input, index) => {
@@ -1971,7 +1971,7 @@ window.onload = function() {
                     input.value = staffNames[index];
                 }
             });
-            
+
             // Fill only existing security staff inputs (no creation)
             const securityInputs = document.querySelectorAll('.security-container .security-name');
             securityInputs.forEach((input, index) => {
@@ -1979,19 +1979,19 @@ window.onload = function() {
                     input.value = securityNames[index];
                 }
             });
-            
+
             // Fill only existing patient inputs (no creation)
             const patientContainers = document.querySelectorAll('.patient-container');
             patientContainers.forEach((container, index) => {
                 if (index < patientNames.length) {
                     const nameInput = container.querySelector('.patient-name');
                     const staffCountSelect = container.querySelector('.staff-count');
-                    
+
                     nameInput.value = patientNames[index];
                     staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
                 }
             });
-            
+
             // Show confirmation message
             const confirmationDiv = document.createElement('div');
             confirmationDiv.className = 'error-message';
@@ -1999,59 +1999,59 @@ window.onload = function() {
             confirmationDiv.textContent = "Debug data filled successfully with random names!";
             document.body.appendChild(confirmationDiv);
             setTimeout(() => confirmationDiv.remove(), 3000);
-            
+
             // Save to localStorage
             saveToLocalStorage();
         } catch (error) {
             console.error("Error fetching random names:", error);
-            
+
             // Show error message
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 5000);
-            
+
             // Fallback to basic generic names if the API fails
             const staffNames = ['Staff Member 1', 'Staff Member 2', 'Staff Member 3', 'Staff Member 4', 'Staff Member 5'];
             const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
             const securityNames = ['Security Officer'];
             const nurseNames = ['Charge Nurse 1', 'Charge Nurse 2'];
-            
+
             // Fill with fallback names
             document.getElementById('nurseInChargeInput').value = nurseNames[0];
             document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-            
+
             document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
                 if (index < staffNames.length) input.value = staffNames[index];
             });
-            
+
             document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
                 if (index < securityNames.length) input.value = securityNames[index];
             });
-            
+
             document.querySelectorAll('.patient-container').forEach((container, index) => {
                 if (index < patientNames.length) {
                     container.querySelector('.patient-name').value = patientNames[index];
                     container.querySelector('.staff-count').value = (index % 3) + 1;
                 }
             });
-            
+
             saveToLocalStorage();
         }
     });
-    
+
     // Debug panel toggle button
     document.getElementById('toggleDebugBtn').addEventListener('click', function() {
         const debugPanel = document.getElementById('debugPanel');
         debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
     });
-    
+
     // Debug panel clear button
     document.getElementById('clearDebugBtn').addEventListener('click', function() {
         document.getElementById('debugOutput').innerHTML = '';
     });
-    
+
     // Add renderStaffRotationStats function if it's missing
     if (typeof renderStaffRotationStats !== 'function') {
         window.renderStaffRotationStats = function(patients, staff) {
@@ -2059,41 +2059,41 @@ window.onload = function() {
             let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
             rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
             rotationHtml += '<table class="rotation-table">';
-            
+
             // Header row with patient initials
             rotationHtml += '<tr><th>Staff</th>';
             patients.forEach(patient => {
                 rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
             });
             rotationHtml += '</tr>';
-            
+
             // Rows for each staff member with initials
             staff.forEach(s => {
                 rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
-                
+
                 // For each patient, show the rotation count
                 patients.forEach(patient => {
-                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ? 
+                    const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ?
                         staffPatientHistory[s][patient] : 0;
-                    
+
                     // Color the cell based on the count (darker for higher counts)
-                    const bgColor = count === 0 ? 
+                    const bgColor = count === 0 ?
                         '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
                     const textColor = count >= 5 ? '#ffffff' : '#000000';
-                    
+
                     rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
                 });
-                
+
                 rotationHtml += '</tr>';
             });
-            
+
             rotationHtml += '</table>';
             rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
-            
+
             document.getElementById('rotationStats').innerHTML = rotationHtml;
         };
     }
-    
+
     // Set up legend based on shift type
     updateLegend();
 };
