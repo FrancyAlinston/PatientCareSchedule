@@ -2258,10 +2258,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         $('#staffPopup').hide();
     });
 
-    // Add these missing handlers:
-    // Select staff button click handler
+    // Select staff button click handler - Fix the data attribute access
     $(document).on('click', '.select-staff-btn', function() {
-        const staffName = $(this).data('name');
+        const staffName = $(this).attr('data-name'); // Use attr() instead of data()
         const time = $('#staffPopup').data('time');
         const patient = $('#staffPopup').data('patient');
 
