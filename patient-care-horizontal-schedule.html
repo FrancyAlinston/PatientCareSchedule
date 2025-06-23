@@ -2260,21 +2260,69 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
     // Select staff button click handler - Fix the data attribute access
     $(document).on('click', '.select-staff-btn', function() {
-        const staffName = $(this).attr('data-name'); // Use attr() instead of data()
+        const staffName = $(this).attr('data-name'); // Using attr() instead of data()
         const time = $('#staffPopup').data('time');
         const patient = $('#staffPopup').data('patient');
-
-        console.log("Selected staff:", staffName, "for", patient, "at", time);
-
-        // Update the assignment in your schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
-            // Add the selected staff to this patient assignment
+        
+        console.log("Selected staff:", staffName, "for patient:", patient, "at time:", time);
+        
+        // Update the assignment in schedule object
+        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
+            // Make sure patient entry exists
+            if (!window.schedule[time].patientAssignments[patient]) {
+                window.schedule[time].patientAssignments[patient] = [];
+            }
+            
+            // Update assignment
             window.schedule[time].patientAssignments[patient] = [staffName];
-
-            // Regenerate all stats and redraw tables
+            
+            // Debug to verify the change happened
+            console.log(`Updated assignment: ${window.schedule[time].patientAssignments[patient]}`);
+            
+            // Make sure helper functions exist before calling regenerateScheduleStats
+            if (typeof getAllStaffNames !== 'function') {
+                console.error("getAllStaffNames function is not defined!");
+                // Define the function if missing
+                window.getAllStaffNames = function() {
+                    const allStaff = [];
+                    $('.staff-name').each(function() {
+                        const name = $(this).val().trim();
+                        if (name) allStaff.push(name);
+                    });
+                    if ($('#nurseInChargeInput').val().trim()) allStaff.push($('#nurseInChargeInput').val().trim());
+                    if ($('#nurseInCharge2Input').val().trim()) allStaff.push($('#nurseInCharge2Input').val().trim());
+                    $('.security-name').each(function() {
+                        const name = $(this).val().trim();
+                        if (name) allStaff.push(name);
+                    });
+                    return allStaff;
+                };
+            }
+            
+            if (typeof getAllPatientNames !== 'function') {
+                console.error("getAllPatientNames function is not defined!");
+                // Define the function if missing
+                window.getAllPatientNames = function() {
+                    const patients = [];
+                    $('.patient-name').each(function() {
+                        const name = $(this).val().trim();
+                        if (name) patients.push(name);
+                    });
+                    return patients;
+                };
+            }
+            
+            // Force redraw the schedule first
+            const allStaff = getAllStaffNames();
+            const patients = getAllPatientNames();
+            renderSchedule(window.schedule, allStaff, patients, {});
+            
+            // Then regenerate all stats
             regenerateScheduleStats();
+        } else {
+            console.error("Cannot update schedule - schedule object structure is invalid", window.schedule);
         }
-
+        
         $('#staffPopup').hide();
     });
 
