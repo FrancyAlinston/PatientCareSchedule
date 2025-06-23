@@ -466,6 +466,16 @@
 
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
+    <!-- Add this popup HTML at the end of your body, just before the closing </body> tag -->
+<div id="staffPopup" data-time="" data-patient="">
+    <h3>Select Staff</h3>
+    <div id="staffList"></div>
+    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+        <button id="removeStaffBtn" style="background-color: #f44336;">Remove Staff</button>
+        <button id="closePopupBtn">Cancel</button>
+    </div>
+</div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Add this function near the top of your script section with other utility functions
@@ -1604,43 +1614,51 @@ $(document).ready(function() {
         $('#staffList').html(html);
     });
 
-    // Select staff button click handler - Fixed
+    // Select staff button click handler - Fixed version that directly updates the UI
     $(document).on('click', '.select-staff-btn', function() {
-        debugLog("Staff button clicked");
         const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
 
-        debugLog(`Selected: ${staffName} for ${patient} at ${time}`);
+        console.log("Selected staff:", staffName, "for", patient, "at", time);
 
-        // Update schedule object
+        // Update schedule structure
         if (!window.schedule) window.schedule = {};
         if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
         if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
 
+        // Update assignment
         window.schedule[time].patientAssignments[patient] = [staffName];
 
-        // Update the UI directly for immediate feedback
-        const patientCell = document.querySelector(`td.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
+        // Update the UI *directly*
+        const patientCell = document.querySelector(`td[data-time="${time}"][data-patient="${patient}"]`);
         if (patientCell) {
-            debugLog("Found cell to update");
             patientCell.textContent = getInitials(staffName);
             patientCell.title = staffName;
 
-            // Color the cell
-            const hash = staffName.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0);
-            const hue = Math.abs(hash) % 360;
-            const bgColor = `hsl(${hue}, 70%, 85%)`;
-            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+            // Color the cell based on staff member
+            if (isDayShift) {
+                // Day shift: use blue shades
+                const hue = 210; // Fixed hue for blue
+                const saturation = 100;
+                const lightness = 60; // Consistent brightness
 
-            patientCell.style.backgroundColor = bgColor;
-            patientCell.style.color = textColor;
+                patientCell.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            } else {
+                // Night shift: use purple shades
+                const hue = 270; // Fixed hue for purple
+                const saturation = 100;
+                const lightness = 60; // Consistent brightness
+
+                patientCell.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            }
+
+            // Set text color to white for better contrast
+            patientCell.style.color = '#ffffff';
             patientCell.classList.remove('staff-unassigned');
-        } else {
-            debugLog("Could not find cell to update");
         }
 
-        // Save changes
+        // Save changes to localStorage
         saveToLocalStorage();
 
         // Close popup
