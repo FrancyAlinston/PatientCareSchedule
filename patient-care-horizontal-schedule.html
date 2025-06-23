@@ -1883,6 +1883,91 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsDiv.innerHTML = statsHtml;
 }
 
+// Add this function to recalculate all statistics when manual staff changes are made
+function regenerateScheduleStats() {
+    // Get current values for staff and patients
+    const allStaff = getAllStaffNames();
+    const patients = getAllPatientNames();
+
+    // Initialize staffStats object to track staff workload
+    const staffStats = {};
+    allStaff.forEach(s => {
+        staffStats[s] = {
+            workHours: 0,
+            breakTime: 0,
+            shortBreakTime: "",
+            secondBreakTime: ""
+        };
+    });
+
+    // Initialize continuous assignment tracker
+    const continuousAssignmentTracker = {};
+    allStaff.forEach(s => {
+        continuousAssignmentTracker[s] = {};
+        patients.forEach(patient => {
+            continuousAssignmentTracker[s][patient] = 0;
+        });
+    });
+
+    // Process each time slot to recalculate work hours
+    timeSlots.forEach((time, timeIndex) => {
+        // Calculate break times
+        allStaff.forEach(s => {
+            if (schedule[time].staffBreaks[s]) {
+                if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
+                    staffStats[s].breakTime += 0.5;
+                    staffStats[s].shortBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
+                    staffStats[s].breakTime += 1;
+                    staffStats[s].secondBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
+                    staffStats[s].breakTime += 1; // Each night break hour is 1 hour
+                    if (!staffStats[s].shortBreakTime) {
+                        staffStats[s].shortBreakTime = time;
+                    } else if (!staffStats[s].secondBreakTime) {
+                        staffStats[s].secondBreakTime = time;
+                    }
+                }
+            }
+        });
+
+        // Calculate work hours and continuous assignments
+        patients.forEach(patient => {
+            const assignedStaff = schedule[time].patientAssignments[patient] || [];
+
+            assignedStaff.forEach(s => {
+                // Update work hours
+                staffStats[s].workHours++;
+
+                // Update continuous assignment tracker
+                if (timeIndex > 0) {
+                    const prevTime = timeSlots[timeIndex - 1];
+                    const prevAssignments = schedule[prevTime].patientAssignments[patient] || [];
+
+                    if (prevAssignments.includes(s)) {
+                        // Staff is continuing with same patient
+                        continuousAssignmentTracker[s][patient]++;
+                    } else {
+                        // Staff is newly assigned to this patient
+                        continuousAssignmentTracker[s][patient] = 1;
+                    }
+                } else {
+                    // First hour of shift
+                    continuousAssignmentTracker[s][patient] = 1;
+                }
+            });
+        });
+    });
+
+    // Render the updated schedule and stats
+    renderSchedule(schedule, allStaff, patients, staffStats);
+    renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
+    renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
+
+    // Save changes to localStorage
+    saveToLocalStorage();
+}
+
 // Add this window.onload function at the end of your script
 window.onload = function() {
     // Set moon emoji for dark mode button
