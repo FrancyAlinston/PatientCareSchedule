@@ -1582,7 +1582,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.title = assignedStaff.join(", ");
                 cell.className = "assignable-staff-cell"; // Add class here
 
-                // Add these data attributes to every cell
+                // Add these data attributes to EVERY patient cell
                 cell.setAttribute("data-time", time);
                 cell.setAttribute("data-patient", patient);
 
@@ -2216,11 +2216,17 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
+        // Check if schedule exists first
+        if (!window.schedule || Object.keys(window.schedule).length === 0) {
+            alert("Please generate a schedule first before making staff changes.");
+            return;
+        }
+
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
 
-        console.log("Opening popup for:", time, patient); // Add debugging
+        console.log("Opening popup for:", time, patient);
 
         // Store these values on the popup element
         $('#staffPopup').data('time', time).data('patient', patient).show();
@@ -2263,66 +2269,38 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         const staffName = $(this).attr('data-name'); // Using attr() instead of data()
         const time = $('#staffPopup').data('time');
         const patient = $('#staffPopup').data('patient');
-        
+
         console.log("Selected staff:", staffName, "for patient:", patient, "at time:", time);
-        
-        // Update the assignment in schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
-            // Make sure patient entry exists
-            if (!window.schedule[time].patientAssignments[patient]) {
-                window.schedule[time].patientAssignments[patient] = [];
-            }
-            
-            // Update assignment
-            window.schedule[time].patientAssignments[patient] = [staffName];
-            
-            // Debug to verify the change happened
-            console.log(`Updated assignment: ${window.schedule[time].patientAssignments[patient]}`);
-            
-            // Make sure helper functions exist before calling regenerateScheduleStats
-            if (typeof getAllStaffNames !== 'function') {
-                console.error("getAllStaffNames function is not defined!");
-                // Define the function if missing
-                window.getAllStaffNames = function() {
-                    const allStaff = [];
-                    $('.staff-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) allStaff.push(name);
-                    });
-                    if ($('#nurseInChargeInput').val().trim()) allStaff.push($('#nurseInChargeInput').val().trim());
-                    if ($('#nurseInCharge2Input').val().trim()) allStaff.push($('#nurseInCharge2Input').val().trim());
-                    $('.security-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) allStaff.push(name);
-                    });
-                    return allStaff;
-                };
-            }
-            
-            if (typeof getAllPatientNames !== 'function') {
-                console.error("getAllPatientNames function is not defined!");
-                // Define the function if missing
-                window.getAllPatientNames = function() {
-                    const patients = [];
-                    $('.patient-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) patients.push(name);
-                    });
-                    return patients;
-                };
-            }
-            
-            // Force redraw the schedule first
-            const allStaff = getAllStaffNames();
-            const patients = getAllPatientNames();
-            renderSchedule(window.schedule, allStaff, patients, {});
-            
-            // Then regenerate all stats
-            regenerateScheduleStats();
-        } else {
-            console.error("Cannot update schedule - schedule object structure is invalid", window.schedule);
+
+        // Ensure schedule object exists
+        if (!window.schedule) {
+            window.schedule = {};
         }
-        
+
+        // Ensure time slot exists
+        if (!window.schedule[time]) {
+            window.schedule[time] = { patientAssignments: {} };
+        }
+
+        // Ensure patientAssignments exists
+        if (!window.schedule[time].patientAssignments) {
+            window.schedule[time].patientAssignments = {};
+        }
+
+        // Update assignment
+        window.schedule[time].patientAssignments[patient] = [staffName];
+
+        // Debug to verify the change happened
+        console.log(`Updated assignment: ${window.schedule[time].patientAssignments[patient]}`);
+
+        // Force redraw the schedule first
+        const allStaff = getAllStaffNames();
+        const patients = getAllPatientNames();
+        renderSchedule(window.schedule, allStaff, patients, {});
+
+        // Then regenerate all stats
+        regenerateScheduleStats();
+
         $('#staffPopup').hide();
     });
 
