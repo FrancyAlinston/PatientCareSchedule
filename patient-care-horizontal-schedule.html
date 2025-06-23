@@ -1243,7 +1243,7 @@ function regenerateScheduleStats() {
 $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
-        console.log("Cell clicked!");
+        console.log("POPUP TRIGGER: Cell clicked!");
 
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
@@ -1303,9 +1303,12 @@ $(document).ready(function() {
         // Update assignment directly
         window.schedule[time].patientAssignments[patient] = [staffName];
 
+        console.log("Schedule updated:", window.schedule[time].patientAssignments[patient]);
+
         // Update the UI immediately
         const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
         if (patientCell.length) {
+            console.log("Found patient cell to update");
             patientCell.text(getInitials(staffName));
             patientCell.attr('title', staffName);
 
@@ -1318,6 +1321,8 @@ $(document).ready(function() {
             patientCell.css('background-color', bgColor);
             patientCell.css('color', textColor);
             patientCell.removeClass('staff-unassigned');
+        } else {
+            console.log("Could not find patient cell to update");
         }
 
         // Update staff-patient history
