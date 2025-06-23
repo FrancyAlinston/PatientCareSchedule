@@ -926,18 +926,18 @@ function isSecurityRestrictedHour(timeIndex, totalHours) {
 function generateSchedule() {
     const allStaff = getAllStaffNames();
     const patients = getAllPatientNames();
-    
+
     // Validate inputs
     if (allStaff.length === 0) {
         showError("Please add staff members before generating schedule");
         return;
     }
-    
+
     if (patients.length === 0) {
         showError("Please add patients before generating schedule");
         return;
     }
-    
+
     // Update security staff global array
     securityStaff = [];
     document.querySelectorAll('.security-name').forEach(input => {
@@ -946,33 +946,33 @@ function generateSchedule() {
             securityStaff.push(name);
         }
     });
-    
+
     // Create a new schedule object
     schedule = {};
-    
+
     // For each time slot, initialize patientAssignments and staffBreaks
     timeSlots.forEach(time => {
         schedule[time] = {
             patientAssignments: {},
             staffBreaks: {}
         };
-        
+
         // Initialize empty assignment arrays for each patient
         patients.forEach(patient => {
             schedule[time].patientAssignments[patient] = [];
         });
     });
-    
+
     // Now assign staff to patients based on the current shift
     if (isDayShift) {
         assignDayShiftStaff(allStaff, patients);
     } else {
         assignNightShiftStaff(allStaff, patients);
     }
-    
+
     // Generate stats and render the schedule
     regenerateScheduleStats();
-    
+
     console.log("Schedule generated successfully");
 }
 
@@ -1564,6 +1564,91 @@ function rotateStaff() {
 }
 
 // Add any additional functions or logic as needed
+
+$(document).ready(function() {
+    // Debug console
+    function debugLog(message) {
+        console.log(message);
+        $("#debugOutput").append(`<div>${message}</div>`);
+    }
+
+    // Open popup on cell click - Improved version with better debugging
+    $(document).on('click', '.assignable-staff-cell', function() {
+        debugLog("Cell clicked!");
+
+        // Get the time and patient from the clicked cell
+        const time = $(this).attr('data-time');
+        const patient = $(this).attr('data-patient');
+
+        debugLog(`Opening popup for time: ${time}, patient: ${patient}`);
+
+        if (!time || !patient) {
+            debugLog("Missing data attributes on cell");
+            return;
+        }
+
+        // Store these values as HTML attributes
+        $('#staffPopup').attr('data-time', time).attr('data-patient', patient).show();
+
+        // List all available staff
+        let staff = getAllStaffNames();
+
+        // Build staff list
+        let html = '';
+        staff.forEach(function(name) {
+            html += `<button class="select-staff-btn" data-name="${name}"
+                     style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
+                     background-color: var(--button-bg-color); color: white; border: none;
+                     border-radius: 4px; cursor: pointer;">${name}</button>`;
+        });
+        $('#staffList').html(html);
+    });
+
+    // Select staff button click handler - Fixed
+    $(document).on('click', '.select-staff-btn', function() {
+        debugLog("Staff button clicked");
+        const staffName = $(this).attr('data-name');
+        const time = $('#staffPopup').attr('data-time');
+        const patient = $('#staffPopup').attr('data-patient');
+
+        debugLog(`Selected: ${staffName} for ${patient} at ${time}`);
+
+        // Update schedule object
+        if (!window.schedule) window.schedule = {};
+        if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+        if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
+
+        window.schedule[time].patientAssignments[patient] = [staffName];
+
+        // Update the UI directly for immediate feedback
+        const patientCell = document.querySelector(`td.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
+        if (patientCell) {
+            debugLog("Found cell to update");
+            patientCell.textContent = getInitials(staffName);
+            patientCell.title = staffName;
+
+            // Color the cell
+            const hash = staffName.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0);
+            const hue = Math.abs(hash) % 360;
+            const bgColor = `hsl(${hue}, 70%, 85%)`;
+            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+
+            patientCell.style.backgroundColor = bgColor;
+            patientCell.style.color = textColor;
+            patientCell.classList.remove('staff-unassigned');
+        } else {
+            debugLog("Could not find cell to update");
+        }
+
+        // Save changes
+        saveToLocalStorage();
+
+        // Close popup
+        $('#staffPopup').hide();
+    });
+
+    // Other handlers remain the same...
+});
     </script>
 </body>
 </html>
