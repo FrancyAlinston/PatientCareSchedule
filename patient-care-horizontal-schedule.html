@@ -1243,7 +1243,12 @@ function regenerateScheduleStats() {
 $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
-        console.log("POPUP TRIGGER: Cell clicked!");
+        // Check if this element actually has the required data attributes
+        console.log("Cell clicked with attributes:", {
+            timeAttr: $(this).attr('data-time'),
+            patientAttr: $(this).attr('data-patient'),
+            hasClass: $(this).hasClass('assignable-staff-cell')
+        });
 
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
@@ -1306,11 +1311,10 @@ $(document).ready(function() {
         console.log("Schedule updated:", window.schedule[time].patientAssignments[patient]);
 
         // Update the UI immediately
-        const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
-        if (patientCell.length) {
-            console.log("Found patient cell to update");
-            patientCell.text(getInitials(staffName));
-            patientCell.attr('title', staffName);
+        const patientCell = document.querySelector(`td[data-time="${time}"][data-patient="${patient}"]`);
+        if (patientCell) {
+            patientCell.textContent = getInitials(staffName);
+            patientCell.title = staffName;
 
             // Color the cell
             const hash = staffName.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0);
@@ -1318,9 +1322,11 @@ $(document).ready(function() {
             const bgColor = `hsl(${hue}, 70%, 85%)`;
             const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
 
-            patientCell.css('background-color', bgColor);
-            patientCell.css('color', textColor);
-            patientCell.removeClass('staff-unassigned');
+            patientCell.style.backgroundColor = bgColor;
+            patientCell.style.color = textColor;
+            patientCell.classList.remove('staff-unassigned');
+
+            console.log("Updated cell:", patientCell);
         } else {
             console.log("Could not find patient cell to update");
         }
