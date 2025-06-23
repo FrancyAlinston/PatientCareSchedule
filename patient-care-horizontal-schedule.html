@@ -1292,9 +1292,8 @@ function assignBreaks(allStaff, staffStats) {
             });
         });
     }
-}
-
-function assignSecurityDuties(securityStaff, staffStats) {
+} // Add this closing brace
+        function assignSecurityDuties(securityStaff, staffStats) {
     // Assign security duties for the first 2 and last 2 hours of the shift
     securityStaff.forEach(s => {
         const totalHours = timeSlots.length;
