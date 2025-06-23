@@ -1883,6 +1883,137 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsDiv.innerHTML = statsHtml;
 }
 
+        // Fix the regenerateScheduleStats function to properly preserve manual assignments
+        function regenerateScheduleStats() {
+            console.log("Regenerating stats while preserving manual assignments...");
+
+            // Store current assignments before recalculating
+            const currentAssignments = {};
+            timeSlots.forEach(time => {
+                currentAssignments[time] = {};
+                if (schedule[time] && schedule[time].patientAssignments) {
+                    Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                        if (schedule[time].patientAssignments[patient] && schedule[time].patientAssignments[patient].length > 0) {
+                            currentAssignments[time][patient] = [...schedule[time].patientAssignments[patient]];
+                        }
+                    });
+                }
+            });
+
+            // Log the stored assignments for debugging
+            console.log("Stored current assignments:", JSON.stringify(currentAssignments));
+
+            // Get current values for staff and patients
+            const allStaff = getAllStaffNames();
+            const patients = getAllPatientNames();
+
+            // Initialize staffStats object to track staff workload
+            const staffStats = {};
+            allStaff.forEach(s => {
+                staffStats[s] = {
+                    workHours: 0,
+                    breakTime: 0,
+                    shortBreakTime: "",
+                    secondBreakTime: ""
+                };
+            });
+
+            // Initialize continuous assignment tracker
+            const continuousAssignmentTracker = {};
+            allStaff.forEach(s => {
+                continuousAssignmentTracker[s] = {};
+                patients.forEach(patient => {
+                    continuousAssignmentTracker[s][patient] = 0;
+                });
+            });
+
+            // Process each time slot to recalculate work hours
+            timeSlots.forEach((time, timeIndex) => {
+                // Calculate break times
+                allStaff.forEach(s => {
+                    if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
+                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
+                            staffStats[s].breakTime += 0.5;
+                            staffStats[s].shortBreakTime = time;
+                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
+                            staffStats[s].breakTime += 1;
+                            staffStats[s].secondBreakTime = time;
+                        } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
+                            staffStats[s].breakTime += 1;
+                            if (!staffStats[s].shortBreakTime) {
+                                staffStats[s].shortBreakTime = time;
+                            } else if (!staffStats[s].secondBreakTime) {
+                                staffStats[s].secondBreakTime = time;
+                            }
+                        }
+                    }
+                });
+
+                // Calculate work hours and continuous assignments using the PRESERVED assignments
+                patients.forEach(patient => {
+                    // IMPORTANT: Use preserved assignments from currentAssignments instead of schedule
+                    const assignedStaff = currentAssignments[time] && currentAssignments[time][patient] ?
+                        currentAssignments[time][patient] : [];
+
+                    assignedStaff.forEach(s => {
+                        // Update work hours
+                        staffStats[s].workHours++;
+
+                        // Update continuous assignment tracker
+                        if (timeIndex > 0) {
+                            const prevTime = timeSlots[timeIndex - 1];
+                            const prevAssignments = currentAssignments[prevTime] &&
+                                currentAssignments[prevTime][patient] ?
+                                currentAssignments[prevTime][patient] : [];
+
+                            if (prevAssignments.includes(s)) {
+                                // Staff is continuing with same patient
+                                continuousAssignmentTracker[s][patient]++;
+                            } else {
+                                // Staff is newly assigned to this patient
+                                continuousAssignmentTracker[s][patient] = 1;
+                            }
+                        } else {
+                            // First hour of shift
+                            continuousAssignmentTracker[s][patient] = 1;
+                        }
+                    });
+                });
+            });
+
+            // CRITICAL: Make sure schedule has the preserved assignments
+            timeSlots.forEach(time => {
+                // Ensure schedule object is properly initialized
+                if (!schedule[time]) schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+                if (!schedule[time].patientAssignments) schedule[time].patientAssignments = {};
+
+                if (currentAssignments[time]) {
+                    // Go through all patients in stored assignments
+                    Object.keys(currentAssignments[time]).forEach(patient => {
+                        // Create patient entry if needed
+                        if (!schedule[time].patientAssignments[patient]) {
+                            schedule[time].patientAssignments[patient] = [];
+                        }
+
+                        // IMPORTANT: Restore the original assignments
+                        const staffAssignment = currentAssignments[time][patient];
+                        if (staffAssignment && staffAssignment.length > 0) {
+                            schedule[time].patientAssignments[patient] = [...staffAssignment];
+                            console.log(`Restored assignment: ${patient} at ${time} = ${staffAssignment}`);
+                        }
+                    });
+                }
+            });
+
+            // Now render with the correct preserved assignments
+            renderSchedule(schedule, allStaff, patients, staffStats);
+            renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
+            renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
+
+            // Save changes to localStorage
+            saveToLocalStorage();
+        }
+
         // Modify the regenerateScheduleStats function to preserve manual assignments
         function regenerateScheduleStats() {
             // Store current assignments before recalculating
