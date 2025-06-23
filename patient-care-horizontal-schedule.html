@@ -2311,7 +2311,8 @@ function getAllPatientNames() {
         // Update assignment
         window.schedule[time].patientAssignments[patient] = [staffName];
 
-        // Force immediate update of the UI
+        // AJAX approach for real-time updates
+        // First update the current cell immediately for responsive UX
         const cell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
         if (cell.length) {
             cell.text(getInitials(staffName));
@@ -2325,26 +2326,115 @@ function getAllPatientNames() {
             cell.css('color', textColor);
         }
 
-        // Then regenerate all stats
-        regenerateScheduleStats();
+        // Use AJAX to update staff table cells
+        updateStaffTableCells(staffName, time, patient);
+
+        // Then asynchronously update all stats for the full regeneration
+        setTimeout(() => {
+            regenerateScheduleStats();
+        }, 50);
 
         // Hide popup
         $('#staffPopup').hide();
     });
 
-    // Remove staff button click handler
+    // Add new function to update staff table cells via AJAX-like approach
+    function updateStaffTableCells(staffName, time, patient) {
+        // Find time column index
+        const timeIndex = timeSlots.indexOf(time) + 1; // +1 because first column is name
+
+        // Get all staff rows
+        const staffRows = $('#staffBody tr');
+
+        // First, clear any other cell that might have this patient assigned in this time column
+        staffRows.each(function() {
+            const cells = $(this).find('td');
+            const timeCell = cells.eq(timeIndex);
+            if (timeCell.text() === getInitials(patient)) {
+                timeCell.text("FREE");
+                timeCell.css('background-color', "#f8f9fa");
+                timeCell.css('color', "#000000");
+            }
+        });
+
+        // Now find the correct staff row and update it
+        staffRows.each(function() {
+            const nameCell = $(this).find('td').eq(0);
+            if (nameCell.attr('title') === staffName) {
+                const timeCell = $(this).find('td').eq(timeIndex);
+                // Only update if not on break
+                if (!timeCell.hasClass('staff-break') &&
+                    !timeCell.hasClass('staff-lunch') &&
+                    timeCell.text() !== "SECURITY" &&
+                    timeCell.text() !== "BREAK" &&
+                    !timeCell.text().includes("CLEANING")) {
+
+                    timeCell.text(getInitials(patient));
+                    timeCell.attr('title', patient);
+
+                    // Use consistent color based on staff
+                    const hash = staffName.split('').reduce((hash, char) => {
+                        return ((hash << 5) - hash) + char.charCodeAt(0);
+                    }, 0);
+
+                    const hue = Math.abs(hash) % 360;
+                    const bgColor = `hsl(${hue}, 70%, 85%)`;
+                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+
+                    timeCell.css('background-color', bgColor);
+                    timeCell.css('color', textColor);
+                }
+            }
+        });
+    }
+
+    // Similarly update the remove staff button handler for AJAX
     $('#removeStaffBtn').click(function() {
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
 
         console.log("Removing staff for", patient, "at", time);
 
-        // Clear the assignment in your schedule object
+        // Find current staff assignment for immediate update
+        let currentStaff = null;
+        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
+            currentStaff = window.schedule[time].patientAssignments[patient][0];
+        }
+
+        // Clear the assignment in schedule object
         if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
             window.schedule[time].patientAssignments[patient] = [];
 
-            // Regenerate all stats and redraw tables
-            regenerateScheduleStats();
+            // Immediately update patient cell
+            const cell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
+            if (cell.length) {
+                cell.text("UNASSIGNED");
+                cell.attr('title', "");
+                cell.css('background-color', "");
+                cell.addClass('staff-unassigned');
+            }
+
+            // If we know who was assigned, update their cell too
+            if (currentStaff) {
+                // Find time column index
+                const timeIndex = timeSlots.indexOf(time) + 1;
+
+                // Update the staff member's cell
+                $('#staffBody tr').each(function() {
+                    const nameCell = $(this).find('td').eq(0);
+                    if (nameCell.attr('title') === currentStaff) {
+                        const timeCell = $(this).find('td').eq(timeIndex);
+                        timeCell.text("FREE");
+                        timeCell.css('background-color', "#f8f9fa");
+                        timeCell.css('color', "#000000");
+                    }
+                });
+            }
+
+            // Asynchronously update full stats
+            setTimeout(() => {
+                regenerateScheduleStats();
+            }, 50);
         }
 
         $('#staffPopup').hide();
