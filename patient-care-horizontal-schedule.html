@@ -1581,11 +1581,11 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.textContent = staffInitials;
                 cell.title = assignedStaff.join(", ");
                 cell.className = "assignable-staff-cell"; // Add class here
-                
+
                 // Add these data attributes to every cell
                 cell.setAttribute("data-time", time);
                 cell.setAttribute("data-patient", patient);
-                
+
                 // Color the cell based on the first assigned staff member
                 if (assignedStaff.length > 0) {
                     // Generate a color based on the staff name
@@ -2219,9 +2219,9 @@ $(document).ready(function() {
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
-        
+
         console.log("Opening popup for:", time, patient); // Add debugging
-        
+
         // Store these values on the popup element
         $('#staffPopup').data('time', time).data('patient', patient).show();
 
@@ -2231,11 +2231,11 @@ $(document).ready(function() {
             const name = $(this).val().trim();
             if (name) staff.push(name);
         });
-        
+
         // Add nurses in charge
         if ($('#nurseInChargeInput').val().trim()) staff.push($('#nurseInChargeInput').val().trim());
         if ($('#nurseInCharge2Input').val().trim()) staff.push($('#nurseInCharge2Input').val().trim());
-        
+
         // Add security staff
         $('.security-name').each(function() {
             const name = $(this).val().trim();
