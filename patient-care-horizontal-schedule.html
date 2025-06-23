@@ -1846,8 +1846,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     staff.forEach(s => {
         maxContinuousHours[s] = {};
         patients.forEach(patient => {
+            // Fix here - change continuousTracker to continuousAssignmentTracker
             const hours = continuousAssignmentTracker[s] ?
-                (continuousTracker[s][patient] || 0) : 0;
+                (continuousAssignmentTracker[s][patient] || 0) : 0;
             maxContinuousHours[s][patient] = hours;
         });
     });
@@ -1883,495 +1884,438 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsDiv.innerHTML = statsHtml;
 }
 
-        // Fix the regenerateScheduleStats function to properly preserve manual assignments
-        function regenerateScheduleStats() {
-            console.log("Regenerating stats while preserving manual assignments...");
+// Fix the regenerateScheduleStats function to properly preserve manual assignments
+function regenerateScheduleStats() {
+    console.log("Regenerating stats while preserving manual assignments...");
 
-            // Store current assignments before recalculating
-            const currentAssignments = {};
-            timeSlots.forEach(time => {
-                currentAssignments[time] = {};
-                if (schedule[time] && schedule[time].patientAssignments) {
-                    Object.keys(schedule[time].patientAssignments).forEach(patient => {
-                        if (schedule[time].patientAssignments[patient] && schedule[time].patientAssignments[patient].length > 0) {
-                            currentAssignments[time][patient] = [...schedule[time].patientAssignments[patient]];
-                        }
-                    });
+    // Store current assignments before recalculating
+    const currentAssignments = {};
+    timeSlots.forEach(time => {
+        currentAssignments[time] = {};
+        if (schedule[time] && schedule[time].patientAssignments) {
+            Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                if (schedule[time].patientAssignments[patient] && schedule[time].patientAssignments[patient].length > 0) {
+                    currentAssignments[time][patient] = [...schedule[time].patientAssignments[patient]];
                 }
             });
-
-            // Log the stored assignments for debugging
-            console.log("Stored current assignments:", JSON.stringify(currentAssignments));
-
-            // Get current values for staff and patients
-            const allStaff = getAllStaffNames();
-            const patients = getAllPatientNames();
-
-            // Initialize staffStats object to track staff workload
-            const staffStats = {};
-            allStaff.forEach(s => {
-                staffStats[s] = {
-                    workHours: 0,
-                    breakTime: 0,
-                    shortBreakTime: "",
-                    secondBreakTime: ""
-                };
-            });
-
-            // Initialize continuous assignment tracker
-            const continuousAssignmentTracker = {};
-            allStaff.forEach(s => {
-                continuousAssignmentTracker[s] = {};
-                patients.forEach(patient => {
-                    continuousAssignmentTracker[s][patient] = 0;
-                });
-            });
-
-            // Process each time slot to recalculate work hours
-            timeSlots.forEach((time, timeIndex) => {
-                // Calculate break times
-                allStaff.forEach(s => {
-                    if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
-                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
-                            staffStats[s].breakTime += 0.5;
-                            staffStats[s].shortBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
-                            staffStats[s].breakTime += 1;
-                            staffStats[s].secondBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
-                            staffStats[s].breakTime += 1;
-                            if (!staffStats[s].shortBreakTime) {
-                                staffStats[s].shortBreakTime = time;
-                            } else if (!staffStats[s].secondBreakTime) {
-                                staffStats[s].secondBreakTime = time;
-                            }
-                        }
-                    }
-                });
-
-                // Calculate work hours and continuous assignments using the PRESERVED assignments
-                patients.forEach(patient => {
-                    // IMPORTANT: Use preserved assignments from currentAssignments instead of schedule
-                    const assignedStaff = currentAssignments[time] && currentAssignments[time][patient] ?
-                        currentAssignments[time][patient] : [];
-
-                    assignedStaff.forEach(s => {
-                        // Update work hours
-                        staffStats[s].workHours++;
-
-                        // Update continuous assignment tracker
-                        if (timeIndex > 0) {
-                            const prevTime = timeSlots[timeIndex - 1];
-                            const prevAssignments = currentAssignments[prevTime] &&
-                                currentAssignments[prevTime][patient] ?
-                                currentAssignments[prevTime][patient] : [];
-
-                            if (prevAssignments.includes(s)) {
-                                // Staff is continuing with same patient
-                                continuousAssignmentTracker[s][patient]++;
-                            } else {
-                                // Staff is newly assigned to this patient
-                                continuousAssignmentTracker[s][patient] = 1;
-                            }
-                        } else {
-                            // First hour of shift
-                            continuousAssignmentTracker[s][patient] = 1;
-                        }
-                    });
-                });
-            });
-
-            // CRITICAL: Make sure schedule has the preserved assignments
-            timeSlots.forEach(time => {
-                // Ensure schedule object is properly initialized
-                if (!schedule[time]) schedule[time] = {patientAssignments: {}, staffBreaks: {}};
-                if (!schedule[time].patientAssignments) schedule[time].patientAssignments = {};
-
-                if (currentAssignments[time]) {
-                    // Go through all patients in stored assignments
-                    Object.keys(currentAssignments[time]).forEach(patient => {
-                        // Create patient entry if needed
-                        if (!schedule[time].patientAssignments[patient]) {
-                            schedule[time].patientAssignments[patient] = [];
-                        }
-
-                        // IMPORTANT: Restore the original assignments
-                        const staffAssignment = currentAssignments[time][patient];
-                        if (staffAssignment && staffAssignment.length > 0) {
-                            schedule[time].patientAssignments[patient] = [...staffAssignment];
-                            console.log(`Restored assignment: ${patient} at ${time} = ${staffAssignment}`);
-                        }
-                    });
-                }
-            });
-
-            // Now render with the correct preserved assignments
-            renderSchedule(schedule, allStaff, patients, staffStats);
-            renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
-            renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
-
-            // Save changes to localStorage
-            saveToLocalStorage();
         }
+    });
 
-        // Modify the regenerateScheduleStats function to preserve manual assignments
-        function regenerateScheduleStats() {
-            // Store current assignments before recalculating
-            const currentAssignments = {};
-            timeSlots.forEach(time => {
-                currentAssignments[time] = {};
-                if (schedule[time] && schedule[time].patientAssignments) {
-                    Object.keys(schedule[time].patientAssignments).forEach(patient => {
-                        currentAssignments[time][patient] = [...(schedule[time].patientAssignments[patient] || [])];
-                    });
-                }
-            });
+    // Log the stored assignments for debugging
+    console.log("Stored current assignments:", JSON.stringify(currentAssignments));
 
-            // Get current values for staff and patients
-            const allStaff = getAllStaffNames();
-            const patients = getAllPatientNames();
+    // Get current values for staff and patients
+    const allStaff = getAllStaffNames();
+    const patients = getAllPatientNames();
 
-            // Initialize staffStats object to track staff workload
-            const staffStats = {};
-            allStaff.forEach(s => {
-                staffStats[s] = {
-                    workHours: 0,
-                    breakTime: 0,
-                    shortBreakTime: "",
-                    secondBreakTime: ""
-                };
-            });
-
-            // Initialize continuous assignment tracker
-            const continuousAssignmentTracker = {};
-            allStaff.forEach(s => {
-                continuousAssignmentTracker[s] = {};
-                patients.forEach(patient => {
-                    continuousAssignmentTracker[s][patient] = 0;
-                });
-            });
-
-            // Process each time slot to recalculate work hours
-            timeSlots.forEach((time, timeIndex) => {
-                // Calculate break times
-                allStaff.forEach(s => {
-                    if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
-                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
-                            staffStats[s].breakTime += 0.5;
-                            staffStats[s].shortBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
-                            staffStats[s].breakTime += 1;
-                            staffStats[s].secondBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
-                            staffStats[s].breakTime += 1;
-                            if (!staffStats[s].shortBreakTime) {
-                                staffStats[s].shortBreakTime = time;
-                            } else if (!staffStats[s].secondBreakTime) {
-                                staffStats[s].secondBreakTime = time;
-                            }
-                        }
-                    }
-                });
-
-                // Calculate work hours and continuous assignments
-                patients.forEach(patient => {
-                    // Use preserved assignments from currentAssignments
-                    const assignedStaff = currentAssignments[time] &&
-                        currentAssignments[time][patient] ?
-                        currentAssignments[time][patient] : [];
-
-                    assignedStaff.forEach(s => {
-                        // Update work hours
-                        staffStats[s].workHours++;
-
-                        // Update continuous assignment tracker
-                        if (timeIndex > 0) {
-                            const prevTime = timeSlots[timeIndex - 1];
-                            const prevAssignments = currentAssignments[prevTime] &&
-                                currentAssignments[prevTime][patient] ?
-                                currentAssignments[prevTime][patient] : [];
-
-                            if (prevAssignments.includes(s)) {
-                                // Staff is continuing with same patient
-                                continuousAssignmentTracker[s][patient]++;
-                            } else {
-                                // Staff is newly assigned to this patient
-                                continuousAssignmentTracker[s][patient] = 1;
-                            }
-                        } else {
-                            // First hour of shift
-                            continuousAssignmentTracker[s][patient] = 1;
-                        }
-                    });
-                });
-            });
-
-            // IMPORTANT: Restore the original assignments from currentAssignments
-            timeSlots.forEach(time => {
-                if (currentAssignments[time]) {
-                    Object.keys(currentAssignments[time]).forEach(patient => {
-                        if (schedule[time] && schedule[time].patientAssignments) {
-                            schedule[time].patientAssignments[patient] = [...(currentAssignments[time][patient] || [])];
-                        }
-                    });
-                }
-            });
-
-            // Render the updated schedule and stats
-            renderSchedule(schedule, allStaff, patients, staffStats);
-            renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
-            renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
-
-            // Save changes to localStorage
-            saveToLocalStorage();
-        }
-
-        // Add this window.onload function at the end of your script
-        window.onload = function() {
-            // Set moon emoji for dark mode button
-            document.getElementById('toggleModeBtn').innerHTML = '🌙';
-
-            // Load data from localStorage
-            loadFromLocalStorage();
-
-            // Add event listeners for all buttons
-            document.getElementById('toggleModeBtn').addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
-                saveToLocalStorage();
-            });
-
-            document.getElementById('toggleShiftBtn').addEventListener('click', function() {
-                isDayShift = !isDayShift;
-                timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
-                document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
-                this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
-                updateLegend();
-                saveToLocalStorage();
-            });
-
-            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                clearAllData();
-                localStorage.removeItem('patientCareData');
-                addStaffInput();
-                addPatientInput();
-                addSecurityStaffInput();
-            });
-
-            document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
-            document.getElementById('removeStaffBtn').addEventListener('click', function() {
-                const staffInputs = document.getElementById('staffInputs');
-                if (staffInputs.children.length > 1) {
-                    staffInputs.removeChild(staffInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
-            document.getElementById('removePatientBtn').addEventListener('click', function() {
-                const patientInputs = document.getElementById('patientInputs');
-                if (patientInputs.children.length > 1) {
-                    patientInputs.removeChild(patientInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
-            document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
-                const securityStaffInputs = document.getElementById('securityStaffInputs');
-                if (securityStaffInputs.children.length > 0) {
-                    securityStaffInputs.removeChild(securityStaffInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('resetRotationBtn').addEventListener('click', function() {
-                staffPatientHistory = {};
-                showError("Rotation history has been reset!");
-                saveToLocalStorage();
-            });
-
-            // Debug button functionality
-            document.getElementById('debugFillBtn').addEventListener('click', async function() {
-                try {
-                    // Show loading message
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'error-message';
-                    loadingDiv.style.backgroundColor = '#3498db';
-                    loadingDiv.textContent = "Fetching random names...";
-                    document.body.appendChild(loadingDiv);
-
-                    // Fetch random names from online API
-                    const staffResponse = await fetch('https://randomuser.me/api/?results=5');
-                    const patientResponse = await fetch('https://randomuser.me/api/?results=4');
-                    const securityResponse = await fetch('https://randomuser.me/api/?results=1');
-                    const nurseResponse = await fetch('https://randomuser.me/api/?results=2');
-
-                    // Parse the responses
-                    const staffData = await staffResponse.json();
-                    const patientData = await patientResponse.json();
-                    const securityData = await securityResponse.json();
-                    const nurseData = await nurseResponse.json();
-
-                    // Extract names from the API responses
-                    const staffNames = staffData.results.map(user =>
-                        `${user.name.first} ${user.name.last}`
-                    );
-                    const patientNames = patientData.results.map((user, index) =>
-                        `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
-                    );
-                    const securityNames = securityData.results.map(user =>
-                        `Security Officer ${user.name.last}`
-                    );
-                    const nurseNames = nurseData.results.map(user =>
-                        `Charge Nurse ${user.name.last}`
-                    );
-
-                    // Remove loading message
-                    loadingDiv.remove();
-
-                    // Fill nurse in charge inputs
-                    document.getElementById('nurseInChargeInput').value = nurseNames[0];
-                    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-
-                    // Fill only existing staff inputs (no creation)
-                    const staffInputs = document.querySelectorAll('.staff-container .staff-name');
-                    staffInputs.forEach((input, index) => {
-                        // Only fill if we have a name for this index
-                        if (index < staffNames.length) {
-                            input.value = staffNames[index];
-                        }
-                    });
-
-                    // Fill only existing security staff inputs (no creation)
-                    const securityInputs = document.querySelectorAll('.security-container .security-name');
-                    securityInputs.forEach((input, index) => {
-                        if (index < securityNames.length) {
-                            input.value = securityNames[index];
-                        }
-                    });
-
-                    // Fill only existing patient inputs (no creation)
-                    const patientContainers = document.querySelectorAll('.patient-container');
-                    patientContainers.forEach((container, index) => {
-                        if (index < patientNames.length) {
-                            const nameInput = container.querySelector('.patient-name');
-                            const staffCountSelect = container.querySelector('.staff-count');
-
-                            nameInput.value = patientNames[index];
-                            staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
-                        }
-                    });
-
-                    // Show confirmation message
-                    const confirmationDiv = document.createElement('div');
-                    confirmationDiv.className = 'error-message';
-                    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
-                    confirmationDiv.textContent = "Debug data filled successfully with random names!";
-                    document.body.appendChild(confirmationDiv);
-                    setTimeout(() => confirmationDiv.remove(), 3000);
-
-                    // Save to localStorage
-                    saveToLocalStorage();
-                } catch (error) {
-                    console.error("Error fetching random names:", error);
-
-                    // Show error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-message';
-                    errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
-                    document.body.appendChild(errorDiv);
-                    setTimeout(() => errorDiv.remove(), 5000);
-
-                    // Fallback to basic generic names if the API fails
-                    const staffNames = ['Staff Member 1', 'Staff Member 2', 'Staff Member 3', 'Staff Member 4', 'Staff Member 5'];
-                    const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
-                    const securityNames = ['Security Officer'];
-                    const nurseNames = ['Charge Nurse 1', 'Charge Nurse 2'];
-
-                    // Fill with fallback names
-                    document.getElementById('nurseInChargeInput').value = nurseNames[0];
-                    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-
-                    document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
-                        if (index < staffNames.length) input.value = staffNames[index];
-                    });
-
-                    document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
-                        if (index < securityNames.length) input.value = securityNames[index];
-                    });
-
-                    document.querySelectorAll('.patient-container').forEach((container, index) => {
-                        if (index < patientNames.length) {
-                            container.querySelector('.patient-name').value = patientNames[index];
-                            container.querySelector('.staff-count').value = (index % 3) + 1;
-                        }
-                    });
-
-                    saveToLocalStorage();
-                }
-            });
-
-            // Debug panel toggle button
-            document.getElementById('toggleDebugBtn').addEventListener('click', function() {
-                const debugPanel = document.getElementById('debugPanel');
-                debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-            });
-
-            // Debug panel clear button
-            document.getElementById('clearDebugBtn').addEventListener('click', function() {
-                document.getElementById('debugOutput').innerHTML = '';
-            });
-
-            // Add renderStaffRotationStats function if it's missing
-            if (typeof renderStaffRotationStats !== 'function') {
-                window.renderStaffRotationStats = function(patients, staff) {
-                    // Generate a table showing how many times each staff member has worked with each patient
-                    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
-                    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
-                    rotationHtml += '<table class="rotation-table">';
-
-                    // Header row with patient initials
-                    rotationHtml += '<tr><th>Staff</th>';
-                    patients.forEach(patient => {
-                        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
-                    });
-                    rotationHtml += '</tr>';
-
-                    // Rows for each staff member with initials
-                    staff.forEach(s => {
-                        rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
-
-                        // For each patient, show the rotation count
-                        patients.forEach(patient => {
-                            const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ?
-                                staffPatientHistory[s][patient] : 0;
-
-                            // Color the cell based on the count (darker for higher counts)
-                            const bgColor = count === 0 ?
-                                '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
-                            const textColor = count >= 5 ? '#ffffff' : '#000000';
-
-                            rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
-                        });
-
-                        rotationHtml += '</tr>';
-                    });
-
-                    rotationHtml += '</table>';
-                    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
-
-                    document.getElementById('rotationStats').innerHTML = rotationHtml;
-                };
-            }
-
-            // Set up legend based on shift type
-            updateLegend();
+    // Initialize staffStats object to track staff workload
+    const staffStats = {};
+    allStaff.forEach(s => {
+        staffStats[s] = {
+            workHours: 0,
+            breakTime: 0,
+            shortBreakTime: "",
+            secondBreakTime: ""
         };
+    });
 
-        $(document).ready(function() {
+    // Initialize continuous assignment tracker
+    const continuousAssignmentTracker = {};
+    allStaff.forEach(s => {
+        continuousAssignmentTracker[s] = {};
+        patients.forEach(patient => {
+            continuousAssignmentTracker[s][patient] = 0;
+        });
+    });
+
+    // Process each time slot to recalculate work hours
+    timeSlots.forEach((time, timeIndex) => {
+        // Calculate break times
+        allStaff.forEach(s => {
+            if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
+                if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
+                    staffStats[s].breakTime += 0.5;
+                    staffStats[s].shortBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
+                    staffStats[s].breakTime += 1;
+                    staffStats[s].secondBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
+                    staffStats[s].breakTime += 1;
+                    if (!staffStats[s].shortBreakTime) {
+                        staffStats[s].shortBreakTime = time;
+                    } else if (!staffStats[s].secondBreakTime) {
+                        staffStats[s].secondBreakTime = time;
+                    }
+                }
+            }
+        });
+
+        // Calculate work hours and continuous assignments using the PRESERVED assignments
+        patients.forEach(patient => {
+            // IMPORTANT: Use preserved assignments from currentAssignments instead of schedule
+            const assignedStaff = currentAssignments[time] && currentAssignments[time][patient] ?
+                currentAssignments[time][patient] : [];
+
+            assignedStaff.forEach(s => {
+                // Update work hours
+                staffStats[s].workHours++;
+
+                // Update continuous assignment tracker
+                if (timeIndex > 0) {
+                    const prevTime = timeSlots[timeIndex - 1];
+                    const prevAssignments = currentAssignments[prevTime] &&
+                        currentAssignments[prevTime][patient] ?
+                        currentAssignments[prevTime][patient] : [];
+
+                    if (prevAssignments.includes(s)) {
+                        // Staff is continuing with same patient
+                        continuousAssignmentTracker[s][patient]++;
+                    } else {
+                        // Staff is newly assigned to this patient
+                        continuousAssignmentTracker[s][patient] = 1;
+                    }
+                } else {
+                    // First hour of shift
+                    continuousAssignmentTracker[s][patient] = 1;
+                }
+            });
+        });
+    });
+
+    // CRITICAL: Make sure schedule has the preserved assignments
+    timeSlots.forEach(time => {
+        // Ensure schedule object is properly initialized
+        if (!schedule[time]) schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+        if (!schedule[time].patientAssignments) schedule[time].patientAssignments = {};
+
+        if (currentAssignments[time]) {
+            // Go through all patients in stored assignments
+            Object.keys(currentAssignments[time]).forEach(patient => {
+                // Create patient entry if needed
+                if (!schedule[time].patientAssignments[patient]) {
+                    schedule[time].patientAssignments[patient] = [];
+                }
+
+                // IMPORTANT: Restore the original assignments
+                const staffAssignment = currentAssignments[time][patient];
+                if (staffAssignment && staffAssignment.length > 0) {
+                    schedule[time].patientAssignments[patient] = [...staffAssignment];
+                    console.log(`Restored assignment: ${patient} at ${time} = ${staffAssignment}`);
+                }
+            });
+        }
+    });
+
+    // Now render with the correct preserved assignments
+    renderSchedule(schedule, allStaff, patients, staffStats);
+    renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
+    renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
+
+    // Save changes to localStorage
+    saveToLocalStorage();
+}
+
+// Modify the regenerateScheduleStats function to preserve manual assignments
+function regenerateScheduleStats() {
+    // Store current assignments before recalculating
+    const currentAssignments = {};
+    timeSlots.forEach(time => {
+        currentAssignments[time] = {};
+        if (schedule[time] && schedule[time].patientAssignments) {
+            Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                currentAssignments[time][patient] = [...(schedule[time].patientAssignments[patient] || [])];
+            });
+        }
+    });
+
+    // Get current values for staff and patients
+    const allStaff = getAllStaffNames();
+    const patients = getAllPatientNames();
+
+    // Initialize staffStats object to track staff workload
+    const staffStats = {};
+    allStaff.forEach(s => {
+        staffStats[s] = {
+            workHours: 0,
+            breakTime: 0,
+            shortBreakTime: "",
+            secondBreakTime: ""
+        };
+    });
+
+    // Initialize continuous assignment tracker
+    const continuousAssignmentTracker = {};
+    allStaff.forEach(s => {
+        continuousAssignmentTracker[s] = {};
+        patients.forEach(patient => {
+            continuousAssignmentTracker[s][patient] = 0;
+        });
+    });
+
+    // Process each time slot to recalculate work hours
+    timeSlots.forEach((time, timeIndex) => {
+        // Calculate break times
+        allStaff.forEach(s => {
+            if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
+                if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
+                    staffStats[s].breakTime += 0.5;
+                    staffStats[s].shortBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
+                    staffStats[s].breakTime += 1;
+                    staffStats[s].secondBreakTime = time;
+                } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
+                    staffStats[s].breakTime += 1;
+                    if (!staffStats[s].shortBreakTime) {
+                        staffStats[s].shortBreakTime = time;
+                    } else if (!staffStats[s].secondBreakTime) {
+                        staffStats[s].secondBreakTime = time;
+                    }
+                }
+            }
+        });
+
+        // Calculate work hours and continuous assignments
+        patients.forEach(patient => {
+            // Use preserved assignments from currentAssignments
+            const assignedStaff = currentAssignments[time] &&
+                currentAssignments[time][patient] ?
+                currentAssignments[time][patient] : [];
+
+            assignedStaff.forEach(s => {
+                // Update work hours
+                staffStats[s].workHours++;
+
+                // Update continuous assignment tracker
+                if (timeIndex > 0) {
+                    const prevTime = timeSlots[timeIndex - 1];
+                    const prevAssignments = currentAssignments[prevTime] &&
+                        currentAssignments[prevTime][patient] ?
+                        currentAssignments[prevTime][patient] : [];
+
+                    if (prevAssignments.includes(s)) {
+                        // Staff is continuing with same patient
+                        continuousAssignmentTracker[s][patient]++;
+                    } else {
+                        // Staff is newly assigned to this patient
+                        continuousAssignmentTracker[s][patient] = 1;
+                    }
+                } else {
+                    // First hour of shift
+                    continuousAssignmentTracker[s][patient] = 1;
+                }
+            });
+        });
+    });
+
+    // IMPORTANT: Restore the original assignments from currentAssignments
+    timeSlots.forEach(time => {
+        if (currentAssignments[time]) {
+            Object.keys(currentAssignments[time]).forEach(patient => {
+                if (schedule[time] && schedule[time].patientAssignments) {
+                    schedule[time].patientAssignments[patient] = [...(currentAssignments[time][patient] || [])];
+                }
+            });
+        }
+    });
+
+    // Render the updated schedule and stats
+    renderSchedule(schedule, allStaff, patients, staffStats);
+    renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
+    renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
+
+    // Save changes to localStorage
+    saveToLocalStorage();
+}
+
+// Add this window.onload function at the end of your script
+window.onload = function() {
+    // Set moon emoji for dark mode button
+    document.getElementById('toggleModeBtn').innerHTML = '🌙';
+
+    // Load data from localStorage
+    loadFromLocalStorage();
+
+    // Add event listeners for all buttons
+    document.getElementById('toggleModeBtn').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        saveToLocalStorage();
+    });
+
+    document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+        isDayShift = !isDayShift;
+        timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+        document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+        this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+        updateLegend();
+        saveToLocalStorage();
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        clearAllData();
+        localStorage.removeItem('patientCareData');
+        addStaffInput();
+        addPatientInput();
+        addSecurityStaffInput();
+    });
+
+    document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+    document.getElementById('removeStaffBtn').addEventListener('click', function() {
+        const staffInputs = document.getElementById('staffInputs');
+        if (staffInputs.children.length > 1) {
+            staffInputs.removeChild(staffInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+
+    document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+    document.getElementById('removePatientBtn').addEventListener('click', function() {
+        const patientInputs = document.getElementById('patientInputs');
+        if (patientInputs.children.length > 1) {
+            patientInputs.removeChild(patientInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+
+    document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
+    document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
+        const securityStaffInputs = document.getElementById('securityStaffInputs');
+        if (securityStaffInputs.children.length > 0) {
+            securityStaffInputs.removeChild(securityStaffInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+
+    document.getElementById('resetRotationBtn').addEventListener('click', function() {
+        staffPatientHistory = {};
+        showError("Rotation history has been reset!");
+        saveToLocalStorage();
+    });
+
+    // Debug button functionality
+    document.getElementById('debugFillBtn').addEventListener('click', async function() {
+        try {
+            // Show loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'error-message';
+            loadingDiv.style.backgroundColor = '#3498db';
+            loadingDiv.textContent = "Fetching random names...";
+            document.body.appendChild(loadingDiv);
+
+            // Fetch random names from online API
+            const staffResponse = await fetch('https://randomuser.me/api/?results=5');
+            const patientResponse = await fetch('https://randomuser.me/api/?results=4');
+            const securityResponse = await fetch('https://randomuser.me/api/?results=1');
+            const nurseResponse = await fetch('https://randomuser.me/api/?results=2');
+
+            // Parse the responses
+            const staffData = await staffResponse.json();
+            const patientData = await patientResponse.json();
+            const securityData = await securityResponse.json();
+            const nurseData = await nurseResponse.json();
+
+            // Extract names from the API responses
+            const staffNames = staffData.results.map(user =>
+                `${user.name.first} ${user.name.last}`
+            );
+            const patientNames = patientData.results.map((user, index) =>
+                `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
+            );
+            const securityNames = securityData.results.map(user =>
+                `Security Officer ${user.name.last}`
+            );
+            const nurseNames = nurseData.results.map(user =>
+                `Charge Nurse ${user.name.last}`
+            );
+
+            // Remove loading message
+            loadingDiv.remove();
+
+            // Fill nurse in charge inputs
+            document.getElementById('nurseInChargeInput').value = nurseNames[0];
+            document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+
+            // Fill only existing staff inputs (no creation)
+            const staffInputs = document.querySelectorAll('.staff-container .staff-name');
+            staffInputs.forEach((input, index) => {
+                // Only fill if we have a name for this index
+                if (index < staffNames.length) {
+                    input.value = staffNames[index];
+                }
+            });
+
+            // Fill only existing security staff inputs (no creation)
+            const securityInputs = document.querySelectorAll('.security-container .security-name');
+            securityInputs.forEach((input, index) => {
+                if (index < securityNames.length) {
+                    input.value = securityNames[index];
+                }
+            });
+
+            // Fill only existing patient inputs (no creation)
+            const patientContainers = document.querySelectorAll('.patient-container');
+            patientContainers.forEach((container, index) => {
+                if (index < patientNames.length) {
+                    const nameInput = container.querySelector('.patient-name');
+                    const staffCountSelect = container.querySelector('.staff-count');
+
+                    nameInput.value = patientNames[index];
+                    staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
+                }
+            });
+
+            // Show confirmation message
+            const confirmationDiv = document.createElement('div');
+            confirmationDiv.className = 'error-message';
+            confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
+            confirmationDiv.textContent = "Debug data filled successfully with random names!";
+            document.body.appendChild(confirmationDiv);
+            setTimeout(() => confirmationDiv.remove(), 3000);
+
+            // Save to localStorage
+            saveToLocalStorage();
+        } catch (error) {
+            console.error("Error fetching random names:", error);
+
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+
+            // Fallback to basic generic names if the API fails
+            const staffNames = ['Staff Member 1', 'Staff Member 2', 'Staff Member 3', 'Staff Member 4', 'Staff Member 5'];
+            const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
+            const securityNames = ['Security Officer'];
+            const nurseNames = ['Charge Nurse 1', 'Charge Nurse 2'];
+
+            // Fill with fallback names
+            document.getElementById('nurseInChargeInput').value = nurseNames[0];
+            document.getElementById('nurseInCharge2Input').value = nurseNames[1];
+
+            document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
+                if (index < staffNames.length) input.value = staffNames[index];
+            });
+
+            document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
+                if (index < securityNames.length) input.value = securityNames[index];
+            });
+
+            document.querySelectorAll('.patient-container').forEach((container, index) => {
+                if (index < patientNames.length) {
+                    container.querySelector('.patient-name').value = patientNames[index];
+                    container.querySelector('.staff-count').value = (index % 3) + 1;
+                }
+            });
+
+            saveToLocalStorage();
+        }
+    };
+
+    $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
         // Get the time and patient from the clicked cell's data attributes
@@ -2441,108 +2385,44 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
 
-        console.log("Selected staff:", staffName, "for", patient, "at", time);
+        console.log("Selected staff:", staffName, "for patient:", patient, "at time:", time);
 
-        // Show loading indicator in the popup
-        $('#staffList').append('<div id="updateSpinner" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.7);display:flex;justify-content:center;align-items:center;">Updating...</div>');
+        // Update schedule structure
+        if (!window.schedule) window.schedule = {};
+        if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+        if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
+        if (!window.schedule[time].patientAssignments[patient]) window.schedule[time].patientAssignments[patient] = [];
 
-        // Use setTimeout to simulate AJAX processing
-        setTimeout(() => {
-            // Ensure schedule object exists with proper structure
-            if (!window.schedule) window.schedule = {};
-            if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
-            if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
-            if (!window.schedule[time].patientAssignments[patient]) window.schedule[time].patientAssignments[patient] = [];
+        // Update assignment directly
+        window.schedule[time].patientAssignments[patient] = [staffName];
 
-            // Get previously assigned staff for this patient at this time
-            const previousStaff = window.schedule[time].patientAssignments[patient][0];
+        // Update the UI immediately (this is key!)
+        const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
+        if (patientCell.length) {
+            patientCell.text(getInitials(staffName));
+            patientCell.attr('title', staffName);
 
-            // Update assignment - IMPORTANT: store as array with single item
-            window.schedule[time].patientAssignments[patient] = [staffName];
+            // Color the cell
+            const hash = staffName.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0);
+            const hue = Math.abs(hash) % 360;
+            const bgColor = `hsl(${hue}, 70%, 85%)`;
+            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
 
-            console.log("Updated schedule:", window.schedule[time].patientAssignments[patient]);
+            patientCell.css('background-color', bgColor);
+            patientCell.css('color', textColor);
+            patientCell.removeClass('staff-unassigned');
+        }
 
-            // 1. Update patient cell immediately
-            const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
-            if (patientCell.length) {
-                // Generate color based on staff name
-                const hash = staffName.split('').reduce((hash, char) => {
-                    return ((hash << 5) - hash) + char.charCodeAt(0);
-                }, 0);
+        // Update staff-patient history
+        updateStaffPatientHistory(staffName, patient);
 
-                const hue = Math.abs(hash) % 360;
-                const bgColor = `hsl(${hue}, 70%, 85%)`;
-                const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+        // Save changes
+        saveToLocalStorage();
 
-                patientCell.text(getInitials(staffName));
-                patientCell.attr('title', staffName);
-                patientCell.css('background-color', bgColor);
-                patientCell.css('color', textColor);
-                patientCell.removeClass('staff-unassigned');
-            }
+        // Close popup
+        $('#staffPopup').hide();
 
-            // 2. Update staff cells in the staff table
-            const timeIndex = timeSlots.indexOf(time) + 1; // +1 because first column is name
-
-            // If there was a previous assignment, clear that staff member's cell
-            if (previousStaff && previousStaff !== staffName) {
-                $('#staffBody tr').each(function() {
-                    const nameCell = $(this).find('td').eq(0);
-                    if (nameCell.attr('title') === previousStaff) {
-                        const timeCell = $(this).find('td').eq(timeIndex);
-                        // Only update if this cell shows the patient
-                        if (timeCell.attr('title') === patient || timeCell.text() === getInitials(patient)) {
-                            timeCell.text("FREE");
-                            timeCell.css('background-color', "#f8f9fa");
-                            timeCell.css('color', "#000000");
-                            timeCell.attr('title', '');
-                        }
-                    }
-                });
-            }
-
-            // Update the new staff member's cell
-            $('#staffBody tr').each(function() {
-                const nameCell = $(this).find('td').eq(0);
-                if (nameCell.attr('title') === staffName) {
-                    const timeCell = $(this).find('td').eq(timeIndex);
-                    // Only update if not on break
-                    if (!timeCell.hasClass('staff-break') &&
-                        !timeCell.hasClass('staff-lunch') &&
-                        timeCell.text() !== "SECURITY" &&
-                        timeCell.text() !== "BREAK" &&
-                        !timeCell.text().includes("CLEANING")) {
-
-                        timeCell.text(getInitials(patient));
-                        timeCell.attr('title', patient);
-
-                        // Use consistent color based on staff
-                        const hash = staffName.split('').reduce((hash, char) => {
-                            return ((hash << 5) - hash) + char.charCodeAt(0);
-                        }, 0);
-
-                        const hue = Math.abs(hash) % 360;
-                        const bgColor = `hsl(${hue}, 70%, 85%)`;
-                        const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                        timeCell.css('background-color', bgColor);
-                        timeCell.css('color', textColor);
-                    }
-                }
-            });
-
-            // 3. Update rotation history in the background
-            updateStaffPatientHistory(staffName, patient);
-
-            // 4. Save to localStorage right away to preserve changes
-            saveToLocalStorage();
-
-            // Close the popup after the "AJAX" operation is complete
-            $('#staffPopup').hide();
-
-            // SKIP regenerating stats as this causes our changes to be lost
-            // The changes have been directly applied to the DOM already
-        }, 300);
+        // DON'T regenerate schedule stats - it overwrites our changes
     });
 
     // Remove staff button click handler with AJAX-style updates
