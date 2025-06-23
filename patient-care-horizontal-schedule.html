@@ -1387,8 +1387,6 @@ function rotateStaff() {
 $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
-        console.log("Cell clicked!");
-
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
