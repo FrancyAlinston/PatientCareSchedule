@@ -1496,13 +1496,14 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
     });
 }
 
-// Add this new function to find staff with continuity limits
-function findStaffWithContinuityLimit(availableStaff, patientName, count, staffStats, continuousTracker, timeIndex) {
+// FIX: In the findStaffWithContinuityLimit function (around line 1508),
+// ensure continuousTracker is changed to continuousAssignmentTracker
+function findStaffWithContinuityLimit(availableStaff, patientName, count, staffStats, continuousAssignmentTracker, timeIndex) {
     // Sort staff based on multiple factors
     const sorted = [...availableStaff].sort((a, b) => {
         // Continuous hours working with this patient
-        const continuousHoursA = continuousTracker[a] ? (continuousTracker[a][patientName] || 0) : 0;
-        const continuousHoursB = continuousTracker[b] ? (continuousTracker[b][patientName] || 0) : 0;
+        const continuousHoursA = continuousAssignmentTracker[a] ? (continuousAssignmentTracker[a][patientName] || 0) : 0;
+        const continuousHoursB = continuousAssignmentTracker[b] ? (continuousAssignmentTracker[b][patientName] || 0) : 0;
 
         // Apply strong penalty for staff with 3+ continuous hours (to force rotation)
         const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
@@ -2318,11 +2319,14 @@ window.onload = function() {
     $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
+        console.log("POPUP CLICK HANDLER TRIGGERED");
+
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
 
-        console.log("Opening popup for:", time, patient);
+        console.log(`Opening popup for: time=${time}, patient=${patient}`);
+        console.log("Current schedule state:", window.schedule ? "exists" : "undefined");
 
         // Store these values as HTML attributes for more reliable access
         $('#staffPopup').attr('data-time', time).attr('data-patient', patient).show();
@@ -2381,11 +2385,15 @@ window.onload = function() {
 
     // Select staff button click handler with AJAX-style updates
     $(document).on('click', '.select-staff-btn', function() {
+        console.log("STAFF SELECTION BUTTON CLICKED");
+
         const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
 
-        console.log("Selected staff:", staffName, "for patient:", patient, "at time:", time);
+        console.log(`Selected staff: ${staffName} for patient: ${patient} at time: ${time}`);
+        console.log("Current schedule before update:", JSON.stringify(window.schedule && window.schedule[time] ?
+            window.schedule[time].patientAssignments[patient] : "undefined"));
 
         // Update schedule structure
         if (!window.schedule) window.schedule = {};
@@ -2396,9 +2404,14 @@ window.onload = function() {
         // Update assignment directly
         window.schedule[time].patientAssignments[patient] = [staffName];
 
-        // Update the UI immediately (this is key!)
+        console.log("Schedule after update:", JSON.stringify(window.schedule[time].patientAssignments[patient]));
+
+        // Update BOTH the patient cell and staff cell simultaneously (important)
+
+        // 1. Update the patient cell
         const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
         if (patientCell.length) {
+            console.log("Found patient cell to update");
             patientCell.text(getInitials(staffName));
             patientCell.attr('title', staffName);
 
@@ -2411,7 +2424,41 @@ window.onload = function() {
             patientCell.css('background-color', bgColor);
             patientCell.css('color', textColor);
             patientCell.removeClass('staff-unassigned');
+        } else {
+            console.log("WARNING: Patient cell not found for update");
         }
+
+        // 2. Update the staff cell
+        const timeIndex = timeSlots.indexOf(time) + 1;
+        $('#staffBody tr').each(function() {
+            const nameCell = $(this).find('td').eq(0);
+            if (nameCell.attr('title') === staffName) {
+                const timeCell = $(this).find('td').eq(timeIndex);
+                // Only update if not on break
+                if (!timeCell.hasClass('staff-break') &&
+                    !timeCell.hasClass('staff-lunch') &&
+                    timeCell.text() !== "SECURITY" &&
+                    timeCell.text() !== "BREAK" &&
+                    !timeCell.text().includes("CLEANING")) {
+
+                    timeCell.text(getInitials(patient));
+                    timeCell.attr('title', patient);
+
+                    // Use consistent color based on staff
+                    const hash = staffName.split('').reduce((hash, char) => {
+                        return ((hash << 5) - hash) + char.charCodeAt(0);
+                    }, 0);
+
+                    const hue = Math.abs(hash) % 360;
+                    const bgColor = `hsl(${hue}, 70%, 85%)`;
+                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+
+                    timeCell.css('background-color', bgColor);
+                    timeCell.css('color', textColor);
+                    console.log("Updated staff cell for", staffName);
+                }
+            }
+        });
 
         // Update staff-patient history
         updateStaffPatientHistory(staffName, patient);
@@ -2421,6 +2468,8 @@ window.onload = function() {
 
         // Close popup
         $('#staffPopup').hide();
+
+        console.log("Staff selection completed successfully");
 
         // DON'T regenerate schedule stats - it overwrites our changes
     });
