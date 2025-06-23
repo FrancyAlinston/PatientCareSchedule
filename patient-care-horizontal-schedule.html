@@ -1123,29 +1123,6 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
 // Keep only the first, more comprehensive implementation that starts around line 2025
 
 // FIX: At the end of your window.onload function (around line 2689), add proper closing bracket
-window.onload = function() {
-    // ... existing code ...
-
-    // End of the renderStaffRotationStats function declaration
-    function renderStaffRotationStats(patients, regularStaff) {
-        // ... function implementation ...
-    }
-
-    // The function ends with this closing bracket
-}; // <-- Add this semicolon here
-
-// FIX: In your jQuery document ready function (around line 2379), fix the missing closing bracket
-$(document).ready(function() {
-    // ... existing code ...
-
-    // After the removeStaffBtn click handler
-    $('#removeStaffBtn').click(function() {
-        // ... existing handler code ...
-    });
-
-    // Add this closing bracket and parenthesis
-}); // <-- Add proper closing here
-
 // FIX: The updateStaffPatientHistory function should be inside the window.onload function or moved outside
 function updateStaffPatientHistory(staffName, patientName) {
     if (!window.staffPatientHistory) window.staffPatientHistory = {};
@@ -1182,26 +1159,13 @@ function getAllPatientNames() {
 
 // Add this comprehensive function to your code:
 function regenerateScheduleStats() {
-    console.log("Regenerating stats while preserving manual assignments...");
-
-    // Store current assignments before recalculating
-    const currentAssignments = {};
-    timeSlots.forEach(time => {
-        currentAssignments[time] = {};
-        if (schedule[time] && schedule[time].patientAssignments) {
-            Object.keys(schedule[time].patientAssignments).forEach(patient => {
-                if (schedule[time].patientAssignments[patient] && schedule[time].patientAssignments[patient].length > 0) {
-                    currentAssignments[time][patient] = [...schedule[time].patientAssignments[patient]];
-                }
-            });
-        }
-    });
+    console.log("Regenerating stats...");
 
     // Get current values for staff and patients
     const allStaff = getAllStaffNames();
     const patients = getAllPatientNames();
 
-    // Initialize staffStats object to track staff workload
+    // Initialize staffStats object
     const staffStats = {};
     allStaff.forEach(s => {
         staffStats[s] = {
@@ -1212,19 +1176,22 @@ function regenerateScheduleStats() {
         };
     });
 
-    // Initialize continuous assignment tracker
-    const continuousAssignmentTracker = {};
-    allStaff.forEach(s => {
-        continuousAssignmentTracker[s] = {};
-        patients.forEach(patient => {
-            continuousAssignmentTracker[s][patient] = 0;
-        });
-    });
+    // Calculate stats based on current schedule
+    calculateStaffStats(staffStats, allStaff);
 
-    // Process each time slot to recalculate work hours
-    timeSlots.forEach((time, timeIndex) => {
-        // Calculate break times
+    // Render the schedule and stats
+    renderSchedule(schedule, allStaff, patients);
+    renderStaffTable(schedule, allStaff);
+    renderBreakTable(staffStats, allStaff);
+
+    // Save changes to localStorage
+    saveToLocalStorage();
+}
+
+function calculateStaffStats(staffStats, allStaff) {
+    timeSlots.forEach((time) => {
         allStaff.forEach(s => {
+            // Calculate break times
             if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
                 if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
                     staffStats[s].breakTime += 0.5;
@@ -1234,217 +1201,19 @@ function regenerateScheduleStats() {
                     staffStats[s].secondBreakTime = time;
                 } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
                     staffStats[s].breakTime += 1;
-                    if (!staffStats[s].shortBreakTime) {
-                        staffStats[s].shortBreakTime = time;
-                    } else if (!staffStats[s].secondBreakTime) {
-                        staffStats[s].secondBreakTime = time;
+                }
+            }
+
+            // Calculate work hours
+            if (schedule[time] && schedule[time].patientAssignments) {
+                for (const patient in schedule[time].patientAssignments) {
+                    if (schedule[time].patientAssignments[patient].includes(s)) {
+                        staffStats[s].workHours++;
+                        break; // Only count once per time slot
                     }
                 }
             }
         });
-
-        // Calculate work hours and continuous assignments using the PRESERVED assignments
-        patients.forEach(patient => {
-            // Use preserved assignments from currentAssignments
-            const assignedStaff = currentAssignments[time] && currentAssignments[time][patient] ?
-                currentAssignments[time][patient] : [];
-
-            assignedStaff.forEach(s => {
-                // Update work hours
-                staffStats[s].workHours++;
-
-                // Update continuous assignment tracker
-                if (timeIndex > 0) {
-                    const prevTime = timeSlots[timeIndex - 1];
-                    const prevAssignments = currentAssignments[prevTime] &&
-                        currentAssignments[prevTime][patient] ?
-                        currentAssignments[prevTime][patient] : [];
-
-                    if (prevAssignments.includes(s)) {
-                        // Staff is continuing with same patient
-                        continuousAssignmentTracker[s][patient]++;
-                    } else {
-                        // Staff is newly assigned to this patient
-                        continuousAssignmentTracker[s][patient] = 1;
-                    }
-                } else {
-                    // First hour of shift
-                    continuousAssignmentTracker[s][patient] = 1;
-                }
-            });
-        });
-    });
-
-    // CRITICAL: Make sure schedule has the preserved assignments
-    timeSlots.forEach(time => {
-        // Ensure schedule object is properly initialized
-        if (!schedule[time]) schedule[time] = {patientAssignments: {}, staffBreaks: {}};
-        if (!schedule[time].patientAssignments) schedule[time].patientAssignments = {};
-
-        if (currentAssignments[time]) {
-            // Go through all patients in stored assignments
-            Object.keys(currentAssignments[time]).forEach(patient => {
-                // Create patient entry if needed
-                if (!schedule[time].patientAssignments[patient]) {
-                    schedule[time].patientAssignments[patient] = [];
-                }
-
-                // IMPORTANT: Restore the original assignments
-                const staffAssignment = currentAssignments[time][patient];
-                if (staffAssignment && staffAssignment.length > 0) {
-                    schedule[time].patientAssignments[patient] = [...staffAssignment];
-                }
-            });
-        }
-    });
-
-    // Now render with the correct preserved assignments
-    renderSchedule(schedule, allStaff, patients, staffStats);
-    renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
-    renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
-
-    // Save changes to localStorage
-    saveToLocalStorage();
-}
-
-function renderSchedule(schedule, allStaff, patients) {
-    const scheduleHeader = document.getElementById('scheduleHeader');
-    const scheduleBody = document.getElementById('scheduleBody');
-
-    // Clear the schedule
-    scheduleHeader.innerHTML = '';
-    scheduleBody.innerHTML = '';
-
-    // Create header row
-    const headerRow = document.createElement('tr');
-
-    // Create patient/time header
-    const cornerHeader = document.createElement('th');
-    cornerHeader.textContent = 'Patient / Time';
-    headerRow.appendChild(cornerHeader);
-
-    // Add time headers
-    timeSlots.forEach(time => {
-        const th = document.createElement('th');
-        th.textContent = time;
-        headerRow.appendChild(th);
-    });
-
-    scheduleHeader.appendChild(headerRow);
-
-    // Create rows for each patient
-    patients.forEach(patient => {
-        const row = document.createElement('tr');
-
-        // Patient name cell
-        const nameCell = document.createElement('td');
-        nameCell.textContent = patient;
-        nameCell.className = 'row-header';
-        row.appendChild(nameCell);
-
-        // Create cells for each time slot
-        timeSlots.forEach(time => {
-            const cell = document.createElement('td');
-
-            // CRITICAL: Add data attributes to each cell
-            cell.setAttribute('data-time', time);
-            cell.setAttribute('data-patient', patient);
-            cell.className = 'assignable-staff-cell';
-
-            const assignedStaff = schedule[time] && schedule[time].patientAssignments[patient]
-                ? schedule[time].patientAssignments[patient]
-                : [];
-
-            if (!assignedStaff || assignedStaff.length === 0) {
-                cell.textContent = "UNASSIGNED";
-                cell.className = 'staff-unassigned assignable-staff-cell';
-            } else {
-                const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
-                cell.textContent = staffInitials;
-                cell.title = assignedStaff.join(", ");
-
-                // Generate color based on staff name
-                if (isDayShift) {
-                    // Day shift: use blue shades
-                    const hue = 210; // Fixed hue for blue
-                    const saturation = 100;
-                    const lightness = Math.min(70, 50 + assignedStaff.length * 5); // Vary lightness
-
-                    cell.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-                } else {
-                    // Night shift: use purple shades
-                    const hue = 270; // Fixed hue for purple
-                    const saturation = 100;
-                    const lightness = Math.min(70, 50 + assignedStaff.length * 5); // Vary lightness
-
-                    cell.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-                }
-
-                // Set text color to white for better contrast
-                cell.style.color = '#ffffff';
-            }
-
-            row.appendChild(cell);
-        });
-
-        scheduleBody.appendChild(row);
-    });
-}
-
-function renderStats(staffStats, allStaff, patients, continuousAssignmentTracker) {
-    const statsDiv = document.getElementById('stats');
-    statsDiv.innerHTML = '';
-
-    // Total patients and staff
-    const totalPatients = patients.length;
-    const totalStaff = allStaff.length;
-
-    // Patients per staff member
-    const patientsPerStaff = Math.ceil(totalPatients / totalStaff);
-
-    // Create stats elements
-    const totalPatientsElem = document.createElement('div');
-    totalPatientsElem.textContent = `Total Patients: ${totalPatients}`;
-
-    const totalStaffElem = document.createElement('div');
-    totalStaffElem.textContent = `Total Staff: ${totalStaff}`;
-
-    const patientsPerStaffElem = document.createElement('div');
-    patientsPerStaffElem.textContent = `Patients per Staff: ${patientsPerStaff}`;
-
-    // Append stats elements
-    statsDiv.appendChild(totalPatientsElem);
-    statsDiv.appendChild(totalStaffElem);
-    statsDiv.appendChild(patientsPerStaffElem);
-
-    // Detailed stats for each staff member
-    allStaff.forEach(staff => {
-        const staffStat = staffStats[staff];
-
-        const staffDiv = document.createElement('div');
-        staffDiv.className = 'staff-stat';
-
-        const nameElem = document.createElement('strong');
-        nameElem.textContent = staff;
-        staffDiv.appendChild(nameElem);
-
-        const workHoursElem = document.createElement('div');
-        workHoursElem.textContent = `Work Hours: ${staffStat.workHours}`;
-        staffDiv.appendChild(workHoursElem);
-
-        const breakTimeElem = document.createElement('div');
-        breakTimeElem.textContent = `Break Time: ${staffStat.breakTime} hours`;
-        staffDiv.appendChild(breakTimeElem);
-
-        // Continuous assignments
-        const continuousAssignments = continuousAssignmentTracker[staff];
-        if (continuousAssignments) {
-            const continuousAssignmentsElem = document.createElement('div');
-            continuousAssignmentsElem.textContent = `Continuous Assignments: ${Object.keys(continuousAssignments).length}`;
-            staffDiv.appendChild(continuousAssignmentsElem);
-        }
-
-        statsDiv.appendChild(staffDiv);
     });
 }
 
