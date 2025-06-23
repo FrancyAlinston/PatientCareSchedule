@@ -2176,39 +2176,41 @@ $(document).ready(function() {
 
         // Update the assignment in your schedule object
         if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
-            // Get current staff assignments for this slot
             const currentAssignments = window.schedule[time].patientAssignments[patient] || [];
 
-            // Check if this staff is already assigned to another patient in this time slot
-            let isAssignedElsewhere = false;
-            Object.keys(window.schedule[time].patientAssignments).forEach(otherPatient => {
-                if (patient !== otherPatient &&
-                    window.schedule[time].patientAssignments[otherPatient].includes(staffName)) {
-                    isAssignedElsewhere = true;
-                }
-            });
-
-            // If staff is on break during this time, show warning
+            // Check if staff is on break/duty during this time
             if (window.schedule[time].staffBreaks[staffName]) {
                 alert(`${staffName} is on ${window.schedule[time].staffBreaks[staffName]} during this time slot.`);
                 return;
             }
 
-            // If staff is assigned elsewhere, show confirmation
-            if (isAssignedElsewhere) {
-                if (!confirm(`${staffName} is already assigned to another patient in this time slot. Continue?`)) {
-                    return;
+            // Check if staff is assigned elsewhere
+            let previousAssignment = null;
+            Object.keys(window.schedule[time].patientAssignments).forEach(otherPatient => {
+                if (patient !== otherPatient &&
+                    window.schedule[time].patientAssignments[otherPatient].includes(staffName)) {
+                    previousAssignment = otherPatient;
+                }
+            });
+
+            if (previousAssignment) {
+                if (confirm(`${staffName} is currently assigned to ${previousAssignment}. Reassign to ${patient}?`)) {
+                    // Remove from previous assignment
+                    const prevAssignments = window.schedule[time].patientAssignments[previousAssignment];
+                    const index = prevAssignments.indexOf(staffName);
+                    if (index !== -1) prevAssignments.splice(index, 1);
+                } else {
+                    return; // User cancelled reassignment
                 }
             }
 
-            // Add staff to assignments if not already there (limit to patient's staffCount)
-            if (!currentAssignments.includes(staffName)) {
-                // Find patient's staffCount
-                const patientEl = $('.patient-container').find(`.patient-name[value="${patient}"]`);
-                const staffCount = patientEl.length ?
-                    parseInt(patientEl.closest('.patient-container').find('.staff-count').val() || 1) : 1;
+            // Find patient's staffCount
+            const patientEl = $('.patient-container').find(`.patient-name[value="${patient}"]`);
+            const staffCount = patientEl.length ?
+                parseInt(patientEl.closest('.patient-container').find('.staff-count').val() || 1) : 1;
 
-                // Add only if we haven't reached the limit
+            // Add staff to assignments if not already there and not exceeding limit
+            if (!currentAssignments.includes(staffName)) {
                 if (currentAssignments.length < staffCount) {
                     currentAssignments.push(staffName);
                     window.schedule[time].patientAssignments[patient] = currentAssignments;
@@ -2218,13 +2220,8 @@ $(document).ready(function() {
                     if (!window.staffPatientHistory[staffName][patient]) window.staffPatientHistory[staffName][patient] = 0;
                     window.staffPatientHistory[staffName][patient]++;
 
-                    // Re-render the schedule
-                    renderSchedule(
-                        window.schedule,
-                        getAllStaffNames(),
-                        getAllPatientNames(),
-                        {} // You'd need to recalculate staffStats here for a complete solution
-                    );
+                    // IMPORTANT: Regenerate full schedule statistics and tracking
+                    regenerateScheduleStats();
                 } else {
                     alert(`This patient is limited to ${staffCount} staff member(s).`);
                 }
@@ -2240,7 +2237,9 @@ $(document).ready(function() {
 
         if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
             window.schedule[time].patientAssignments[patient] = [];
-            renderSchedule(window.schedule, getAllStaffNames(), getAllPatientNames(), {});
+
+            // IMPORTANT: Regenerate full schedule statistics and tracking
+            regenerateScheduleStats();
         }
         $('#staffPopup').hide();
     });
