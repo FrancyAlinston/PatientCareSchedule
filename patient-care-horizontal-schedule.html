@@ -2239,7 +2239,13 @@ function getAllPatientNames() {
         };
 
         $(document).ready(function() {
-    // Open popup on cell click
+    // Debug console function
+    function debugLog(message) {
+        console.log(message);
+        $("#debugOutput").append(`<div>${message}</div>`);
+    }
+
+    // IMPORTANT: Store the time and patient in HTML attributes, not jQuery data
     $(document).on('click', '.assignable-staff-cell', function() {
         // Check if schedule exists first
         if (!window.schedule || Object.keys(window.schedule).length === 0) {
@@ -2247,14 +2253,13 @@ function getAllPatientNames() {
             return;
         }
 
-        // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
 
-        console.log("Opening popup for:", time, patient);
+        debugLog(`Popup opened for time: ${time}, patient: ${patient}`);
 
-        // Store these values on the popup element
-        $('#staffPopup').data('time', time).data('patient', patient).show();
+        // Store in HTML attributes instead of jQuery data
+        $('#staffPopup').attr('data-time', time).attr('data-patient', patient).show();
 
         // List all available staff
         let staff = [];
@@ -2291,20 +2296,11 @@ function getAllPatientNames() {
 
     // Select staff button click handler - Using both attr() and direct data access
     $(document).on('click', '.select-staff-btn', function() {
-        // Get time and patient from both jQuery data and HTML attributes
         const staffName = $(this).attr('data-name');
-        let time = $('#staffPopup').data('time');
-        let patient = $('#staffPopup').data('patient');
+        const time = $('#staffPopup').attr('data-time');
+        const patient = $('#staffPopup').attr('data-patient');
 
-        // Debug info
-        console.log("Button clicked with staff:", staffName);
-        console.log("Time from data attribute:", time);
-        console.log("Patient from data attribute:", patient);
-
-        if (!time || !patient) {
-            showError("Could not identify time slot or patient. Please try again.");
-            return;
-        }
+        debugLog(`Selected staff: ${staffName} for time: ${time}, patient: ${patient}`);
 
         // Ensure schedule object exists with proper structure
         if (!window.schedule) window.schedule = {};
@@ -2338,8 +2334,8 @@ function getAllPatientNames() {
 
     // Remove staff button click handler
     $('#removeStaffBtn').click(function() {
-        const time = $('#staffPopup').data('time');
-        const patient = $('#staffPopup').data('patient');
+        const time = $('#staffPopup').attr('data-time');
+        const patient = $('#staffPopup').attr('data-patient');
 
         console.log("Removing staff for", patient, "at", time);
 
