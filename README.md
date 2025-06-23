@@ -1,5 +1,7 @@
 # Patient Care Schedule Generator
 
+**Version 1.5.0** | Last Updated: June 23, 2025
+
 ## Overview
 
 The Patient Care Schedule Generator is a web-based application designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
