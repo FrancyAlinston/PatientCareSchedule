@@ -1581,28 +1581,27 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.textContent = staffInitials;
                 cell.title = assignedStaff.join(", ");
                 cell.className = "assignable-staff-cell"; // Add class here
-
-                // Add these data attributes to EVERY patient cell
-                cell.setAttribute("data-time", time);
-                cell.setAttribute("data-patient", patient);
-
-                // Color the cell based on the first assigned staff member
-                if (assignedStaff.length > 0) {
-                    // Generate a color based on the staff name
-                    const staffName = assignedStaff[0];
-                    const hash = staffName.split('').reduce((hash, char) => {
-                        return ((hash << 5) - hash) + char.charCodeAt(0);
-                    }, 0);
-
-                    const hue = Math.abs(hash) % 360;
-                    const bgColor = `hsl(${hue}, 70%, 85%)`;
-                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                    cell.style.backgroundColor = bgColor;
-                    cell.style.color = textColor;
-                }
             }
 
+            // Add these data attributes to EVERY patient cell
+            cell.setAttribute("data-time", time);
+            cell.setAttribute("data-patient", patient);
+
+            // Color the cell based on the first assigned staff member
+            if (assignedStaff && assignedStaff.length > 0) {
+                // Generate a color based on the staff name
+                const staffName = assignedStaff[0];
+                const hash = staffName.split('').reduce((hash, char) => {
+                    return ((hash << 5) - hash) + char.charCodeAt(0);
+                }, 0);
+
+                const hue = Math.abs(hash) % 360;
+                const bgColor = `hsl(${hue}, 70%, 85%)`;
+                const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+
+                cell.style.backgroundColor = bgColor;
+                cell.style.color = textColor;
+            }
             row.appendChild(cell);
         });
 
