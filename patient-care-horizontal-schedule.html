@@ -1883,8 +1883,19 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsDiv.innerHTML = statsHtml;
 }
 
-        // Add this function to recalculate all statistics when manual staff changes are made
+        // Modify the regenerateScheduleStats function to preserve manual assignments
         function regenerateScheduleStats() {
+            // Store current assignments before recalculating
+            const currentAssignments = {};
+            timeSlots.forEach(time => {
+                currentAssignments[time] = {};
+                if (schedule[time] && schedule[time].patientAssignments) {
+                    Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                        currentAssignments[time][patient] = [...(schedule[time].patientAssignments[patient] || [])];
+                    });
+                }
+            });
+
             // Get current values for staff and patients
             const allStaff = getAllStaffNames();
             const patients = getAllPatientNames();
@@ -1913,7 +1924,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             timeSlots.forEach((time, timeIndex) => {
                 // Calculate break times
                 allStaff.forEach(s => {
-                    if (schedule[time].staffBreaks[s]) {
+                    if (schedule[time] && schedule[time].staffBreaks && schedule[time].staffBreaks[s]) {
                         if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
                             staffStats[s].breakTime += 0.5;
                             staffStats[s].shortBreakTime = time;
@@ -1921,7 +1932,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                             staffStats[s].breakTime += 1;
                             staffStats[s].secondBreakTime = time;
                         } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
-                            staffStats[s].breakTime += 1; // Each night break hour is 1 hour
+                            staffStats[s].breakTime += 1;
                             if (!staffStats[s].shortBreakTime) {
                                 staffStats[s].shortBreakTime = time;
                             } else if (!staffStats[s].secondBreakTime) {
@@ -1933,7 +1944,10 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
                 // Calculate work hours and continuous assignments
                 patients.forEach(patient => {
-                    const assignedStaff = schedule[time].patientAssignments[patient] || [];
+                    // Use preserved assignments from currentAssignments
+                    const assignedStaff = currentAssignments[time] &&
+                        currentAssignments[time][patient] ?
+                        currentAssignments[time][patient] : [];
 
                     assignedStaff.forEach(s => {
                         // Update work hours
@@ -1942,7 +1956,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                         // Update continuous assignment tracker
                         if (timeIndex > 0) {
                             const prevTime = timeSlots[timeIndex - 1];
-                            const prevAssignments = schedule[prevTime].patientAssignments[patient] || [];
+                            const prevAssignments = currentAssignments[prevTime] &&
+                                currentAssignments[prevTime][patient] ?
+                                currentAssignments[prevTime][patient] : [];
 
                             if (prevAssignments.includes(s)) {
                                 // Staff is continuing with same patient
@@ -1957,6 +1973,17 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                         }
                     });
                 });
+            });
+
+            // IMPORTANT: Restore the original assignments from currentAssignments
+            timeSlots.forEach(time => {
+                if (currentAssignments[time]) {
+                    Object.keys(currentAssignments[time]).forEach(patient => {
+                        if (schedule[time] && schedule[time].patientAssignments) {
+                            schedule[time].patientAssignments[patient] = [...(currentAssignments[time][patient] || [])];
+                        }
+                    });
+                }
             });
 
             // Render the updated schedule and stats
