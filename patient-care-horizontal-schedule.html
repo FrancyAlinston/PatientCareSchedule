@@ -1967,6 +1967,32 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             saveToLocalStorage();
         }
 
+        // Define these helper functions OUTSIDE the $(document).ready block
+// so they're accessible globally
+function getAllStaffNames() {
+    const allStaff = [];
+    $('.staff-name').each(function() {
+        const name = $(this).val().trim();
+        if (name) allStaff.push(name);
+    });
+    if ($('#nurseInChargeInput').val().trim()) allStaff.push($('#nurseInChargeInput').val().trim());
+    if ($('#nurseInCharge2Input').val().trim()) allStaff.push($('#nurseInCharge2Input').val().trim());
+    $('.security-name').each(function() {
+        const name = $(this).val().trim();
+        if (name) allStaff.push(name);
+    });
+    return allStaff;
+}
+
+function getAllPatientNames() {
+    const patients = [];
+    $('.patient-name').each(function() {
+        const name = $(this).val().trim();
+        if (name) patients.push(name);
+    });
+    return patients;
+}
+
         // Add this window.onload function at the end of your script
         window.onload = function() {
             // Set moon emoji for dark mode button
@@ -2263,43 +2289,50 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         $('#staffPopup').hide();
     });
 
-    // Select staff button click handler - Fix the data attribute access
+    // Select staff button click handler - Using both attr() and direct data access
     $(document).on('click', '.select-staff-btn', function() {
-        const staffName = $(this).attr('data-name'); // Using attr() instead of data()
-        const time = $('#staffPopup').data('time');
-        const patient = $('#staffPopup').data('patient');
+        // Get time and patient from both jQuery data and HTML attributes
+        const staffName = $(this).attr('data-name');
+        let time = $('#staffPopup').data('time');
+        let patient = $('#staffPopup').data('patient');
 
-        console.log("Selected staff:", staffName, "for patient:", patient, "at time:", time);
+        // Debug info
+        console.log("Button clicked with staff:", staffName);
+        console.log("Time from data attribute:", time);
+        console.log("Patient from data attribute:", patient);
 
-        // Ensure schedule object exists
-        if (!window.schedule) {
-            window.schedule = {};
+        if (!time || !patient) {
+            showError("Could not identify time slot or patient. Please try again.");
+            return;
         }
 
-        // Ensure time slot exists
-        if (!window.schedule[time]) {
-            window.schedule[time] = { patientAssignments: {} };
-        }
-
-        // Ensure patientAssignments exists
-        if (!window.schedule[time].patientAssignments) {
-            window.schedule[time].patientAssignments = {};
-        }
+        // Ensure schedule object exists with proper structure
+        if (!window.schedule) window.schedule = {};
+        if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+        if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
+        if (!window.schedule[time].patientAssignments[patient]) window.schedule[time].patientAssignments[patient] = [];
 
         // Update assignment
         window.schedule[time].patientAssignments[patient] = [staffName];
 
-        // Debug to verify the change happened
-        console.log(`Updated assignment: ${window.schedule[time].patientAssignments[patient]}`);
-
-        // Force redraw the schedule first
-        const allStaff = getAllStaffNames();
-        const patients = getAllPatientNames();
-        renderSchedule(window.schedule, allStaff, patients, {});
+        // Force immediate update of the UI
+        const cell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
+        if (cell.length) {
+            cell.text(getInitials(staffName));
+            cell.attr('title', staffName);
+            // Add color based on staff name
+            const hash = staffName.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0);
+            const hue = Math.abs(hash) % 360;
+            const bgColor = `hsl(${hue}, 70%, 85%)`;
+            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+            cell.css('background-color', bgColor);
+            cell.css('color', textColor);
+        }
 
         // Then regenerate all stats
         regenerateScheduleStats();
 
+        // Hide popup
         $('#staffPopup').hide();
     });
 
