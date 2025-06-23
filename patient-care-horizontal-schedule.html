@@ -1847,7 +1847,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         maxContinuousHours[s] = {};
         patients.forEach(patient => {
             const hours = continuousAssignmentTracker[s] ?
-                (continuousAssignmentTracker[s][patient] || 0) : 0;
+                (continuousTracker[s][patient] || 0) : 0;
             maxContinuousHours[s][patient] = hours;
         });
     });
@@ -2448,7 +2448,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
         // Use setTimeout to simulate AJAX processing
         setTimeout(() => {
-            // Update the assignment in the schedule object
+            // Ensure schedule object exists with proper structure
             if (!window.schedule) window.schedule = {};
             if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
             if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
@@ -2457,10 +2457,10 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             // Get previously assigned staff for this patient at this time
             const previousStaff = window.schedule[time].patientAssignments[patient][0];
 
-            // Update assignment
+            // Update assignment - IMPORTANT: store as array with single item
             window.schedule[time].patientAssignments[patient] = [staffName];
 
-            // AJAX-style updates for better UX:
+            console.log("Updated schedule:", window.schedule[time].patientAssignments[patient]);
 
             // 1. Update patient cell immediately
             const patientCell = $(`.assignable-staff-cell[data-time="${time}"][data-patient="${patient}"]`);
@@ -2534,18 +2534,15 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             // 3. Update rotation history in the background
             updateStaffPatientHistory(staffName, patient);
 
-            // 4. Save to localStorage
+            // 4. Save to localStorage right away to preserve changes
             saveToLocalStorage();
 
             // Close the popup after the "AJAX" operation is complete
             $('#staffPopup').hide();
 
-            // Asynchronously update statistics in the background for better UX
-            setTimeout(() => {
-                regenerateScheduleStats();
-            }, 100);
-
-        }, 300); // Simulate network delay for better UX
+            // SKIP regenerating stats as this causes our changes to be lost
+            // The changes have been directly applied to the DOM already
+        }, 300);
     });
 
     // Remove staff button click handler with AJAX-style updates
