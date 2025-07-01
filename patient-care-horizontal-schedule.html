@@ -524,7 +524,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #4CAF50;"></div>
-                        <div>OBS (Ward Observation)</div>
+                        <div>OBS</div>
                     </div>
                 `;
             } else {
@@ -547,7 +547,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #4CAF50;"></div>
-                        <div>OBS (Ward Observation)</div>
+                        <div>OBS</div>
                     </div>
                 `;
             }
@@ -1297,11 +1297,9 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
     if (regularStaff.length === 0) {
         console.warn("No regular staff available for OBS duties");
         return;
-    }
-
-    const totalHours = timeSlots.length;
-
-    // First 3 hours: assign same staff for continuity
+    }    const totalHours = timeSlots.length;
+    
+    // First 2 hours: assign same staff for continuity
     let firstObsStaff = null;
     if (regularStaff.length > 0) {
         // Select staff with least overall assignments for better balance
@@ -1310,16 +1308,16 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
             const currentWorkload = staffStats[currentStaff] ? (staffStats[currentStaff].workHours || 0) : 0;
             return currentWorkload < minWorkload ? currentStaff : minStaff;
         });
-
-        for (let i = 0; i < Math.min(3, totalHours); i++) {
+        
+        for (let i = 0; i < Math.min(2, totalHours); i++) {
             schedule[timeSlots[i]].patientAssignments["OBS"] = [firstObsStaff];
         }
     }
 
-    // Last 3 hours: assign same staff for continuity (can be different from first 3 hours)
+    // Last 2 hours: assign same staff for continuity (can be different from first 2 hours)
     let lastObsStaff = null;
     if (regularStaff.length > 0) {
-        // Try to select a different staff member if possible, but ensure continuity for last 3 hours
+        // Try to select a different staff member if possible, but ensure continuity for last 2 hours
         const availableForLast = regularStaff.filter(s => s !== firstObsStaff);
         if (availableForLast.length > 0) {
             lastObsStaff = availableForLast.reduce((minStaff, currentStaff) => {
@@ -1331,15 +1329,15 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
             // If only one staff available, use the same one
             lastObsStaff = firstObsStaff;
         }
-
-        for (let i = Math.max(0, totalHours - 3); i < totalHours; i++) {
+        
+        for (let i = Math.max(0, totalHours - 2); i < totalHours; i++) {
             schedule[timeSlots[i]].patientAssignments["OBS"] = [lastObsStaff];
         }
     }
 
-    // Middle hours (4th to 3rd from last): can rotate different staff
-    const middleStartIndex = 3;
-    const middleEndIndex = totalHours - 3;
+    // Middle hours (3rd to 3rd from last): can rotate different staff
+    const middleStartIndex = 2;
+    const middleEndIndex = totalHours - 2;
 
     for (let i = middleStartIndex; i < middleEndIndex; i++) {
         // Prefer staff who are not on break and have less workload
@@ -2355,10 +2353,52 @@ function renderSchedule(schedule, staff, patients) {
     headerHTML += '</tr>';
     scheduleHeader.innerHTML = headerHTML;
 
-    // Setup patient schedule body (patient rows)
+    // Setup patient schedule body
     const scheduleBody = document.getElementById('scheduleBody');
     scheduleBody.innerHTML = '';
 
+    // Add OBS (Ward Observation) row first
+    const obsRow = document.createElement('tr');
+    
+    // Add OBS label cell
+    const obsCell = document.createElement('td');
+    obsCell.textContent = "OBS";
+    obsCell.className = 'row-header';
+    obsCell.style.backgroundColor = "#e8f5e8"; // Light green background for OBS
+    obsCell.style.fontWeight = "bold";
+    obsRow.appendChild(obsCell);
+
+    // Add cells for each time slot
+    timeSlots.forEach(time => {
+        const cell = document.createElement('td');
+        cell.className = 'assignable-staff-cell';
+        cell.setAttribute('data-time', time);
+        cell.setAttribute('data-patient', "OBS");
+
+        const assignedStaff = schedule[time]?.patientAssignments?.["OBS"] || [];
+
+        if (assignedStaff.length === 0) {
+            cell.textContent = "";
+            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
+            cell.style.color = "#666666";
+        } else {
+            // Display assigned staff for OBS
+            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
+            cell.textContent = staffInitials;
+            cell.title = assignedStaff.join(", "); // Full names on hover
+
+            // Add special styling for OBS - green background
+            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
+            cell.style.color = "#ffffff"; // White text
+            cell.style.fontWeight = "bold";
+        }
+
+        obsRow.appendChild(cell);
+    });
+
+    scheduleBody.appendChild(obsRow);
+
+    // Add patient rows after OBS
     patients.forEach(patient => {
         const row = document.createElement('tr');
 
@@ -2405,47 +2445,6 @@ function renderSchedule(schedule, staff, patients) {
 
         scheduleBody.appendChild(row);
     });
-
-    // Add OBS (Ward Observation) row at the end
-    const obsRow = document.createElement('tr');
-
-    // Add OBS label cell
-    const obsCell = document.createElement('td');
-    obsCell.textContent = "OBS (Ward Observation)";
-    obsCell.className = 'row-header';
-    obsCell.style.backgroundColor = "#e8f5e8"; // Light green background for OBS
-    obsCell.style.fontWeight = "bold";
-    obsRow.appendChild(obsCell);
-
-    // Add cells for each time slot
-    timeSlots.forEach(time => {
-        const cell = document.createElement('td');
-        cell.className = 'assignable-staff-cell';
-        cell.setAttribute('data-time', time);
-        cell.setAttribute('data-patient', "OBS");
-
-        const assignedStaff = schedule[time]?.patientAssignments?.["OBS"] || [];
-
-        if (assignedStaff.length === 0) {
-            cell.textContent = "";
-            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
-            cell.style.color = "#666666";
-        } else {
-            // Display assigned staff for OBS
-            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-            cell.textContent = staffInitials;
-            cell.title = assignedStaff.join(", "); // Full names on hover
-
-            // Add special styling for OBS - green background
-            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
-            cell.style.color = "#ffffff"; // White text
-            cell.style.fontWeight = "bold";
-        }
-
-        obsRow.appendChild(cell);
-    });
-
-    scheduleBody.appendChild(obsRow);
 }
 
 // Initialize the application when the page loads

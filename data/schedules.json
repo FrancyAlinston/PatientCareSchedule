@@ -28,8 +28,8 @@
               "Anna Watkins"
             ],
             "Patient B - Stone": [
-              "Amelia Pearson",
-              "Riley Hudson"
+              "Riley Hudson",
+              "Amelia Pearson"
             ],
             "Patient C - Ford": [
               "Katherine Fletcher",
@@ -41,7 +41,7 @@
             ]
           },
           "staffBreaks": {
-            "Riley Hudson": "30-MIN BREAK",
+            "Amelia Pearson": "30-MIN BREAK",
             "Anna Watkins": "30-MIN BREAK",
             "Jackie Brown": "30-MIN BREAK"
           }
@@ -49,7 +49,7 @@
         "10:00-11:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Sheryl Kelley"
+              "Amelia Pearson"
             ],
             "Patient B - Stone": [
               "Anna Watkins",
@@ -65,66 +65,65 @@
             ]
           },
           "staffBreaks": {
-            "Amelia Pearson": "30-MIN BREAK",
+            "Sheryl Kelley": "30-MIN BREAK",
+            "Bradley Russell": "30-MIN BREAK",
             "Katherine Fletcher": "30-MIN BREAK"
           }
         },
         "11:00-12:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Sheryl Kelley"
+              "Bradley Russell"
             ],
             "Patient B - Stone": [
               "Katherine Fletcher",
-              "Riley Hudson"
-            ],
-            "Patient C - Ford": [
-              "Amelia Pearson",
-              "Jackie Brown",
               "Anna Watkins"
             ],
+            "Patient C - Ford": [
+              "Jackie Brown",
+              "Sheryl Kelley",
+              "Amelia Pearson"
+            ],
             "OBS": [
-              "Riley Hudson"
+              "Amelia Pearson"
             ]
           },
           "staffBreaks": {
-            "Bradley Russell": "30-MIN BREAK"
+            "Riley Hudson": "30-MIN BREAK"
           }
         },
         "12:00-13:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Anna Watkins"
+              "Katherine Fletcher"
             ],
             "Patient B - Stone": [
               "Jackie Brown",
-              "Katherine Fletcher"
+              "Sheryl Kelley"
             ],
             "Patient C - Ford": [
+              "Anna Watkins",
               "Bradley Russell",
-              "Amelia Pearson",
               "Riley Hudson"
             ],
             "OBS": [
               "Riley Hudson"
             ]
           },
-          "staffBreaks": {
-            "Sheryl Kelley": "30-MIN BREAK"
-          }
+          "staffBreaks": {}
         },
         "13:00-14:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Katherine Fletcher"
-            ],
-            "Patient B - Stone": [
-              "Amelia Pearson",
               "Jackie Brown"
             ],
+            "Patient B - Stone": [
+              "Riley Hudson",
+              "Katherine Fletcher"
+            ],
             "Patient C - Ford": [
+              "Amelia Pearson",
               "Sheryl Kelley",
-              "Bradley Russell",
               "Anna Watkins"
             ],
             "OBS": [
@@ -136,107 +135,107 @@
         "14:00-15:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Katherine Fletcher"
+              "Anna Watkins"
             ],
             "Patient B - Stone": [
-              "Bradley Russell",
-              "Amelia Pearson"
+              "Sheryl Kelley",
+              "Katherine Fletcher"
             ],
             "Patient C - Ford": [
+              "Bradley Russell",
               "Riley Hudson",
-              "Anna Watkins",
-              "Jackie Brown"
+              "Amelia Pearson"
             ],
             "OBS": [
               "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Sheryl Kelley": "2ND BREAK"
+            "Jackie Brown": "2ND BREAK"
           }
         },
         "15:00-16:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Amelia Pearson"
+              "Katherine Fletcher"
             ],
             "Patient B - Stone": [
-              "Bradley Russell",
-              "Katherine Fletcher"
+              "Amelia Pearson",
+              "Jackie Brown"
             ],
             "Patient C - Ford": [
               "Sheryl Kelley",
-              "Jackie Brown",
+              "Bradley Russell",
               "Riley Hudson"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Amelia Pearson"
             ]
           },
           "staffBreaks": {
-            "Anna Watkins": "2ND BREAK"
+            "Riley Hudson": "2ND BREAK",
+            "Anna Watkins": "2ND BREAK",
+            "Katherine Fletcher": "2ND BREAK"
           }
         },
         "16:00-17:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Jackie Brown"
+              "Anna Watkins"
             ],
             "Patient B - Stone": [
-              "Anna Watkins",
-              "Riley Hudson"
+              "Riley Hudson",
+              "Amelia Pearson"
             ],
             "Patient C - Ford": [
               "Sheryl Kelley",
-              "Katherine Fletcher",
-              "Bradley Russell"
+              "Jackie Brown",
+              "Katherine Fletcher"
             ],
             "OBS": [
-              "Anna Watkins"
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Riley Hudson": "2ND BREAK",
-            "Amelia Pearson": "2ND BREAK",
-            "Katherine Fletcher": "2ND BREAK"
+            "Bradley Russell": "2ND BREAK"
           }
         },
         "17:00-18:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Riley Hudson"
+              "Sheryl Kelley"
             ],
             "Patient B - Stone": [
-              "Sheryl Kelley",
-              "Anna Watkins"
+              "Bradley Russell",
+              "Riley Hudson"
             ],
             "Patient C - Ford": [
+              "Jackie Brown",
               "Katherine Fletcher",
-              "Bradley Russell",
-              "Amelia Pearson"
+              "Anna Watkins"
             ],
             "OBS": [
-              "Amelia Pearson"
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Jackie Brown": "2ND BREAK",
-            "Bradley Russell": "2ND BREAK"
+            "Amelia Pearson": "2ND BREAK",
+            "Sheryl Kelley": "2ND BREAK"
           }
         },
         "18:00-19:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Bradley Russell"
+              "Riley Hudson"
             ],
             "Patient B - Stone": [
-              "Riley Hudson",
-              "Katherine Fletcher"
+              "Bradley Russell",
+              "Sheryl Kelley"
             ],
             "Patient C - Ford": [
+              "Anna Watkins",
               "Amelia Pearson",
-              "Jackie Brown",
-              "Sheryl Kelley"
+              "Jackie Brown"
             ],
             "OBS": [
               "Amelia Pearson"
@@ -247,16 +246,16 @@
         "19:00-20:00": {
           "patientAssignments": {
             "Patient A - Martin": [
-              "Amelia Pearson"
+              "Riley Hudson"
             ],
             "Patient B - Stone": [
-              "Riley Hudson",
-              "Katherine Fletcher"
+              "Jackie Brown",
+              "Sheryl Kelley"
             ],
             "Patient C - Ford": [
-              "Jackie Brown",
-              "Sheryl Kelley",
-              "Anna Watkins"
+              "Amelia Pearson",
+              "Bradley Russell",
+              "Katherine Fletcher"
             ],
             "OBS": [
               "Amelia Pearson"
@@ -265,8 +264,8 @@
           "staffBreaks": {}
         }
       },
-      "createdAt": "2025-07-01T22:07:47.578Z",
-      "updatedAt": "2025-07-01T22:07:47.578Z"
+      "createdAt": "2025-07-01T22:12:26.239Z",
+      "updatedAt": "2025-07-01T22:12:26.239Z"
     }
   },
   "settings": {
@@ -296,5 +295,7 @@
     "nurseInCharge2": "Katherine Fletcher",
     "isDayShift": true,
     "isDarkMode": true
+  }
+}": true
   }
 }
