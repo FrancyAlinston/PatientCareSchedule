@@ -177,12 +177,60 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve the main application at root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'patient-care-horizontal-schedule.html'));
+});
+
+// Serve test page
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-ajax.html'));
+});
+
+// API routes info
+app.get('/api', (req, res) => {
+    res.json({
+        message: 'Patient Care Schedule API',
+        version: '2.0.0',
+        endpoints: {
+            'GET /api/health': 'Health check',
+            'GET /api/data': 'Load all data',
+            'POST /api/settings': 'Save settings',
+            'POST /api/schedule': 'Save schedule',
+            'GET /api/schedule/:id': 'Load specific schedule',
+            'DELETE /api/schedule/:id': 'Delete schedule',
+            'GET /api/schedules': 'List all schedules',
+            'POST /api/reset': 'Reset all data'
+        },
+        documentation: 'See README.md for full documentation'
+    });
+});
+
+// 404 handler for unknown routes
+app.use('*', (req, res) => {
+    res.status(404).json({ 
+        error: 'Route not found',
+        availableRoutes: {
+            '/': 'Main application',
+            '/test': 'AJAX test page',
+            '/api': 'API documentation',
+            '/api/*': 'API endpoints'
+        }
+    });
+});
+
 // Start server
 async function startServer() {
     await ensureDataDirectory();
     app.listen(PORT, () => {
-        console.log(`Patient Care Schedule Server running on http://localhost:${PORT}`);
-        console.log(`Data will be stored in: ${DATA_FILE}`);
+        console.log('🏥 Patient Care Schedule Server');
+        console.log('================================');
+        console.log(`🌐 Server running on: http://localhost:${PORT}`);
+        console.log(`📱 Main App: http://localhost:${PORT}/`);
+        console.log(`🔧 Test Page: http://localhost:${PORT}/test`);
+        console.log(`💾 Data stored in: ${DATA_FILE}`);
+        console.log('================================');
+        console.log('Press Ctrl+C to stop the server');
     });
 }
 
