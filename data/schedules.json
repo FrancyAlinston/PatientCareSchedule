@@ -4,319 +4,296 @@
       "schedule": {
         "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Scarlett Morrison"
+            "Patient A - Martin": [
+              "Bradley Russell"
             ],
-            "Patient B - Hart": [
-              "Lucas Or Luke Wells",
-              "Suzanne Anderson"
+            "Patient B - Stone": [
+              "Jackie Brown",
+              "Sheryl Kelley"
             ],
-            "Patient C - Rodriquez": [
-              "Sheryl Reynolds",
-              "Fred Lowe",
-              "Jean Simmons"
+            "Patient C - Ford": [
+              "Riley Hudson",
+              "Amelia Pearson",
+              "Anna Watkins"
             ],
-            "Patient D - Garcia": [
-              "Felicia Fernandez"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
-          "staffBreaks": {
-            "Leonard West": "SECURITY DUTY"
-          }
+          "staffBreaks": {}
         },
         "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Jean Simmons"
+            "Patient A - Martin": [
+              "Anna Watkins"
             ],
-            "Patient B - Hart": [
-              "Sheryl Reynolds",
-              "Fred Lowe"
+            "Patient B - Stone": [
+              "Amelia Pearson",
+              "Riley Hudson"
             ],
-            "Patient C - Rodriquez": [
-              "Lucy Smith",
-              "Lucas Or Luke Wells",
-              "Suzanne Anderson"
+            "Patient C - Ford": [
+              "Katherine Fletcher",
+              "Sheryl Kelley",
+              "Bradley Russell"
             ],
-            "Patient D - Garcia": [
-              "Felicia Fernandez"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Scarlett Morrison": "30-MIN BREAK",
-            "Earl Barnett": "30-MIN BREAK",
-            "Leonard West": "SECURITY DUTY"
+            "Riley Hudson": "30-MIN BREAK",
+            "Anna Watkins": "30-MIN BREAK",
+            "Jackie Brown": "30-MIN BREAK"
           }
         },
         "10:00-11:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Fred Lowe"
+            "Patient A - Martin": [
+              "Sheryl Kelley"
             ],
-            "Patient B - Hart": [
-              "Jean Simmons",
-              "Sheryl Reynolds"
+            "Patient B - Stone": [
+              "Anna Watkins",
+              "Bradley Russell"
             ],
-            "Patient C - Rodriquez": [
-              "Earl Barnett",
-              "Scarlett Morrison",
-              "Felicia Fernandez"
+            "Patient C - Ford": [
+              "Jackie Brown",
+              "Katherine Fletcher",
+              "Riley Hudson"
             ],
-            "Patient D - Garcia": [
-              "Suzanne Anderson"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Lucas Or Luke Wells": "30-MIN BREAK",
-            "Lucy Smith": "30-MIN BREAK"
+            "Amelia Pearson": "30-MIN BREAK",
+            "Katherine Fletcher": "30-MIN BREAK"
           }
         },
         "11:00-12:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Suzanne Anderson"
+            "Patient A - Martin": [
+              "Sheryl Kelley"
             ],
-            "Patient B - Hart": [
-              "Scarlett Morrison",
-              "Leonard West"
+            "Patient B - Stone": [
+              "Katherine Fletcher",
+              "Riley Hudson"
             ],
-            "Patient C - Rodriquez": [
-              "Lucy Smith",
-              "Earl Barnett",
-              "Lucas Or Luke Wells"
+            "Patient C - Ford": [
+              "Amelia Pearson",
+              "Jackie Brown",
+              "Anna Watkins"
             ],
-            "Patient D - Garcia": [
-              "Fred Lowe"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Sheryl Reynolds": "30-MIN BREAK",
-            "Jean Simmons": "30-MIN BREAK",
-            "Felicia Fernandez": "30-MIN BREAK"
+            "Bradley Russell": "30-MIN BREAK"
           }
         },
         "12:00-13:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Lucas Or Luke Wells"
+            "Patient A - Martin": [
+              "Anna Watkins"
             ],
-            "Patient B - Hart": [
-              "Lucy Smith",
-              "Earl Barnett"
+            "Patient B - Stone": [
+              "Jackie Brown",
+              "Katherine Fletcher"
             ],
-            "Patient C - Rodriquez": [
-              "Sheryl Reynolds",
-              "Jean Simmons",
-              "Scarlett Morrison"
+            "Patient C - Ford": [
+              "Bradley Russell",
+              "Amelia Pearson",
+              "Riley Hudson"
             ],
-            "Patient D - Garcia": [
-              "Leonard West"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Fred Lowe": "30-MIN BREAK",
-            "Suzanne Anderson": "30-MIN BREAK"
+            "Sheryl Kelley": "30-MIN BREAK"
           }
         },
         "13:00-14:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Sheryl Reynolds"
+            "Patient A - Martin": [
+              "Katherine Fletcher"
             ],
-            "Patient B - Hart": [
-              "Lucy Smith",
-              "Earl Barnett"
+            "Patient B - Stone": [
+              "Amelia Pearson",
+              "Jackie Brown"
             ],
-            "Patient C - Rodriquez": [
-              "Felicia Fernandez",
-              "Fred Lowe",
-              "Suzanne Anderson"
+            "Patient C - Ford": [
+              "Sheryl Kelley",
+              "Bradley Russell",
+              "Anna Watkins"
             ],
-            "Patient D - Garcia": [
-              "Jean Simmons"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {}
         },
         "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Lucy Smith"
+            "Patient A - Martin": [
+              "Katherine Fletcher"
             ],
-            "Patient B - Hart": [
-              "Felicia Fernandez",
-              "Fred Lowe"
+            "Patient B - Stone": [
+              "Bradley Russell",
+              "Amelia Pearson"
             ],
-            "Patient C - Rodriquez": [
-              "Leonard West",
-              "Lucas Or Luke Wells",
-              "Scarlett Morrison"
+            "Patient C - Ford": [
+              "Riley Hudson",
+              "Anna Watkins",
+              "Jackie Brown"
             ],
-            "Patient D - Garcia": [
-              "Earl Barnett"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "15:00-16:00": {
-          "patientAssignments": {
-            "Patient A - Lawson": [
-              "Earl Barnett"
-            ],
-            "Patient B - Hart": [
-              "Lucas Or Luke Wells",
-              "Jean Simmons"
-            ],
-            "Patient C - Rodriquez": [
-              "Suzanne Anderson",
-              "Felicia Fernandez",
-              "Sheryl Reynolds"
-            ],
-            "Patient D - Garcia": [
-              "Scarlett Morrison"
+            "OBS": [
+              "Riley Hudson"
             ]
           },
           "staffBreaks": {
-            "Sheryl Reynolds": "2ND BREAK",
-            "Jean Simmons": "2ND BREAK",
-            "Scarlett Morrison": "2ND BREAK",
-            "Lucy Smith": "2ND BREAK"
+            "Sheryl Kelley": "2ND BREAK"
+          }
+        },
+        "15:00-16:00": {
+          "patientAssignments": {
+            "Patient A - Martin": [
+              "Amelia Pearson"
+            ],
+            "Patient B - Stone": [
+              "Bradley Russell",
+              "Katherine Fletcher"
+            ],
+            "Patient C - Ford": [
+              "Sheryl Kelley",
+              "Jackie Brown",
+              "Riley Hudson"
+            ],
+            "OBS": [
+              "Riley Hudson"
+            ]
+          },
+          "staffBreaks": {
+            "Anna Watkins": "2ND BREAK"
           }
         },
         "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Felicia Fernandez"
+            "Patient A - Martin": [
+              "Jackie Brown"
             ],
-            "Patient B - Hart": [
-              "Suzanne Anderson",
-              "Scarlett Morrison"
+            "Patient B - Stone": [
+              "Anna Watkins",
+              "Riley Hudson"
             ],
-            "Patient C - Rodriquez": [
-              "Lucy Smith",
-              "Leonard West",
-              "Fred Lowe"
+            "Patient C - Ford": [
+              "Sheryl Kelley",
+              "Katherine Fletcher",
+              "Bradley Russell"
             ],
-            "Patient D - Garcia": [
-              "Sheryl Reynolds"
+            "OBS": [
+              "Anna Watkins"
             ]
           },
           "staffBreaks": {
-            "Earl Barnett": "2ND BREAK"
+            "Riley Hudson": "2ND BREAK",
+            "Amelia Pearson": "2ND BREAK",
+            "Katherine Fletcher": "2ND BREAK"
           }
         },
         "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Earl Barnett"
+            "Patient A - Martin": [
+              "Riley Hudson"
             ],
-            "Patient B - Hart": [
-              "Felicia Fernandez",
-              "Leonard West"
+            "Patient B - Stone": [
+              "Sheryl Kelley",
+              "Anna Watkins"
             ],
-            "Patient C - Rodriquez": [
-              "Jean Simmons",
-              "Lucy Smith",
-              "Lucas Or Luke Wells"
+            "Patient C - Ford": [
+              "Katherine Fletcher",
+              "Bradley Russell",
+              "Amelia Pearson"
             ],
-            "Patient D - Garcia": [
-              "Sheryl Reynolds"
+            "OBS": [
+              "Amelia Pearson"
             ]
           },
           "staffBreaks": {
-            "Fred Lowe": "2ND BREAK",
-            "Lucas Or Luke Wells": "2ND BREAK",
-            "Suzanne Anderson": "2ND BREAK",
-            "Felicia Fernandez": "2ND BREAK",
-            "Leonard West": "2ND BREAK"
+            "Jackie Brown": "2ND BREAK",
+            "Bradley Russell": "2ND BREAK"
           }
         },
         "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Lucy Smith"
+            "Patient A - Martin": [
+              "Bradley Russell"
             ],
-            "Patient B - Hart": [
-              "Lucas Or Luke Wells",
-              "Scarlett Morrison"
+            "Patient B - Stone": [
+              "Riley Hudson",
+              "Katherine Fletcher"
             ],
-            "Patient C - Rodriquez": [
-              "Fred Lowe",
-              "Jean Simmons",
-              "Suzanne Anderson"
+            "Patient C - Ford": [
+              "Amelia Pearson",
+              "Jackie Brown",
+              "Sheryl Kelley"
             ],
-            "Patient D - Garcia": [
-              "Earl Barnett"
+            "OBS": [
+              "Amelia Pearson"
             ]
           },
-          "staffBreaks": {
-            "Leonard West": "SECURITY DUTY"
-          }
+          "staffBreaks": {}
         },
         "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Lawson": [
-              "Lucas Or Luke Wells"
+            "Patient A - Martin": [
+              "Amelia Pearson"
             ],
-            "Patient B - Hart": [
-              "Fred Lowe",
-              "Jean Simmons"
+            "Patient B - Stone": [
+              "Riley Hudson",
+              "Katherine Fletcher"
             ],
-            "Patient C - Rodriquez": [
-              "Sheryl Reynolds",
-              "Scarlett Morrison",
-              "Felicia Fernandez"
+            "Patient C - Ford": [
+              "Jackie Brown",
+              "Sheryl Kelley",
+              "Anna Watkins"
             ],
-            "Patient D - Garcia": [
-              "Lucy Smith"
+            "OBS": [
+              "Amelia Pearson"
             ]
           },
-          "staffBreaks": {
-            "Leonard West": "SECURITY DUTY"
-          }
+          "staffBreaks": {}
         }
       },
-      "createdAt": "2025-07-01T21:57:15.436Z",
-      "updatedAt": "2025-07-01T21:57:15.436Z"
+      "createdAt": "2025-07-01T22:07:47.578Z",
+      "updatedAt": "2025-07-01T22:07:47.578Z"
     }
   },
   "settings": {
     "staff": [
-      "Sheryl Reynolds",
-      "Fred Lowe",
-      "Jean Simmons",
-      "Lucas Or Luke Wells",
-      "Suzanne Anderson",
-      "Scarlett Morrison",
-      "Felicia Fernandez"
+      "Riley Hudson",
+      "Amelia Pearson",
+      "Anna Watkins",
+      "Jackie Brown",
+      "Sheryl Kelley"
     ],
     "patients": [
       {
-        "name": "Patient A - Lawson",
+        "name": "Patient A - Martin",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Hart",
+        "name": "Patient B - Stone",
         "staffCount": 2
       },
       {
-        "name": "Patient C - Rodriquez",
+        "name": "Patient C - Ford",
         "staffCount": 3
-      },
-      {
-        "name": "Patient D - Garcia",
-        "staffCount": 1
       }
     ],
-    "securityStaff": [
-      "Leonard West"
-    ],
-    "nurseInCharge1": "Lucy Smith",
-    "nurseInCharge2": "Earl Barnett",
-    "isDayShift": true,
-    "isDarkMode": true
-  }
-}
+    "securityStaff": [],
+    "nurseInCharge1": "Bradley Russell",
+    "nurseInCharge2": "Katherine Fletcher",
     "isDayShift": true,
     "isDarkMode": true
   }
