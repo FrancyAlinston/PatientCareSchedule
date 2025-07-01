@@ -629,10 +629,11 @@
             await saveToServer();
         }, 500);
 
-        function showError(message) {
+        function showError(message, color = '#f44336') {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = message;
+            errorDiv.style.backgroundColor = color;
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 5000);
         }
@@ -2238,13 +2239,81 @@ async function resetAll() {
         try {
             console.log('Calling api.resetData()...'); // Debug log
             await api.resetData();
-            console.log('Reset successful, reloading page...'); // Debug log
-            location.reload(); // Reload the page to reset everything
+            console.log('Reset successful, clearing all input fields...'); // Debug log
+            
+            // Clear all input fields
+            clearAllInputFields();
+            
+            // Clear all display areas
+            clearAllDisplayAreas();
+            
+            // Reset global variables
+            resetGlobalVariables();
+            
+            // Save cleared state to server
+            await saveToServer();
+            
+            console.log('Reset completed successfully'); // Debug log
+            showError("All data has been reset successfully", "#4CAF50"); // Green success message
+            
         } catch (error) {
             console.error('Reset error:', error); // Debug log
             showError(`Failed to reset data: ${error.message}`);
         }
     }
+}
+
+function clearAllInputFields() {
+    // Clear health care worker inputs
+    document.getElementById('staffInputs').innerHTML = '';
+    addStaffInput(); // Add one empty staff input
+    
+    // Clear patient inputs
+    document.getElementById('patientInputs').innerHTML = '';
+    addPatientInput(); // Add one empty patient input
+    
+    // Clear security staff input (keep the single input but clear its value)
+    const securityInput = document.querySelector('.security-name');
+    if (securityInput) {
+        securityInput.value = '';
+    }
+    
+    // Clear nurse inputs
+    document.getElementById('nurseInChargeInput').value = '';
+    document.getElementById('nurseInCharge2Input').value = '';
+}
+
+function clearAllDisplayAreas() {
+    // Clear schedule tables
+    document.getElementById('scheduleHeader').innerHTML = '';
+    document.getElementById('scheduleBody').innerHTML = '';
+    document.getElementById('staffHeader').innerHTML = '';
+    document.getElementById('staffBody').innerHTML = '';
+    document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
+    
+    // Clear stats
+    document.getElementById('stats').innerHTML = '';
+    document.getElementById('rotationStats').innerHTML = '';
+}
+
+function resetGlobalVariables() {
+    // Reset all global variables to their default state
+    schedule = {};
+    isDayShift = true;
+    timeSlots = [...dayShiftSlots];
+    securityStaff = [];
+    nurseInCharge1 = '';
+    nurseInCharge2 = '';
+    staffPatientHistory = {};
+    
+    // Reset UI elements
+    document.getElementById('siteTitle').textContent = "Day Shift Allocation";
+    document.getElementById('toggleShiftBtn').textContent = "Switch to Night Shift";
+    document.body.classList.remove('dark-mode');
+    document.getElementById('toggleModeBtn').textContent = '🌙';
+    
+    // Update legend
+    updateLegend();
 }
 
 function toggleShift() {
