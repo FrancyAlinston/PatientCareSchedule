@@ -1297,69 +1297,98 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
     if (regularStaff.length === 0) {
         console.warn("No regular staff available for OBS duties");
         return;
-    }    const totalHours = timeSlots.length;
+    }
+
+    const totalHours = timeSlots.length;
     
-    // First 2 hours: assign same staff for continuity
-    let firstObsStaff = null;
-    if (regularStaff.length > 0) {
-        // Select staff with least overall assignments for better balance
-        firstObsStaff = regularStaff.reduce((minStaff, currentStaff) => {
-            const minWorkload = staffStats[minStaff] ? (staffStats[minStaff].workHours || 0) : 0;
-            const currentWorkload = staffStats[currentStaff] ? (staffStats[currentStaff].workHours || 0) : 0;
-            return currentWorkload < minWorkload ? currentStaff : minStaff;
-        });
+    // Initialize continuous assignment tracker for OBS
+    const obsAssignmentTracker = {};
+    regularStaff.forEach(s => {
+        obsAssignmentTracker[s] = 0; // Track consecutive hours for each staff
+    });
+
+    // Track OBS assignment history for rotation
+    if (!staffPatientHistory) {
+        staffPatientHistory = {};
+    }
+    
+    // Ensure all staff have OBS history initialized
+    regularStaff.forEach(s => {
+        if (!staffPatientHistory[s]) {
+            staffPatientHistory[s] = {};
+        }
+        if (staffPatientHistory[s]["OBS"] === undefined) {
+            staffPatientHistory[s]["OBS"] = 0;
+        }
+    });
+
+    // Process each time slot for OBS assignment
+    timeSlots.forEach((time, timeIndex) => {
+        // Get available staff for this time slot (those not on break)
+        const availableStaff = regularStaff.filter(s => !schedule[time].staffBreaks[s]);
         
-        for (let i = 0; i < Math.min(2, totalHours); i++) {
-            schedule[timeSlots[i]].patientAssignments["OBS"] = [firstObsStaff];
-        }
-    }
+        let allAvailableStaff = availableStaff.length > 0 ? availableStaff : regularStaff;
 
-    // Last 2 hours: assign same staff for continuity (can be different from first 2 hours)
-    let lastObsStaff = null;
-    if (regularStaff.length > 0) {
-        // Try to select a different staff member if possible, but ensure continuity for last 2 hours
-        const availableForLast = regularStaff.filter(s => s !== firstObsStaff);
-        if (availableForLast.length > 0) {
-            lastObsStaff = availableForLast.reduce((minStaff, currentStaff) => {
-                const minWorkload = staffStats[minStaff] ? (staffStats[minStaff].workHours || 0) : 0;
-                const currentWorkload = staffStats[currentStaff] ? (staffStats[currentStaff].workHours || 0) : 0;
-                return currentWorkload < minWorkload ? currentStaff : minStaff;
-            });
-        } else {
-            // If only one staff available, use the same one
-            lastObsStaff = firstObsStaff;
-        }
+        // For first 2 and last 2 hours, prefer continuity but still allow rotation
+        const isFixedPeriod = timeIndex < 2 || timeIndex >= totalHours - 2;
         
-        for (let i = Math.max(0, totalHours - 2); i < totalHours; i++) {
-            schedule[timeSlots[i]].patientAssignments["OBS"] = [lastObsStaff];
-        }
-    }
+        // If we have multiple staff, use fair rotation logic
+        if (allAvailableStaff.length > 1) {
+            // Sort staff based on assignment history and continuous hours
+            const sortedStaff = [...allAvailableStaff].sort((a, b) => {
+                // Continuous hours penalty (to prevent long continuous assignments)
+                const continuousHoursA = obsAssignmentTracker[a] || 0;
+                const continuousHoursB = obsAssignmentTracker[b] || 0;
+                
+                // Apply penalty for continuous assignments (more than 2 hours)
+                const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+                const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
 
-    // Middle hours (3rd to 3rd from last): can rotate different staff
-    const middleStartIndex = 2;
-    const middleEndIndex = totalHours - 2;
+                // OBS assignment history (for fair rotation)
+                const obsHistoryA = staffPatientHistory[a]["OBS"] || 0;
+                const obsHistoryB = staffPatientHistory[b]["OBS"] || 0;
 
-    for (let i = middleStartIndex; i < middleEndIndex; i++) {
-        // Prefer staff who are not on break and have less workload
-        const availableStaff = regularStaff.filter(s => {
-            // Check if staff is not on break at this time
-            return !schedule[timeSlots[i]].staffBreaks[s];
-        });
+                // Overall workload
+                const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
+                const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
 
-        if (availableStaff.length > 0) {
-            // Select staff with least workload for better balance
-            const selectedStaff = availableStaff.reduce((minStaff, currentStaff) => {
-                const minWorkload = staffStats[minStaff] ? (staffStats[minStaff].workHours || 0) : 0;
-                const currentWorkload = staffStats[currentStaff] ? (staffStats[currentStaff].workHours || 0) : 0;
-                return currentWorkload < minWorkload ? currentStaff : minStaff;
+                // Combined score (lower is better)
+                const scoreA = continuityPenaltyA + (obsHistoryA * 10) + workloadA;
+                const scoreB = continuityPenaltyB + (obsHistoryB * 10) + workloadB;
+
+                return scoreA - scoreB;
             });
-            schedule[timeSlots[i]].patientAssignments["OBS"] = [selectedStaff];
-        } else if (regularStaff.length > 0) {
-            // If all staff are on break, just assign someone anyway (rotating)
-            const selectedStaff = regularStaff[i % regularStaff.length];
-            schedule[timeSlots[i]].patientAssignments["OBS"] = [selectedStaff];
+
+            // Select the best candidate
+            const selectedStaff = sortedStaff[0];
+            schedule[time].patientAssignments["OBS"] = [selectedStaff];
+
+            // Update tracking
+            if (staffPatientHistory[selectedStaff]) {
+                staffPatientHistory[selectedStaff]["OBS"]++;
+            }
+
+            // Update continuous assignment tracking
+            regularStaff.forEach(s => {
+                if (s === selectedStaff) {
+                    obsAssignmentTracker[s] = (obsAssignmentTracker[s] || 0) + 1;
+                } else {
+                    obsAssignmentTracker[s] = 0; // Reset if not assigned
+                }
+            });
+
+        } else if (allAvailableStaff.length === 1) {
+            // Only one staff available
+            const selectedStaff = allAvailableStaff[0];
+            schedule[time].patientAssignments["OBS"] = [selectedStaff];
+            
+            // Update tracking
+            if (staffPatientHistory[selectedStaff]) {
+                staffPatientHistory[selectedStaff]["OBS"]++;
+            }
+            obsAssignmentTracker[selectedStaff] = (obsAssignmentTracker[selectedStaff] || 0) + 1;
         }
-    }
+    });
 }
 
 // Cleaning duties assignment for night shift
@@ -2364,7 +2393,6 @@ function renderSchedule(schedule, staff, patients) {
     const obsCell = document.createElement('td');
     obsCell.textContent = "OBS";
     obsCell.className = 'row-header';
-    obsCell.style.backgroundColor = "#e8f5e8"; // Light green background for OBS
     obsCell.style.fontWeight = "bold";
     obsRow.appendChild(obsCell);
 

@@ -4,298 +4,342 @@
       "schedule": {
         "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Bradley Russell"
+            "Patient A - Stanley": [
+              "Tara Daniels"
             ],
-            "Patient B - Stone": [
-              "Jackie Brown",
-              "Sheryl Kelley"
+            "Patient B - Pearson": [
+              "Ashley Freeman",
+              "Andrea Sanchez"
             ],
-            "Patient C - Ford": [
-              "Riley Hudson",
-              "Amelia Pearson",
-              "Anna Watkins"
+            "Patient C - Rodriguez": [
+              "Amanda Burke",
+              "Kevin Stevens",
+              "Ronnie Andrews"
+            ],
+            "Patient D - Hunt": [
+              "Wyatt Hughes"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Amanda Burke"
             ]
           },
           "staffBreaks": {}
         },
         "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Anna Watkins"
+            "Patient A - Stanley": [
+              "Wyatt Hughes"
             ],
-            "Patient B - Stone": [
-              "Riley Hudson",
-              "Amelia Pearson"
+            "Patient B - Pearson": [
+              "Amanda Burke",
+              "Ronnie Andrews"
             ],
-            "Patient C - Ford": [
-              "Katherine Fletcher",
-              "Sheryl Kelley",
-              "Bradley Russell"
+            "Patient C - Rodriguez": [
+              "Judith Gutierrez",
+              "Art Gutierrez",
+              "Andrea Sanchez"
+            ],
+            "Patient D - Hunt": [
+              "Tara Daniels"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Ronnie Andrews"
             ]
           },
           "staffBreaks": {
-            "Amelia Pearson": "30-MIN BREAK",
-            "Anna Watkins": "30-MIN BREAK",
-            "Jackie Brown": "30-MIN BREAK"
+            "Kevin Stevens": "30-MIN BREAK",
+            "Ashley Freeman": "30-MIN BREAK"
           }
         },
         "10:00-11:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Amelia Pearson"
+            "Patient A - Stanley": [
+              "Art Gutierrez"
             ],
-            "Patient B - Stone": [
-              "Anna Watkins",
-              "Bradley Russell"
+            "Patient B - Pearson": [
+              "Kevin Stevens",
+              "Judith Gutierrez"
             ],
-            "Patient C - Ford": [
-              "Jackie Brown",
-              "Katherine Fletcher",
-              "Riley Hudson"
+            "Patient C - Rodriguez": [
+              "Ashley Freeman",
+              "Tara Daniels",
+              "Wyatt Hughes"
+            ],
+            "Patient D - Hunt": [
+              "Amanda Burke"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Kevin Stevens"
             ]
           },
           "staffBreaks": {
-            "Sheryl Kelley": "30-MIN BREAK",
-            "Bradley Russell": "30-MIN BREAK",
-            "Katherine Fletcher": "30-MIN BREAK"
+            "Andrea Sanchez": "30-MIN BREAK",
+            "Tara Daniels": "30-MIN BREAK",
+            "Wyatt Hughes": "30-MIN BREAK"
           }
         },
         "11:00-12:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Bradley Russell"
+            "Patient A - Stanley": [
+              "Judith Gutierrez"
             ],
-            "Patient B - Stone": [
-              "Katherine Fletcher",
-              "Anna Watkins"
+            "Patient B - Pearson": [
+              "Art Gutierrez",
+              "Tara Daniels"
             ],
-            "Patient C - Ford": [
-              "Jackie Brown",
-              "Sheryl Kelley",
-              "Amelia Pearson"
+            "Patient C - Rodriguez": [
+              "Kevin Stevens",
+              "Ashley Freeman",
+              "Andrea Sanchez"
+            ],
+            "Patient D - Hunt": [
+              "Amanda Burke"
             ],
             "OBS": [
-              "Amelia Pearson"
+              "Ashley Freeman"
             ]
           },
           "staffBreaks": {
-            "Riley Hudson": "30-MIN BREAK"
+            "Ronnie Andrews": "30-MIN BREAK"
           }
         },
         "12:00-13:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Katherine Fletcher"
+            "Patient A - Stanley": [
+              "Andrea Sanchez"
             ],
-            "Patient B - Stone": [
-              "Jackie Brown",
-              "Sheryl Kelley"
+            "Patient B - Pearson": [
+              "Kevin Stevens",
+              "Ashley Freeman"
             ],
-            "Patient C - Ford": [
-              "Anna Watkins",
-              "Bradley Russell",
-              "Riley Hudson"
+            "Patient C - Rodriguez": [
+              "Ronnie Andrews",
+              "Wyatt Hughes",
+              "Judith Gutierrez"
+            ],
+            "Patient D - Hunt": [
+              "Art Gutierrez"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Andrea Sanchez"
             ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Amanda Burke": "30-MIN BREAK",
+            "Judith Gutierrez": "30-MIN BREAK",
+            "Art Gutierrez": "30-MIN BREAK"
+          }
         },
         "13:00-14:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Jackie Brown"
+            "Patient A - Stanley": [
+              "Kevin Stevens"
             ],
-            "Patient B - Stone": [
-              "Riley Hudson",
-              "Katherine Fletcher"
+            "Patient B - Pearson": [
+              "Wyatt Hughes",
+              "Ronnie Andrews"
             ],
-            "Patient C - Ford": [
-              "Amelia Pearson",
-              "Sheryl Kelley",
-              "Anna Watkins"
+            "Patient C - Rodriguez": [
+              "Amanda Burke",
+              "Tara Daniels",
+              "Art Gutierrez"
+            ],
+            "Patient D - Hunt": [
+              "Ashley Freeman"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Tara Daniels"
             ]
           },
           "staffBreaks": {}
         },
         "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Anna Watkins"
+            "Patient A - Stanley": [
+              "Ashley Freeman"
             ],
-            "Patient B - Stone": [
-              "Sheryl Kelley",
-              "Katherine Fletcher"
+            "Patient B - Pearson": [
+              "Amanda Burke",
+              "Tara Daniels"
             ],
-            "Patient C - Ford": [
-              "Bradley Russell",
-              "Riley Hudson",
-              "Amelia Pearson"
+            "Patient C - Rodriguez": [
+              "Ronnie Andrews",
+              "Andrea Sanchez",
+              "Judith Gutierrez"
+            ],
+            "Patient D - Hunt": [
+              "Kevin Stevens"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Wyatt Hughes"
             ]
           },
-          "staffBreaks": {
-            "Jackie Brown": "2ND BREAK"
-          }
+          "staffBreaks": {}
         },
         "15:00-16:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Katherine Fletcher"
+            "Patient A - Stanley": [
+              "Ronnie Andrews"
             ],
-            "Patient B - Stone": [
-              "Amelia Pearson",
-              "Jackie Brown"
+            "Patient B - Pearson": [
+              "Andrea Sanchez",
+              "Judith Gutierrez"
             ],
-            "Patient C - Ford": [
-              "Sheryl Kelley",
-              "Bradley Russell",
-              "Riley Hudson"
+            "Patient C - Rodriguez": [
+              "Art Gutierrez",
+              "Wyatt Hughes",
+              "Tara Daniels"
+            ],
+            "Patient D - Hunt": [
+              "Ashley Freeman"
             ],
             "OBS": [
-              "Amelia Pearson"
+              "Ronnie Andrews"
             ]
           },
           "staffBreaks": {
-            "Riley Hudson": "2ND BREAK",
-            "Anna Watkins": "2ND BREAK",
-            "Katherine Fletcher": "2ND BREAK"
+            "Amanda Burke": "2ND BREAK",
+            "Kevin Stevens": "2ND BREAK",
+            "Wyatt Hughes": "2ND BREAK",
+            "Judith Gutierrez": "2ND BREAK"
           }
         },
         "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Anna Watkins"
+            "Patient A - Stanley": [
+              "Judith Gutierrez"
             ],
-            "Patient B - Stone": [
-              "Riley Hudson",
-              "Amelia Pearson"
+            "Patient B - Pearson": [
+              "Wyatt Hughes",
+              "Art Gutierrez"
             ],
-            "Patient C - Ford": [
-              "Sheryl Kelley",
-              "Jackie Brown",
-              "Katherine Fletcher"
+            "Patient C - Rodriguez": [
+              "Amanda Burke",
+              "Kevin Stevens",
+              "Ronnie Andrews"
+            ],
+            "Patient D - Hunt": [
+              "Andrea Sanchez"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Amanda Burke"
             ]
           },
           "staffBreaks": {
-            "Bradley Russell": "2ND BREAK"
+            "Ashley Freeman": "2ND BREAK",
+            "Andrea Sanchez": "2ND BREAK",
+            "Tara Daniels": "2ND BREAK"
           }
         },
         "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Sheryl Kelley"
+            "Patient A - Stanley": [
+              "Wyatt Hughes"
             ],
-            "Patient B - Stone": [
-              "Bradley Russell",
-              "Riley Hudson"
+            "Patient B - Pearson": [
+              "Ashley Freeman",
+              "Tara Daniels"
             ],
-            "Patient C - Ford": [
-              "Jackie Brown",
-              "Katherine Fletcher",
-              "Anna Watkins"
+            "Patient C - Rodriguez": [
+              "Amanda Burke",
+              "Kevin Stevens",
+              "Andrea Sanchez"
+            ],
+            "Patient D - Hunt": [
+              "Judith Gutierrez"
             ],
             "OBS": [
-              "Riley Hudson"
+              "Kevin Stevens"
             ]
           },
           "staffBreaks": {
-            "Amelia Pearson": "2ND BREAK",
-            "Sheryl Kelley": "2ND BREAK"
+            "Ronnie Andrews": "2ND BREAK",
+            "Art Gutierrez": "2ND BREAK"
           }
         },
         "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Riley Hudson"
+            "Patient A - Stanley": [
+              "Kevin Stevens"
             ],
-            "Patient B - Stone": [
-              "Bradley Russell",
-              "Sheryl Kelley"
+            "Patient B - Pearson": [
+              "Ronnie Andrews",
+              "Amanda Burke"
             ],
-            "Patient C - Ford": [
-              "Anna Watkins",
-              "Amelia Pearson",
-              "Jackie Brown"
+            "Patient C - Rodriguez": [
+              "Art Gutierrez",
+              "Tara Daniels",
+              "Wyatt Hughes"
+            ],
+            "Patient D - Hunt": [
+              "Andrea Sanchez"
             ],
             "OBS": [
-              "Amelia Pearson"
+              "Ashley Freeman"
             ]
           },
           "staffBreaks": {}
         },
         "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Martin": [
-              "Riley Hudson"
+            "Patient A - Stanley": [
+              "Amanda Burke"
             ],
-            "Patient B - Stone": [
-              "Jackie Brown",
-              "Sheryl Kelley"
+            "Patient B - Pearson": [
+              "Kevin Stevens",
+              "Andrea Sanchez"
             ],
-            "Patient C - Ford": [
-              "Amelia Pearson",
-              "Bradley Russell",
-              "Katherine Fletcher"
+            "Patient C - Rodriguez": [
+              "Judith Gutierrez",
+              "Ronnie Andrews",
+              "Art Gutierrez"
+            ],
+            "Patient D - Hunt": [
+              "Tara Daniels"
             ],
             "OBS": [
-              "Amelia Pearson"
+              "Andrea Sanchez"
             ]
           },
           "staffBreaks": {}
         }
       },
-      "createdAt": "2025-07-01T22:12:26.239Z",
-      "updatedAt": "2025-07-01T22:12:26.239Z"
+      "createdAt": "2025-07-01T22:21:34.175Z",
+      "updatedAt": "2025-07-01T22:21:34.175Z"
     }
   },
   "settings": {
     "staff": [
-      "Riley Hudson",
-      "Amelia Pearson",
-      "Anna Watkins",
-      "Jackie Brown",
-      "Sheryl Kelley"
+      "Amanda Burke",
+      "Kevin Stevens",
+      "Ronnie Andrews",
+      "Ashley Freeman",
+      "Andrea Sanchez",
+      "Tara Daniels",
+      "Wyatt Hughes"
     ],
     "patients": [
       {
-        "name": "Patient A - Martin",
+        "name": "Patient A - Stanley",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Stone",
+        "name": "Patient B - Pearson",
         "staffCount": 2
       },
       {
-        "name": "Patient C - Ford",
+        "name": "Patient C - Rodriguez",
         "staffCount": 3
+      },
+      {
+        "name": "Patient D - Hunt",
+        "staffCount": 1
       }
     ],
     "securityStaff": [],
-    "nurseInCharge1": "Bradley Russell",
-    "nurseInCharge2": "Katherine Fletcher",
+    "nurseInCharge1": "Judith Gutierrez",
+    "nurseInCharge2": "Art Gutierrez",
     "isDayShift": true,
-    "isDarkMode": true
-  }
-}": true
+    "isDarkMode": false
   }
 }
