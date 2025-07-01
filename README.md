@@ -1,12 +1,18 @@
-# Patient Care Schedule Generator
+# Patient Care Schedule Management System
 
-**Version 1.5.0** | Last Updated: June 23, 2025
+**Version 2.0.0** | Last Updated: July 1, 2025
 
 ## Overview
 
-The Patient Care Schedule Generator is a web-based application designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
+The Patient Care Schedule Management System is a web-based application with AJAX backend support designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
+
+**🆕 NEW: Now with server-side data storage and real-time synchronization!**
 
 ## Key Features
+
+- **AJAX Backend**: Data is now stored on a server instead of localStorage
+- **Real-time Sync**: All changes are automatically saved to the server
+- **Connection Status**: Real-time server connection indicator
 
 - **Interactive Staff Management**: Real-time staff reassignment with visual feedback
 - **Shift Management**: Switch between day shift (8AM-8PM) and night shift (8PM-8AM) scheduling
@@ -122,3 +128,77 @@ This project was created to help healthcare facilities optimize their staffing s
 - Day and night shift support
 - Staff break management
 - Patient assignment algorithm
+
+## Setup Instructions
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Start the Server
+
+```bash
+npm start
+```
+
+Or for development with auto-restart:
+```bash
+npm run dev
+```
+
+The server will start on `http://localhost:3000`
+
+### 3. Open the Application
+
+Open `patient-care-horizontal-schedule.html` in your web browser. The application will automatically connect to the server.
+
+## API Endpoints
+
+- `GET /api/data` - Load all data (settings + schedules)
+- `POST /api/settings` - Save settings (staff, patients, preferences)
+- `POST /api/schedule` - Save a specific schedule
+- `GET /api/schedule/:id` - Load a specific schedule
+- `DELETE /api/schedule/:id` - Delete a schedule
+- `GET /api/schedules` - List all schedules
+- `POST /api/reset` - Reset all data
+- `GET /api/health` - Health check
+
+## Data Storage
+
+Data is stored in `data/schedules.json` file on the server. The structure includes:
+
+```json
+{
+  "schedules": {
+    "schedule_id": {
+      "schedule": {...},
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    }
+  },
+  "settings": {
+    "staff": [],
+    "patients": [],
+    "securityStaff": [],
+    "nurseInCharge1": "",
+    "nurseInCharge2": "",
+    "isDayShift": true,
+    "isDarkMode": false
+  }
+}
+```
+
+## Connection Status
+
+- 🟢 **Connected**: Successfully connected to server
+- 🔴 **Disconnected**: Cannot reach server
+
+## Error Handling
+
+The application includes comprehensive error handling for:
+- Network connectivity issues
+- Server errors  
+- Data validation errors
+- Automatic retry mechanisms

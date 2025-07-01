@@ -479,6 +479,7 @@
 </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="api.js"></script>
     <script>
         // Add this function near the top of your script section with other utility functions
         function getInitials(fullName) {
@@ -574,6 +575,12 @@
         let nurseInCharge1 = '';
         let nurseInCharge2 = '';
 
+        // Initialize API instance
+        const api = new ScheduleAPI();
+
+        // Current schedule ID (for saving/loading specific schedules)
+        let currentScheduleId = `schedule_${new Date().toISOString().split('T')[0]}`;
+
         // Time slots for day and night shifts
         const dayShiftSlots = [
             "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
@@ -607,6 +614,11 @@
             }
         }
 
+        // Debounced save function for AJAX
+        const debouncedSaveToServer = debounce(async () => {
+            await saveToServer();
+        }, 500);
+
         function showError(message) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
@@ -615,8 +627,8 @@
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Simplified saveToLocalStorage function that only stores essential data
-        function saveToLocalStorage() {
+        // AJAX-based save function to replace localStorage
+        async function saveToServer() {
             try {
                 // Get all current input values
                 const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
@@ -631,8 +643,8 @@
                 const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
                 const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
 
-                // Save only essential data: names, preferences, and input fields
-                const data = {
+                // Save settings to server
+                const settings = {
                     staff: staffInputs,
                     nurseInCharge1,
                     nurseInCharge2,
@@ -642,31 +654,33 @@
                     isDarkMode: document.body.classList.contains('dark-mode') // Dark/light mode toggle
                 };
 
-                localStorage.setItem('patientCareData', JSON.stringify(data));
+                await api.saveSettings(settings);
+                console.log("Settings saved to server successfully");
                 return true;
             } catch (error) {
-                console.error("Error saving to localStorage:", error);
-                showError("Failed to save your changes. Your browser storage might be full or restricted.");
+                console.error("Error saving to server:", error);
+                showError(`Failed to save your changes: ${error.message}`);
                 return false;
             }
         }
 
-        // Simplified loadFromLocalStorage function to match
-        function loadFromLocalStorage() {
+        // AJAX-based load function to replace localStorage
+        async function loadFromServer() {
             try {
-                const savedData = localStorage.getItem('patientCareData');
-                if (!savedData) {
-                    console.warn("No data found in localStorage.");
+                const data = await api.loadData();
+                
+                if (!data || !data.settings) {
+                    console.warn("No data found on server.");
                     // Add default data
                     addStaffInput();
                     addPatientInput();
                     return false;
                 }
 
-                const parsedData = JSON.parse(savedData);
+                const settings = data.settings;
 
                 // Load shift type
-                isDayShift = parsedData.isDayShift !== undefined ? parsedData.isDayShift : true;
+                isDayShift = settings.isDayShift !== undefined ? settings.isDayShift : true;
                 timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
 
                 // Update UI for shift type
@@ -674,7 +688,7 @@
                 document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
 
                 // Load dark mode setting
-                if (parsedData.isDarkMode) {
+                if (settings.isDarkMode) {
                     document.body.classList.add('dark-mode');
                     document.getElementById('toggleModeBtn').textContent = '☀️';
                 } else {
@@ -684,16 +698,16 @@
 
                 // Load nurse in charge values
                 if (document.getElementById('nurseInChargeInput')) {
-                    document.getElementById('nurseInChargeInput').value = parsedData.nurseInCharge1 || '';
+                    document.getElementById('nurseInChargeInput').value = settings.nurseInCharge1 || '';
                 }
                 if (document.getElementById('nurseInCharge2Input')) {
-                    document.getElementById('nurseInCharge2Input').value = parsedData.nurseInCharge2 || '';
+                    document.getElementById('nurseInCharge2Input').value = settings.nurseInCharge2 || '';
                 }
 
                 // Load staff, patients, and security staff
-                loadStaffFromData(parsedData.staff || []);
-                loadPatientsFromData(parsedData.patients || []);
-                loadSecurityStaffFromData(parsedData.securityStaff || []);
+                loadStaffFromData(settings.staff || []);
+                loadPatientsFromData(settings.patients || []);
+                loadSecurityStaffFromData(settings.securityStaff || []);
 
                 // Initialize empty schedule when loading (instead of loading saved schedule)
                 schedule = {};
@@ -701,11 +715,52 @@
                 // Set up legend based on shift type
                 updateLegend();
 
-                console.log("Data loaded successfully from localStorage");
+                console.log("Data loaded successfully from server");
                 return true;
             } catch (error) {
-                console.error("Error loading from localStorage:", error);
-                showError("Failed to load your saved data. Using default settings instead.");
+                console.error("Error loading from server:", error);
+                showError(`Failed to load your saved data: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Save current schedule to server
+        async function saveScheduleToServer() {
+            try {
+                if (Object.keys(schedule).length === 0) {
+                    console.log("No schedule to save");
+                    return true;
+                }
+
+                await api.saveSchedule(currentScheduleId, schedule);
+                console.log("Schedule saved to server successfully");
+                return true;
+            } catch (error) {
+                console.error("Error saving schedule to server:", error);
+                showError(`Failed to save schedule: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Load schedule from server
+        async function loadScheduleFromServer(scheduleId = null) {
+            try {
+                const id = scheduleId || currentScheduleId;
+                const scheduleData = await api.loadSchedule(id);
+                
+                if (scheduleData && scheduleData.schedule) {
+                    schedule = scheduleData.schedule;
+                    regenerateScheduleStats();
+                    console.log("Schedule loaded from server successfully");
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error("Error loading schedule from server:", error);
+                // Don't show error for schedule not found, as it's normal for new schedules
+                if (!error.message.includes('not found')) {
+                    showError(`Failed to load schedule: ${error.message}`);
+                }
                 return false;
             }
         }
@@ -723,7 +778,7 @@
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'staff-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debouncedSaveToServer);
 
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
@@ -752,11 +807,11 @@
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'patient-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debouncedSaveToServer);
 
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
-                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+                staffCountSelect.addEventListener('change', debouncedSaveToServer);
 
                 const option1 = document.createElement('option');
                 option1.value = 1;
@@ -804,7 +859,7 @@
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'security-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debouncedSaveToServer);
 
                 securityContainer.appendChild(newInput);
                 securityStaffInputs.appendChild(securityContainer);
@@ -849,9 +904,9 @@ function addStaffInput() {
     staffInputs.appendChild(staffContainer);
 
     // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    newInput.addEventListener('input', debouncedSaveToServer);
 
-    saveToLocalStorage();
+    saveToServer();
 }
 
 // Function to add patient input
@@ -895,10 +950,10 @@ function addPatientInput() {
     patientInputs.appendChild(patientContainer);
 
     // Add event listeners to the new elements
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+    newInput.addEventListener('input', debouncedSaveToServer);
+    staffCountSelect.addEventListener('change', debouncedSaveToServer);
 
-    saveToLocalStorage();
+    saveToServer();
 }
 
 // Function to add security staff input
@@ -923,9 +978,9 @@ function addSecurityStaffInput() {
     securityStaffInputs.appendChild(securityContainer);
 
     // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    newInput.addEventListener('input', debouncedSaveToServer);
 
-    saveToLocalStorage();
+    saveToServer();
 }
 
 // Function to check if time is restricted for security
@@ -1074,8 +1129,8 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         document.body.appendChild(confirmationDiv);
         setTimeout(() => confirmationDiv.remove(), 3000);
 
-        // Save to localStorage
-        saveToLocalStorage();
+        // Save to server
+        await saveToServer();
     } catch (error) {
         console.error("Error fetching random names:", error);
 
@@ -1117,7 +1172,7 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
             }
         });
 
-        saveToLocalStorage();
+        await saveToServer();
     }
 });
 
@@ -1224,8 +1279,9 @@ function regenerateScheduleStats() {
     renderStats(staffStats, allStaff, patients);
     renderStaffRotationStats(patients, allStaff);
 
-    // Save to localStorage
-    saveToLocalStorage();
+    // Save to server
+    saveToServer();
+    saveScheduleToServer();
 }
 
 function calculateStaffStats(staffStats, allStaff) {
@@ -1476,7 +1532,298 @@ $(document).ready(function() {
     });
 });
 
-// Modify your renderSchedule function to add data attributes to cells
+// Complete the renderStaffTable function
+function renderStaffTable(schedule, staff) {
+    // Setup staff schedule header (same as patient schedule)
+    const staffHeader = document.getElementById('staffHeader');
+    let headerHTML = '<tr><th>Staff</th>';
+    timeSlots.forEach(time => {
+        headerHTML += `<th>${time}</th>`;
+    });
+    headerHTML += '</tr>';
+    staffHeader.innerHTML = headerHTML;
+
+    // Generate colors for staff
+    const staffColors = generateStaffColors(staff);
+
+    // Setup staff schedule body
+    const staffBody = document.getElementById('staffBody');
+    staffBody.innerHTML = '';
+
+    staff.forEach(s => {
+        const row = document.createElement('tr');
+
+        // Add staff name cell
+        const staffCell = document.createElement('td');
+        staffCell.textContent = s;
+        staffCell.className = 'row-header';
+
+        // Style based on staff type
+        if (securityStaff.includes(s)) {
+            staffCell.style.backgroundColor = "#ff9800";
+            staffCell.style.color = "#000000";
+            staffCell.style.fontWeight = "bold";
+            staffCell.textContent = s + " (Security)";
+        } else if (staffColors[s]) {
+            const { bgColor, textColor } = staffColors[s];
+            staffCell.style.backgroundColor = bgColor;
+            staffCell.style.color = textColor;
+        }
+
+        row.appendChild(staffCell);
+
+        // Add cells for each time slot
+        timeSlots.forEach((time, timeIndex) => {
+            const cell = document.createElement('td');
+
+            // Check for breaks first
+            if (schedule[time]?.staffBreaks?.[s]) {
+                const breakType = schedule[time].staffBreaks[s];
+                cell.textContent = breakType;
+                
+                if (breakType.includes("BREAK")) {
+                    cell.className = 'staff-break';
+                } else if (breakType.includes("LUNCH") || breakType === "2ND BREAK") {
+                    cell.className = 'staff-lunch';
+                } else if (breakType.includes("CLEANING") || cleaningDuties.includes(breakType)) {
+                    cell.className = 'staff-cleaning-duty';
+                } else {
+                    cell.style.backgroundColor = "#ffccbc";
+                    cell.style.color = "#000000";
+                    cell.style.fontWeight = "bold";
+                }
+            }
+            // Check if assigned to a patient
+            else {
+                let assignedPatient = null;
+                if (schedule[time]?.patientAssignments) {
+                    for (const patient in schedule[time].patientAssignments) {
+                        if (schedule[time].patientAssignments[patient]?.includes(s)) {
+                            assignedPatient = patient;
+                            break;
+                        }
+                    }
+                }
+
+                if (assignedPatient) {
+                    cell.textContent = getInitials(assignedPatient);
+                    cell.title = assignedPatient;
+                    
+                    if (staffColors[s]) {
+                        const { bgColor, textColor } = staffColors[s];
+                        cell.style.backgroundColor = bgColor;
+                        cell.style.color = textColor;
+                    }
+                } else {
+                    cell.textContent = "UNASSIGNED";
+                    cell.style.backgroundColor = "#ffeaa7";
+                    cell.style.color = "#000000";
+                    cell.classList.add('staff-unassigned');
+                }
+            }
+            row.appendChild(cell);
+        });
+
+        staffBody.appendChild(row);
+    });
+}
+
+// Connection status and page initialization
+async function initializeApp() {
+    try {
+        // Check server connection
+        await api.healthCheck();
+        console.log("Connected to server successfully");
+        showConnectionStatus(true);
+        
+        // Load data from server
+        await loadFromServer();
+        
+        // Set up event listeners for real-time save
+        setupEventListeners();
+        
+    } catch (error) {
+        console.error("Failed to connect to server:", error);
+        showConnectionStatus(false);
+        showError("Cannot connect to server. Please ensure the server is running on localhost:3000");
+    }
+}
+
+function showConnectionStatus(isConnected) {
+    const statusIndicator = document.createElement('div');
+    statusIndicator.id = 'connectionStatus';
+    statusIndicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 20px;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 1001;
+        transition: all 0.3s ease;
+    `;
+    
+    if (isConnected) {
+        statusIndicator.textContent = '🟢 Connected';
+        statusIndicator.style.backgroundColor = '#4CAF50';
+        statusIndicator.style.color = 'white';
+    } else {
+        statusIndicator.textContent = '🔴 Disconnected';
+        statusIndicator.style.backgroundColor = '#f44336';
+        statusIndicator.style.color = 'white';
+    }
+    
+    // Remove existing status indicator
+    const existing = document.getElementById('connectionStatus');
+    if (existing) existing.remove();
+    
+    document.body.appendChild(statusIndicator);
+}
+
+function setupEventListeners() {
+    // Nurse in charge inputs
+    document.getElementById('nurseInChargeInput')?.addEventListener('input', debouncedSaveToServer);
+    document.getElementById('nurseInCharge2Input')?.addEventListener('input', debouncedSaveToServer);
+    
+    // Button event listeners
+    document.getElementById('addStaffBtn')?.addEventListener('click', addStaffInput);
+    document.getElementById('removeStaffBtn')?.addEventListener('click', removeStaffInput);
+    document.getElementById('addPatientBtn')?.addEventListener('click', addPatientInput);
+    document.getElementById('removePatientBtn')?.addEventListener('click', removePatientInput);
+    document.getElementById('addSecurityStaffBtn')?.addEventListener('click', addSecurityStaffInput);
+    document.getElementById('removeSecurityStaffBtn')?.addEventListener('click', removeSecurityStaffInput);
+    
+    // Shift and mode toggles
+    document.getElementById('toggleShiftBtn')?.addEventListener('click', toggleShift);
+    document.getElementById('toggleModeBtn')?.addEventListener('click', toggleDarkMode);
+    
+    // Reset button
+    document.getElementById('resetBtn')?.addEventListener('click', resetAll);
+}
+
+async function resetAll() {
+    if (confirm('Are you sure you want to reset all data? This will clear all settings and schedules.')) {
+        try {
+            await api.resetData();
+            location.reload(); // Reload the page to reset everything
+        } catch (error) {
+            showError(`Failed to reset data: ${error.message}`);
+        }
+    }
+}
+
+function toggleShift() {
+    isDayShift = !isDayShift;
+    timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+    
+    document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+    document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+    
+    updateLegend();
+    saveToServer();
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    document.getElementById('toggleModeBtn').textContent = isDark ? '☀️' : '🌙';
+    saveToServer();
+}
+
+// Helper functions for removing items
+function removeStaffInput() {
+    const staffContainers = document.querySelectorAll('.staff-container');
+    if (staffContainers.length > 1) {
+        staffContainers[staffContainers.length - 1].remove();
+        saveToServer();
+    }
+}
+
+function removePatientInput() {
+    const patientContainers = document.querySelectorAll('.patient-container');
+    if (patientContainers.length > 1) {
+        patientContainers[patientContainers.length - 1].remove();
+        saveToServer();
+    }
+}
+
+function removeSecurityStaffInput() {
+    const securityContainers = document.querySelectorAll('.security-container');
+    if (securityContainers.length > 0) {
+        securityContainers[securityContainers.length - 1].remove();
+        saveToServer();
+    }
+}
+
+// Helper function to generate staff colors
+function generateStaffColors(staff) {
+    const colors = [
+        { bgColor: '#ffeb3b', textColor: '#000000' },
+        { bgColor: '#ff9800', textColor: '#000000' },
+        { bgColor: '#e91e63', textColor: '#ffffff' },
+        { bgColor: '#9c27b0', textColor: '#ffffff' },
+        { bgColor: '#673ab7', textColor: '#ffffff' },
+        { bgColor: '#3f51b5', textColor: '#ffffff' },
+        { bgColor: '#2196f3', textColor: '#ffffff' },
+        { bgColor: '#00bcd4', textColor: '#000000' },
+        { bgColor: '#009688', textColor: '#ffffff' },
+        { bgColor: '#4caf50', textColor: '#ffffff' },
+        { bgColor: '#8bc34a', textColor: '#000000' },
+        { bgColor: '#cddc39', textColor: '#000000' }
+    ];
+    
+    const staffColors = {};
+    staff.forEach((staffMember, index) => {
+        staffColors[staffMember] = colors[index % colors.length];
+    });
+    
+    return staffColors;
+}
+
+// Add missing render functions
+function renderBreakHoursTable(staffStats, staff) {
+    const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
+    breakHoursTableBody.innerHTML = '';
+
+    staff.forEach(s => {
+        const row = document.createElement('tr');
+
+        // Staff name
+        const staffCell = document.createElement('td');
+        staffCell.textContent = s;
+        row.appendChild(staffCell);
+
+        // First break time (30-min break for day shift, first hour of night break for night shift)
+        const shortBreakCell = document.createElement('td');
+        shortBreakCell.textContent = staffStats[s].shortBreakTime || 'N/A';
+        row.appendChild(shortBreakCell);
+
+        // Second break time (2nd break for day shift, second hour of night break for night shift)
+        const secondBreakCell = document.createElement('td');
+        secondBreakCell.textContent = staffStats[s].secondBreakTime || 'N/A';
+        row.appendChild(secondBreakCell);
+
+        breakHoursTableBody.appendChild(row);
+    });
+}
+
+function renderStats(staffStats, allStaff, patients) {
+    const statsDiv = document.getElementById('stats');
+    statsDiv.innerHTML = '<h2>Staff Statistics</h2>';
+    
+    allStaff.forEach(s => {
+        const statDiv = document.createElement('div');
+        statDiv.innerHTML = `
+            <strong>${s}:</strong> 
+            Work Hours: ${staffStats[s].workHours}, 
+            Break Hours: ${staffStats[s].breakTime}
+        `;
+        statsDiv.appendChild(statDiv);
+    });
+}
+
+// Complete the renderSchedule function
 function renderSchedule(schedule, staff, patients) {
     // Generate colors for staff
     const staffColors = generateStaffColors(staff);
@@ -1528,9 +1875,8 @@ function renderSchedule(schedule, staff, patients) {
                     cell.style.backgroundColor = bgColor;
                     cell.style.color = textColor;
                 } else {
-                    // Fallback colors
-                    cell.style.backgroundColor = "#f8f9fa";
-                    cell.style.color = "#000000";
+                    cell.style.backgroundColor = "#ffffff";
+                    cell.style.color = "#333333";
                 }
             }
 
@@ -1539,135 +1885,10 @@ function renderSchedule(schedule, staff, patients) {
 
         scheduleBody.appendChild(row);
     });
-
-    // Rest of your existing renderSchedule code...
 }
 
-// Function to render staff schedule table
-function renderStaffTable(schedule, staff) {
-    // Setup staff schedule header (same as patient schedule)
-    const staffHeader = document.getElementById('staffHeader');
-    let headerHTML = '<tr><th>Staff</th>';
-    timeSlots.forEach(time => {
-        headerHTML += `<th>${time}</th>`;
-    });
-    headerHTML += '</tr>';
-    staffHeader.innerHTML = headerHTML;
-
-    // Generate colors for staff
-    const staffColors = generateStaffColors(staff);
-
-    // Setup staff schedule body
-    const staffBody = document.getElementById('staffBody');
-    staffBody.innerHTML = '';
-
-    staff.forEach(s => {
-        const row = document.createElement('tr');
-
-        // Add staff name cell
-        const staffCell = document.createElement('td');
-        staffCell.textContent = s;
-        staffCell.className = 'row-header';
-
-        // Style based on staff type
-        if (securityStaff.includes(s)) {
-            staffCell.style.backgroundColor = "#ff9800";
-            staffCell.style.color = "#000000";
-            staffCell.style.fontWeight = "bold";
-            staffCell.textContent = s + " (Security)";
-        } else if (staffColors[s]) {
-            const { bgColor, textColor } = staffColors[s];
-            staffCell.style.backgroundColor = bgColor;
-            staffCell.style.color = textColor;
-        }
-
-        row.appendChild(staffCell);
-
-        // Add cells for each time slot
-        timeSlots.forEach((time, timeIndex) => {
-            const cell = document.createElement('td');
-
-            // Check for breaks first
-            if (schedule[time]?.staffBreaks?.[s]) {
-                const breakType = schedule[time].staffBreaks[s];
-
-                if (breakType === "30-MIN BREAK") {
-                    cell.textContent = "BREAK";
-                    cell.className = 'staff-break';
-                } else if (breakType === "2ND BREAK") {
-                    cell.textContent = "2ND BREAK";
-                    cell.className = 'staff-lunch';
-                } else if (breakType === "NIGHT BREAK") {
-                    cell.textContent = "BREAK";
-                    cell.style.backgroundColor = "#673ab7";
-                    cell.style.color = "#ffffff";
-                } else if (breakType === "SECURITY DUTY") {
-                    cell.textContent = "SECURITY";
-                    cell.style.backgroundColor = "#ffccbc";
-                    cell.style.color = "#000000";
-                    cell.style.fontWeight = "bold";
-                }
-            }
-            // Check if assigned to a patient
-            else {
-                let assigned = false;
-
-                if (schedule[time]?.patientAssignments) {
-                    for (const patient in schedule[time].patientAssignments) {
-                        if (schedule[time].patientAssignments[patient]?.includes(s)) {
-                            cell.textContent = patient;
-
-                            if (staffColors[s]) {
-                                cell.style.backgroundColor = staffColors[s].bgColor;
-                                cell.style.color = staffColors[s].textColor;
-                            }
-
-                            assigned = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!assigned) {
-                    cell.textContent = "FREE";
-                    cell.style.backgroundColor = "#e0f7fa";
-                    cell.style.color = "#000000";
-                }
-            }
-
-            row.appendChild(cell);
-        });
-
-        staffBody.appendChild(row);
-    });
-}
-
-// Function to render break hours table
-function renderBreakHoursTable(staffStats, staff) {
-    const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
-    breakHoursTableBody.innerHTML = '';
-
-    staff.forEach(s => {
-        const row = document.createElement('tr');
-
-        // Staff name
-        const staffCell = document.createElement('td');
-        staffCell.textContent = s;
-        row.appendChild(staffCell);
-
-        // First break time (30-min break for day shift, first hour of night break for night shift)
-        const shortBreakCell = document.createElement('td');
-        shortBreakCell.textContent = staffStats[s].shortBreakTime || 'N/A';
-        row.appendChild(shortBreakCell);
-
-        // Second break time (2nd break for day shift, second hour of night break for night shift)
-        const secondBreakCell = document.createElement('td');
-        secondBreakCell.textContent = staffStats[s].secondBreakTime || 'N/A';
-        row.appendChild(secondBreakCell);
-
-        breakHoursTableBody.appendChild(row);
-    });
-}
+// Initialize the application when the page loads
+document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>

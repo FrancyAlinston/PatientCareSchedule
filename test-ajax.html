@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Patient Care Schedule - AJAX Test</h1>
+    
+    <div id="status"></div>
+    
+    <h2>Server Connection Test</h2>
+    <button onclick="testConnection()">Test Server Connection</button>
+    
+    <h2>Data Operations Test</h2>
+    <button onclick="testSaveSettings()">Test Save Settings</button>
+    <button onclick="testLoadData()">Test Load Data</button>
+    <button onclick="testResetData()">Test Reset Data</button>
+    
+    <h3>Test Results:</h3>
+    <div id="results"></div>
+
+    <script src="api.js"></script>
+    <script>
+        const api = new ScheduleAPI();
+        
+        function showStatus(message, isSuccess = true) {
+            const status = document.getElementById('status');
+            status.className = `status ${isSuccess ? 'success' : 'error'}`;
+            status.textContent = message;
+        }
+        
+        function addResult(test, result, details = '') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>${test}:</strong> ${result} ${details}`;
+            div.className = result === 'PASS' ? 'success' : 'error';
+            div.style.padding = '5px';
+            div.style.margin = '2px 0';
+            results.appendChild(div);
+        }
+        
+        async function testConnection() {
+            try {
+                showStatus('Testing server connection...');
+                const result = await api.healthCheck();
+                showStatus('Server connection successful!');
+                addResult('Connection Test', 'PASS', `- Server status: ${result.status}`);
+            } catch (error) {
+                showStatus(`Connection failed: ${error.message}`, false);
+                addResult('Connection Test', 'FAIL', `- Error: ${error.message}`);
+            }
+        }
+        
+        async function testSaveSettings() {
+            try {
+                showStatus('Testing save settings...');
+                const testSettings = {
+                    staff: ['Test Worker 1', 'Test Worker 2'],
+                    patients: [
+                        { name: 'Test Patient A', staffCount: 1 },
+                        { name: 'Test Patient B', staffCount: 2 }
+                    ],
+                    securityStaff: ['Test Security'],
+                    nurseInCharge1: 'Test Nurse 1',
+                    nurseInCharge2: 'Test Nurse 2',
+                    isDayShift: true,
+                    isDarkMode: false
+                };
+                
+                const result = await api.saveSettings(testSettings);
+                showStatus('Settings saved successfully!');
+                addResult('Save Settings Test', 'PASS', `- ${result.message}`);
+            } catch (error) {
+                showStatus(`Save failed: ${error.message}`, false);
+                addResult('Save Settings Test', 'FAIL', `- Error: ${error.message}`);
+            }
+        }
+        
+        async function testLoadData() {
+            try {
+                showStatus('Testing load data...');
+                const result = await api.loadData();
+                showStatus('Data loaded successfully!');
+                addResult('Load Data Test', 'PASS', `- Found ${result.settings?.staff?.length || 0} staff members`);
+            } catch (error) {
+                showStatus(`Load failed: ${error.message}`, false);
+                addResult('Load Data Test', 'FAIL', `- Error: ${error.message}`);
+            }
+        }
+        
+        async function testResetData() {
+            if (confirm('This will reset all data. Continue?')) {
+                try {
+                    showStatus('Testing reset data...');
+                    const result = await api.resetData();
+                    showStatus('Data reset successfully!');
+                    addResult('Reset Data Test', 'PASS', `- ${result.message}`);
+                } catch (error) {
+                    showStatus(`Reset failed: ${error.message}`, false);
+                    addResult('Reset Data Test', 'FAIL', `- Error: ${error.message}`);
+                }
+            }
+        }
+        
+        // Auto-test connection on page load
+        window.addEventListener('load', testConnection);
+    </script>
+</body>
+</html>
