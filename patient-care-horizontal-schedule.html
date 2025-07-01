@@ -2285,11 +2285,19 @@ function renderSchedule(schedule, staff, patients) {
                 cell.style.color = "#000000"; // Black text for contrast
                 cell.classList.add('staff-unassigned');
             } else {
-                // Use initials for display
-                cell.textContent = getInitials(assignedStaff[0]);
+                // Display all assigned staff for this patient
+                if (assignedStaff.length === 1) {
+                    // Single staff - show initials
+                    cell.textContent = getInitials(assignedStaff[0]);
+                } else {
+                    // Multiple staff - show count and initials
+                    const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
+                    cell.textContent = `${assignedStaff.length}: ${staffInitials}`;
+                }
+
                 cell.title = assignedStaff.join(", "); // Full names on hover
 
-                // Add styling based on staff color
+                // Add styling based on staff color (use first staff member's color)
                 if (assignedStaff.length > 0 && staffColors[assignedStaff[0]]) {
                     const { bgColor, textColor } = staffColors[assignedStaff[0]];
                     cell.style.backgroundColor = bgColor;

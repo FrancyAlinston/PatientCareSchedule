@@ -28,18 +28,18 @@
     </div>
 
     <div class="test-scenario">
-        <h2>Test Scenario 2: Insufficient Staff</h2>
-        <p><strong>Staff:</strong> 2 healthcare workers</p>
-        <p><strong>Patients:</strong> 3 patients requiring 1 staff each</p>
-        <p><strong>Expected:</strong> Some patients may share staff, but no UNASSIGNED cells</p>
+        <h2>Test Scenario 2: Patient Care Levels (1:1, 2:1, 3:1)</h2>
+        <p><strong>Staff:</strong> 6 healthcare workers</p>
+        <p><strong>Patients:</strong> Patient A (1:1), Patient B (2:1), Patient C (3:1)</p>
+        <p><strong>Expected:</strong> Patient A gets 1 staff, Patient B gets 2 staff, Patient C gets 3 staff</p>
         <div id="test2-result"></div>
     </div>
 
     <div class="test-scenario">
-        <h2>Test Scenario 3: High Care Requirements</h2>
-        <p><strong>Staff:</strong> 3 healthcare workers</p>
-        <p><strong>Patients:</strong> 1 patient requiring 3 staff</p>
-        <p><strong>Expected:</strong> All staff assigned to the single patient</p>
+        <h2>Test Scenario 3: Insufficient Staff for High Care Requirements</h2>
+        <p><strong>Staff:</strong> 4 healthcare workers</p>
+        <p><strong>Patients:</strong> Patient ICU (3:1), Patient Ward (2:1)</p>
+        <p><strong>Expected:</strong> Staff shared but both patients get assignments</p>
         <div id="test3-result"></div>
     </div>
 
@@ -169,24 +169,26 @@
                 { name: 'Patient B', staffCount: 1 }
             ], timeSlots, 'test1-result');
 
-            // Test 2: Insufficient staff
-            const test2Schedule = simulateAssignment(2, [
+            // Test 2: Patient care levels (1:1, 2:1, 3:1)
+            const test2Schedule = simulateAssignment(6, [
                 { name: 'Patient A', staffCount: 1 },
-                { name: 'Patient B', staffCount: 1 },
-                { name: 'Patient C', staffCount: 1 }
+                { name: 'Patient B', staffCount: 2 },
+                { name: 'Patient C', staffCount: 3 }
             ]);
             renderTestResult(test2Schedule, [
                 { name: 'Patient A', staffCount: 1 },
-                { name: 'Patient B', staffCount: 1 },
-                { name: 'Patient C', staffCount: 1 }
+                { name: 'Patient B', staffCount: 2 },
+                { name: 'Patient C', staffCount: 3 }
             ], timeSlots, 'test2-result');
 
-            // Test 3: High care requirements
-            const test3Schedule = simulateAssignment(3, [
-                { name: 'Patient ICU', staffCount: 3 }
+            // Test 3: Insufficient staff for high care requirements
+            const test3Schedule = simulateAssignment(4, [
+                { name: 'Patient ICU', staffCount: 3 },
+                { name: 'Patient Ward', staffCount: 2 }
             ]);
             renderTestResult(test3Schedule, [
-                { name: 'Patient ICU', staffCount: 3 }
+                { name: 'Patient ICU', staffCount: 3 },
+                { name: 'Patient Ward', staffCount: 2 }
             ], timeSlots, 'test3-result');
         }
 
