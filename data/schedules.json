@@ -5,15 +5,16 @@
         "20:00-21:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Meghan Lynch"
+              "Nora Davis"
             ],
             "Patient B - Pierce": [
-              "Nora Davis",
-              "Brian Peters"
+              "Earl Lewis",
+              "Linda Murphy",
+              "Meghan Lynch"
             ],
             "Patient C - Craig": [
-              "Earl Lewis",
-              "Linda Murphy"
+              "Brett Cook",
+              "Anna Wagner"
             ]
           },
           "staffBreaks": {
@@ -23,15 +24,16 @@
         "21:00-22:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Nora Davis"
+              "Earl Lewis"
             ],
             "Patient B - Pierce": [
-              "Brett Cook",
+              "Anna Wagner",
+              "Brian Peters",
               "Connie Castro"
             ],
             "Patient C - Craig": [
-              "Anna Wagner",
-              "Jeff Long"
+              "Jeff Long",
+              "Meghan Lynch"
             ]
           },
           "staffBreaks": {
@@ -41,15 +43,16 @@
         "22:00-23:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Brett Cook"
+              "Connie Castro"
             ],
             "Patient B - Pierce": [
-              "Earl Lewis",
+              "Landon Willis",
+              "Nora Davis",
               "Linda Murphy"
             ],
             "Patient C - Craig": [
               "Brian Peters",
-              "Meghan Lynch"
+              "Brett Cook"
             ]
           },
           "staffBreaks": {}
@@ -60,11 +63,12 @@
               "Brian Peters"
             ],
             "Patient B - Pierce": [
-              "Anna Wagner",
-              "Jeff Long"
+              "Jeff Long",
+              "Earl Lewis",
+              "Meghan Lynch"
             ],
             "Patient C - Craig": [
-              "Connie Castro",
+              "Landon Willis",
               "Nora Davis"
             ]
           },
@@ -73,15 +77,16 @@
         "00:00-01:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Jeff Long"
+              "Brian Peters"
             ],
             "Patient B - Pierce": [
-              "Meghan Lynch",
-              "Earl Lewis"
+              "Brett Cook",
+              "Anna Wagner",
+              "Jeff Long"
             ],
             "Patient C - Craig": [
-              "Brett Cook",
-              "Anna Wagner"
+              "Earl Lewis",
+              "Meghan Lynch"
             ]
           },
           "staffBreaks": {
@@ -94,15 +99,16 @@
         "01:00-02:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Anna Wagner"
+              "Earl Lewis"
             ],
             "Patient B - Pierce": [
               "Landon Willis",
-              "Brian Peters"
+              "Brett Cook",
+              "Anna Wagner"
             ],
             "Patient C - Craig": [
-              "Earl Lewis",
-              "Meghan Lynch"
+              "Jeff Long",
+              "Brian Peters"
             ]
           },
           "staffBreaks": {
@@ -115,14 +121,15 @@
         "02:00-03:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Earl Lewis"
+              "Jeff Long"
             ],
             "Patient B - Pierce": [
               "Linda Murphy",
-              "Connie Castro"
+              "Connie Castro",
+              "Nora Davis"
             ],
             "Patient C - Craig": [
-              "Nora Davis",
+              "Landon Willis",
               "Brett Cook"
             ]
           },
@@ -135,15 +142,16 @@
         "03:00-04:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Landon Willis"
+              "Brett Cook"
             ],
             "Patient B - Pierce": [
-              "Jeff Long",
-              "Nora Davis"
-            ],
-            "Patient C - Craig": [
+              "Earl Lewis",
               "Linda Murphy",
               "Connie Castro"
+            ],
+            "Patient C - Craig": [
+              "Nora Davis",
+              "Jeff Long"
             ]
           },
           "staffBreaks": {
@@ -155,15 +163,16 @@
         "04:00-05:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Linda Murphy"
+              "Anna Wagner"
             ],
             "Patient B - Pierce": [
               "Meghan Lynch",
-              "Anna Wagner"
-            ],
-            "Patient C - Craig": [
               "Brian Peters",
               "Landon Willis"
+            ],
+            "Patient C - Craig": [
+              "Linda Murphy",
+              "Connie Castro"
             ]
           },
           "staffBreaks": {
@@ -175,14 +184,15 @@
         "05:00-06:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Meghan Lynch"
+              "Connie Castro"
             ],
             "Patient B - Pierce": [
-              "Connie Castro",
-              "Nora Davis"
+              "Nora Davis",
+              "Meghan Lynch",
+              "Brian Peters"
             ],
             "Patient C - Craig": [
-              "Brian Peters",
+              "Anna Wagner",
               "Linda Murphy"
             ]
           },
@@ -195,14 +205,15 @@
         "06:00-07:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Anna Wagner"
+              "Linda Murphy"
             ],
             "Patient B - Pierce": [
-              "Brett Cook",
-              "Jeff Long"
+              "Earl Lewis",
+              "Nora Davis",
+              "Brett Cook"
             ],
             "Patient C - Craig": [
-              "Earl Lewis",
+              "Meghan Lynch",
               "Connie Castro"
             ]
           },
@@ -213,11 +224,12 @@
         "07:00-08:00": {
           "patientAssignments": {
             "Patient A - Davidson": [
-              "Connie Castro"
+              "Linda Murphy"
             ],
             "Patient B - Pierce": [
+              "Earl Lewis",
               "Brett Cook",
-              "Brian Peters"
+              "Anna Wagner"
             ],
             "Patient C - Craig": [
               "Jeff Long",
@@ -229,8 +241,8 @@
           }
         }
       },
-      "createdAt": "2025-07-01T21:45:32.952Z",
-      "updatedAt": "2025-07-01T21:45:32.952Z"
+      "createdAt": "2025-07-01T21:53:36.513Z",
+      "updatedAt": "2025-07-01T21:53:36.513Z"
     }
   },
   "settings": {
@@ -250,7 +262,7 @@
       },
       {
         "name": "Patient B - Pierce",
-        "staffCount": 2
+        "staffCount": 3
       },
       {
         "name": "Patient C - Craig",
