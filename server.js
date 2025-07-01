@@ -177,6 +177,11 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve the test assignment page
+app.get('/test-assignment', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-assignment.html'));
+});
+
 // Serve the main application at root
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'patient-care-horizontal-schedule.html'));

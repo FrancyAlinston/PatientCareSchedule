@@ -4,294 +4,297 @@
       "schedule": {
         "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Kathryn Richardson"
+            "Patient A - Bryant": [
+              "Mathew Porter"
             ],
-            "Patient B - Baker": [
-              "Linda Berry",
-              "Sean Wallace"
+            "Patient B - Wood": [
+              "Peter Soto",
+              "Genesis Jensen"
             ],
-            "Patient C - Carpenter": [
-              "Patsy Diaz"
+            "Patient C - Kelley": [
+              "Marc Long"
             ],
-            "Patient D - Ferguson": [
-              "Landon Stephens"
+            "Patient D - Holt": [
+              "Scarlett Garrett"
             ]
           },
           "staffBreaks": {
-            "Ritthy Fleming": "SECURITY DUTY"
+            "Arianna Carpenter": "SECURITY DUTY"
           }
         },
         "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Connor Horton"
+            "Patient A - Bryant": [
+              "Peter Soto"
             ],
-            "Patient B - Baker": [
-              "Greg Soto",
-              "Jessica Barnett"
+            "Patient B - Wood": [
+              "Megan Morrison",
+              "Rebecca Castillo"
             ],
-            "Patient C - Carpenter": [
-              "Hannah Bryant"
+            "Patient C - Kelley": [
+              "Mathew Porter"
             ],
-            "Patient D - Ferguson": [
-              "Linda Berry"
+            "Patient D - Holt": [
+              "Scarlett Garrett"
             ]
           },
           "staffBreaks": {
-            "Kathryn Richardson": "30-MIN BREAK",
-            "Ritthy Fleming": "SECURITY DUTY"
+            "Genesis Jensen": "30-MIN BREAK",
+            "Marc Long": "30-MIN BREAK",
+            "Sheryl Garrett": "30-MIN BREAK",
+            "Carolyn Young": "30-MIN BREAK",
+            "Arianna Carpenter": "SECURITY DUTY"
           }
         },
         "10:00-11:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Sean Wallace"
+            "Patient A - Bryant": [
+              "Genesis Jensen"
             ],
-            "Patient B - Baker": [
-              "Kathryn Richardson",
-              "Landon Stephens"
+            "Patient B - Wood": [
+              "Sheryl Garrett",
+              "Carolyn Young"
             ],
-            "Patient C - Carpenter": [
-              "Greg Soto"
+            "Patient C - Kelley": [
+              "Megan Morrison"
             ],
-            "Patient D - Ferguson": [
-              "Connor Horton"
+            "Patient D - Holt": [
+              "Marc Long"
             ]
           },
           "staffBreaks": {
-            "Patsy Diaz": "30-MIN BREAK",
-            "Jessica Barnett": "30-MIN BREAK"
+            "Mathew Porter": "30-MIN BREAK",
+            "Arianna Carpenter": "30-MIN BREAK"
           }
         },
         "11:00-12:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Jessica Barnett"
+            "Patient A - Bryant": [
+              "Sheryl Garrett"
             ],
-            "Patient B - Baker": [
-              "Patsy Diaz",
-              "Hannah Bryant"
+            "Patient B - Wood": [
+              "Mathew Porter",
+              "Marc Long"
             ],
-            "Patient C - Carpenter": [
-              "Linda Berry"
+            "Patient C - Kelley": [
+              "Carolyn Young"
             ],
-            "Patient D - Ferguson": [
-              "Kathryn Richardson"
+            "Patient D - Holt": [
+              "Peter Soto"
             ]
           },
           "staffBreaks": {
-            "Sean Wallace": "30-MIN BREAK",
-            "Landon Stephens": "30-MIN BREAK",
-            "Connor Horton": "30-MIN BREAK",
-            "Ritthy Fleming": "30-MIN BREAK"
+            "Rebecca Castillo": "30-MIN BREAK"
           }
         },
         "12:00-13:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Patsy Diaz"
+            "Patient A - Bryant": [
+              "Carolyn Young"
             ],
-            "Patient B - Baker": [
-              "Connor Horton",
-              "Sean Wallace"
+            "Patient B - Wood": [
+              "Rebecca Castillo",
+              "Genesis Jensen"
             ],
-            "Patient C - Carpenter": [
-              "Landon Stephens"
+            "Patient C - Kelley": [
+              "Sheryl Garrett"
             ],
-            "Patient D - Ferguson": [
-              "Jessica Barnett"
+            "Patient D - Holt": [
+              "Mathew Porter"
             ]
           },
           "staffBreaks": {
-            "Linda Berry": "30-MIN BREAK",
-            "Greg Soto": "30-MIN BREAK",
-            "Hannah Bryant": "30-MIN BREAK"
+            "Peter Soto": "30-MIN BREAK",
+            "Scarlett Garrett": "30-MIN BREAK",
+            "Megan Morrison": "30-MIN BREAK"
           }
         },
         "13:00-14:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Linda Berry"
+            "Patient A - Bryant": [
+              "Rebecca Castillo"
             ],
-            "Patient B - Baker": [
-              "Greg Soto",
-              "Hannah Bryant"
+            "Patient B - Wood": [
+              "Scarlett Garrett",
+              "Megan Morrison"
             ],
-            "Patient C - Carpenter": [
-              "Sean Wallace"
+            "Patient C - Kelley": [
+              "Peter Soto"
             ],
-            "Patient D - Ferguson": [
-              "Patsy Diaz"
+            "Patient D - Holt": [
+              "Genesis Jensen"
             ]
           },
           "staffBreaks": {}
         },
         "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Hannah Bryant"
+            "Patient A - Bryant": [
+              "Megan Morrison"
             ],
-            "Patient B - Baker": [
-              "Ritthy Fleming",
-              "Kathryn Richardson"
+            "Patient B - Wood": [
+              "Arianna Carpenter",
+              "Marc Long"
             ],
-            "Patient C - Carpenter": [
-              "Jessica Barnett"
+            "Patient C - Kelley": [
+              "Rebecca Castillo"
             ],
-            "Patient D - Ferguson": [
-              "Sean Wallace"
+            "Patient D - Holt": [
+              "Sheryl Garrett"
             ]
           },
           "staffBreaks": {
-            "Linda Berry": "2ND BREAK",
-            "Landon Stephens": "2ND BREAK",
-            "Greg Soto": "2ND BREAK",
-            "Ritthy Fleming": "2ND BREAK"
+            "Scarlett Garrett": "2ND BREAK"
           }
         },
         "15:00-16:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Greg Soto"
+            "Patient A - Bryant": [
+              "Marc Long"
             ],
-            "Patient B - Baker": [
-              "Landon Stephens",
-              "Connor Horton"
+            "Patient B - Wood": [
+              "Scarlett Garrett",
+              "Carolyn Young"
             ],
-            "Patient C - Carpenter": [
-              "Kathryn Richardson"
+            "Patient C - Kelley": [
+              "Arianna Carpenter"
             ],
-            "Patient D - Ferguson": [
-              "Hannah Bryant"
+            "Patient D - Holt": [
+              "Megan Morrison"
             ]
           },
           "staffBreaks": {
-            "Jessica Barnett": "2ND BREAK"
+            "Genesis Jensen": "2ND BREAK",
+            "Sheryl Garrett": "2ND BREAK"
           }
         },
         "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Landon Stephens"
+            "Patient A - Bryant": [
+              "Scarlett Garrett"
             ],
-            "Patient B - Baker": [
-              "Linda Berry",
-              "Patsy Diaz"
+            "Patient B - Wood": [
+              "Peter Soto",
+              "Mathew Porter"
             ],
-            "Patient C - Carpenter": [
-              "Connor Horton"
+            "Patient C - Kelley": [
+              "Genesis Jensen"
             ],
-            "Patient D - Ferguson": [
-              "Greg Soto"
+            "Patient D - Holt": [
+              "Rebecca Castillo"
             ]
           },
           "staffBreaks": {
-            "Hannah Bryant": "2ND BREAK"
+            "Megan Morrison": "2ND BREAK",
+            "Carolyn Young": "2ND BREAK",
+            "Arianna Carpenter": "2ND BREAK"
           }
         },
         "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Linda Berry"
+            "Patient A - Bryant": [
+              "Arianna Carpenter"
             ],
-            "Patient B - Baker": [
-              "Jessica Barnett",
-              "Ritthy Fleming"
+            "Patient B - Wood": [
+              "Sheryl Garrett",
+              "Carolyn Young"
             ],
-            "Patient C - Carpenter": [
-              "Landon Stephens"
+            "Patient C - Kelley": [
+              "Scarlett Garrett"
             ],
-            "Patient D - Ferguson": [
-              "Greg Soto"
+            "Patient D - Holt": [
+              "Genesis Jensen"
             ]
           },
           "staffBreaks": {
-            "Sean Wallace": "2ND BREAK",
-            "Kathryn Richardson": "2ND BREAK",
-            "Patsy Diaz": "2ND BREAK",
-            "Connor Horton": "2ND BREAK"
+            "Peter Soto": "2ND BREAK",
+            "Mathew Porter": "2ND BREAK",
+            "Marc Long": "2ND BREAK",
+            "Rebecca Castillo": "2ND BREAK"
           }
         },
         "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Patsy Diaz"
+            "Patient A - Bryant": [
+              "Marc Long"
             ],
-            "Patient B - Baker": [
-              "Sean Wallace",
-              "Kathryn Richardson"
+            "Patient B - Wood": [
+              "Peter Soto",
+              "Mathew Porter"
             ],
-            "Patient C - Carpenter": [
-              "Jessica Barnett"
+            "Patient C - Kelley": [
+              "Megan Morrison"
             ],
-            "Patient D - Ferguson": [
-              "Connor Horton"
+            "Patient D - Holt": [
+              "Carolyn Young"
             ]
           },
           "staffBreaks": {
-            "Ritthy Fleming": "SECURITY DUTY"
+            "Arianna Carpenter": "SECURITY DUTY"
           }
         },
         "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Hicks": [
-              "Sean Wallace"
+            "Patient A - Bryant": [
+              "Peter Soto"
             ],
-            "Patient B - Baker": [
-              "Hannah Bryant",
-              "Linda Berry"
+            "Patient B - Wood": [
+              "Rebecca Castillo",
+              "Sheryl Garrett"
             ],
-            "Patient C - Carpenter": [
-              "Kathryn Richardson"
+            "Patient C - Kelley": [
+              "Genesis Jensen"
             ],
-            "Patient D - Ferguson": [
-              "Patsy Diaz"
+            "Patient D - Holt": [
+              "Mathew Porter"
             ]
           },
           "staffBreaks": {
-            "Ritthy Fleming": "SECURITY DUTY"
+            "Arianna Carpenter": "SECURITY DUTY"
           }
         }
       },
-      "createdAt": "2025-07-01T20:46:27.647Z",
-      "updatedAt": "2025-07-01T20:46:27.647Z"
+      "createdAt": "2025-07-01T21:37:40.655Z",
+      "updatedAt": "2025-07-01T21:37:40.655Z"
     }
   },
   "settings": {
     "staff": [
-      "Linda Berry",
-      "Sean Wallace",
-      "Kathryn Richardson",
-      "Patsy Diaz",
-      "Landon Stephens",
-      "Greg Soto",
-      "Jessica Barnett"
+      "Peter Soto",
+      "Genesis Jensen",
+      "Mathew Porter",
+      "Marc Long",
+      "Scarlett Garrett",
+      "Megan Morrison",
+      "Rebecca Castillo"
     ],
     "patients": [
       {
-        "name": "Patient A - Hicks",
+        "name": "Patient A - Bryant",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Baker",
+        "name": "Patient B - Wood",
         "staffCount": 2
       },
       {
-        "name": "Patient C - Carpenter",
+        "name": "Patient C - Kelley",
         "staffCount": 1
       },
       {
-        "name": "Patient D - Ferguson",
+        "name": "Patient D - Holt",
         "staffCount": 1
       }
     ],
     "securityStaff": [
-      "Ritthy Fleming"
+      "Arianna Carpenter"
     ],
-    "nurseInCharge1": "Connor Horton",
-    "nurseInCharge2": "Hannah Bryant",
+    "nurseInCharge1": "Sheryl Garrett",
+    "nurseInCharge2": "Carolyn Young",
     "isDayShift": true,
+    "isDarkMode": true
+  }
+}rue,
     "isDarkMode": true
   }
 }
