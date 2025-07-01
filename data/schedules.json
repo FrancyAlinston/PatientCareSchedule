@@ -2,344 +2,241 @@
   "schedules": {
     "schedule_2025-07-01": {
       "schedule": {
-        "20:00-21:00": {
+        "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Ronnie Andrews"
+            "Patient A - Carroll": [
+              "Leona Parker"
             ],
-            "Patient B - Pearson": [
-              "Wyatt Hughes",
-              "Judith Gutierrez"
-            ],
-            "Patient C - Rodriguez": [
-              "Ashley Freeman",
-              "Amanda Burke",
-              "Kevin Stevens"
-            ],
-            "Patient D - Hunt": [
-              "Art Gutierrez"
+            "Patient B - Foster": [
+              "Edgar Shelton",
+              "Anthony Lord"
             ],
             "OBS": [
-              "Tara Daniels"
+              "Edgar Shelton"
+            ]
+          },
+          "staffBreaks": {
+            "Caroline Bates": "SECURITY DUTY"
+          }
+        },
+        "09:00-10:00": {
+          "patientAssignments": {
+            "Patient A - Carroll": [
+              "Leona Parker"
+            ],
+            "Patient B - Foster": [
+              "Isaiah Hayes",
+              "Jorge Little"
+            ],
+            "OBS": [
+              "Leona Parker"
+            ]
+          },
+          "staffBreaks": {
+            "Edgar Shelton": "30-MIN BREAK",
+            "Anthony Lord": "30-MIN BREAK",
+            "Brett Snyder": "30-MIN BREAK",
+            "Caroline Bates": "SECURITY DUTY"
+          }
+        },
+        "10:00-11:00": {
+          "patientAssignments": {
+            "Patient A - Carroll": [
+              "Anthony Lord"
+            ],
+            "Patient B - Foster": [
+              "Brett Snyder",
+              "Edgar Shelton"
+            ],
+            "OBS": [
+              "Anthony Lord"
+            ]
+          },
+          "staffBreaks": {
+            "Leona Parker": "30-MIN BREAK",
+            "Isaiah Hayes": "30-MIN BREAK"
+          }
+        },
+        "11:00-12:00": {
+          "patientAssignments": {
+            "Patient A - Carroll": [
+              "Brett Snyder"
+            ],
+            "Patient B - Foster": [
+              "Leona Parker",
+              "Isaiah Hayes"
+            ],
+            "OBS": [
+              "Isaiah Hayes"
             ]
           },
           "staffBreaks": {}
         },
-        "21:00-22:00": {
+        "12:00-13:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Kevin Stevens"
+            "Patient A - Carroll": [
+              "Edgar Shelton"
             ],
-            "Patient B - Pearson": [
-              "Art Gutierrez",
-              "Amanda Burke"
-            ],
-            "Patient C - Rodriguez": [
-              "Ashley Freeman",
-              "Andrea Sanchez",
-              "Tara Daniels"
-            ],
-            "Patient D - Hunt": [
-              "Ronnie Andrews"
+            "Patient B - Foster": [
+              "Anthony Lord",
+              "Brett Snyder"
             ],
             "OBS": [
-              "Wyatt Hughes"
+              "Edgar Shelton"
+            ]
+          },
+          "staffBreaks": {
+            "Jorge Little": "30-MIN BREAK",
+            "Caroline Bates": "30-MIN BREAK"
+          }
+        },
+        "13:00-14:00": {
+          "patientAssignments": {
+            "Patient A - Carroll": [
+              "Isaiah Hayes"
+            ],
+            "Patient B - Foster": [
+              "Jorge Little",
+              "Caroline Bates"
+            ],
+            "OBS": [
+              "Anthony Lord"
             ]
           },
           "staffBreaks": {}
         },
-        "22:00-23:00": {
+        "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Amanda Burke"
+            "Patient A - Carroll": [
+              "Edgar Shelton"
             ],
-            "Patient B - Pearson": [
-              "Tara Daniels",
-              "Kevin Stevens"
-            ],
-            "Patient C - Rodriguez": [
-              "Wyatt Hughes",
-              "Judith Gutierrez",
-              "Andrea Sanchez"
-            ],
-            "Patient D - Hunt": [
-              "Ronnie Andrews"
+            "Patient B - Foster": [
+              "Leona Parker",
+              "Jorge Little"
             ],
             "OBS": [
-              "Amanda Burke"
+              "Leona Parker"
+            ]
+          },
+          "staffBreaks": {
+            "Anthony Lord": "2ND BREAK"
+          }
+        },
+        "15:00-16:00": {
+          "patientAssignments": {
+            "Patient A - Carroll": [
+              "Jorge Little"
+            ],
+            "Patient B - Foster": [
+              "Anthony Lord",
+              "Isaiah Hayes"
+            ],
+            "OBS": [
+              "Isaiah Hayes"
             ]
           },
           "staffBreaks": {}
         },
-        "23:00-00:00": {
+        "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Art Gutierrez"
+            "Patient A - Carroll": [
+              "Anthony Lord"
             ],
-            "Patient B - Pearson": [
-              "Ashley Freeman",
-              "Andrea Sanchez"
-            ],
-            "Patient C - Rodriguez": [
-              "Tara Daniels",
-              "Wyatt Hughes",
-              "Judith Gutierrez"
-            ],
-            "Patient D - Hunt": [
-              "Kevin Stevens"
+            "Patient B - Foster": [
+              "Caroline Bates",
+              "Edgar Shelton"
             ],
             "OBS": [
-              "Kevin Stevens"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "00:00-01:00": {
-          "patientAssignments": {
-            "Patient A - Stanley": [
-              "Andrea Sanchez"
-            ],
-            "Patient B - Pearson": [
-              "Judith Gutierrez",
-              "Wyatt Hughes"
-            ],
-            "Patient C - Rodriguez": [
-              "Ronnie Andrews",
-              "Art Gutierrez",
-              "Amanda Burke"
-            ],
-            "Patient D - Hunt": [
-              "Tara Daniels"
-            ],
-            "OBS": [
-              "Ronnie Andrews"
+              "Edgar Shelton"
             ]
           },
           "staffBreaks": {
-            "Amanda Burke": "NIGHT BREAK",
-            "Ashley Freeman": "NIGHT BREAK",
-            "Wyatt Hughes": "NIGHT BREAK"
+            "Leona Parker": "2ND BREAK",
+            "Isaiah Hayes": "2ND BREAK",
+            "Brett Snyder": "2ND BREAK",
+            "Caroline Bates": "2ND BREAK"
           }
         },
-        "01:00-02:00": {
+        "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Andrea Sanchez"
+            "Patient A - Carroll": [
+              "Isaiah Hayes"
             ],
-            "Patient B - Pearson": [
-              "Art Gutierrez",
-              "Ashley Freeman"
-            ],
-            "Patient C - Rodriguez": [
-              "Kevin Stevens",
-              "Ronnie Andrews",
-              "Tara Daniels"
-            ],
-            "Patient D - Hunt": [
-              "Judith Gutierrez"
+            "Patient B - Foster": [
+              "Brett Snyder",
+              "Leona Parker"
             ],
             "OBS": [
-              "Andrea Sanchez"
+              "Anthony Lord"
             ]
           },
           "staffBreaks": {
-            "Amanda Burke": "NIGHT BREAK",
-            "Ashley Freeman": "NIGHT BREAK",
-            "Wyatt Hughes": "NIGHT BREAK"
+            "Edgar Shelton": "2ND BREAK",
+            "Jorge Little": "2ND BREAK"
           }
         },
-        "02:00-03:00": {
+        "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Ashley Freeman"
+            "Patient A - Carroll": [
+              "Jorge Little"
             ],
-            "Patient B - Pearson": [
-              "Ronnie Andrews",
-              "Wyatt Hughes"
-            ],
-            "Patient C - Rodriguez": [
-              "Amanda Burke",
-              "Art Gutierrez",
-              "Kevin Stevens"
-            ],
-            "Patient D - Hunt": [
-              "Andrea Sanchez"
+            "Patient B - Foster": [
+              "Brett Snyder",
+              "Edgar Shelton"
             ],
             "OBS": [
-              "Ashley Freeman"
+              "Leona Parker"
             ]
           },
           "staffBreaks": {
-            "Kevin Stevens": "NIGHT BREAK",
-            "Andrea Sanchez": "NIGHT BREAK",
-            "Judith Gutierrez": "NIGHT BREAK"
+            "Caroline Bates": "SECURITY DUTY"
           }
         },
-        "03:00-04:00": {
+        "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Stanley": [
-              "Ashley Freeman"
+            "Patient A - Carroll": [
+              "Brett Snyder"
             ],
-            "Patient B - Pearson": [
-              "Judith Gutierrez",
-              "Ronnie Andrews"
-            ],
-            "Patient C - Rodriguez": [
-              "Amanda Burke",
-              "Tara Daniels",
-              "Art Gutierrez"
-            ],
-            "Patient D - Hunt": [
-              "Wyatt Hughes"
+            "Patient B - Foster": [
+              "Anthony Lord",
+              "Leona Parker"
             ],
             "OBS": [
-              "Tara Daniels"
+              "Isaiah Hayes"
             ]
           },
           "staffBreaks": {
-            "Kevin Stevens": "NIGHT BREAK",
-            "Andrea Sanchez": "NIGHT BREAK",
-            "Judith Gutierrez": "NIGHT BREAK"
+            "Caroline Bates": "SECURITY DUTY"
           }
-        },
-        "04:00-05:00": {
-          "patientAssignments": {
-            "Patient A - Stanley": [
-              "Wyatt Hughes"
-            ],
-            "Patient B - Pearson": [
-              "Amanda Burke",
-              "Kevin Stevens"
-            ],
-            "Patient C - Rodriguez": [
-              "Tara Daniels",
-              "Ashley Freeman",
-              "Andrea Sanchez"
-            ],
-            "Patient D - Hunt": [
-              "Judith Gutierrez"
-            ],
-            "OBS": [
-              "Wyatt Hughes"
-            ]
-          },
-          "staffBreaks": {
-            "Ronnie Andrews": "NIGHT BREAK",
-            "Tara Daniels": "NIGHT BREAK",
-            "Art Gutierrez": "NIGHT BREAK"
-          }
-        },
-        "05:00-06:00": {
-          "patientAssignments": {
-            "Patient A - Stanley": [
-              "Amanda Burke"
-            ],
-            "Patient B - Pearson": [
-              "Tara Daniels",
-              "Art Gutierrez"
-            ],
-            "Patient C - Rodriguez": [
-              "Ashley Freeman",
-              "Andrea Sanchez",
-              "Wyatt Hughes"
-            ],
-            "Patient D - Hunt": [
-              "Kevin Stevens"
-            ],
-            "OBS": [
-              "Amanda Burke"
-            ]
-          },
-          "staffBreaks": {
-            "Ronnie Andrews": "NIGHT BREAK",
-            "Tara Daniels": "NIGHT BREAK",
-            "Art Gutierrez": "NIGHT BREAK"
-          }
-        },
-        "06:00-07:00": {
-          "patientAssignments": {
-            "Patient A - Stanley": [
-              "Tara Daniels"
-            ],
-            "Patient B - Pearson": [
-              "Andrea Sanchez",
-              "Amanda Burke"
-            ],
-            "Patient C - Rodriguez": [
-              "Wyatt Hughes",
-              "Judith Gutierrez",
-              "Ashley Freeman"
-            ],
-            "Patient D - Hunt": [
-              "Art Gutierrez"
-            ],
-            "OBS": [
-              "Kevin Stevens"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "07:00-08:00": {
-          "patientAssignments": {
-            "Patient A - Stanley": [
-              "Tara Daniels"
-            ],
-            "Patient B - Pearson": [
-              "Ashley Freeman",
-              "Andrea Sanchez"
-            ],
-            "Patient C - Rodriguez": [
-              "Judith Gutierrez",
-              "Ronnie Andrews",
-              "Kevin Stevens"
-            ],
-            "Patient D - Hunt": [
-              "Amanda Burke"
-            ],
-            "OBS": [
-              "Ronnie Andrews"
-            ]
-          },
-          "staffBreaks": {}
         }
       },
-      "createdAt": "2025-07-01T22:22:26.945Z",
-      "updatedAt": "2025-07-01T22:22:26.945Z"
+      "createdAt": "2025-07-01T22:23:39.044Z",
+      "updatedAt": "2025-07-01T22:23:39.044Z"
     }
   },
   "settings": {
     "staff": [
-      "Amanda Burke",
-      "Kevin Stevens",
-      "Ronnie Andrews",
-      "Ashley Freeman",
-      "Andrea Sanchez",
-      "Tara Daniels",
-      "Wyatt Hughes"
+      "Edgar Shelton",
+      "Anthony Lord",
+      "Leona Parker",
+      "Isaiah Hayes"
     ],
     "patients": [
       {
-        "name": "Patient A - Stanley",
+        "name": "Patient A - Carroll",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Pearson",
+        "name": "Patient B - Foster",
         "staffCount": 2
-      },
-      {
-        "name": "Patient C - Rodriguez",
-        "staffCount": 3
-      },
-      {
-        "name": "Patient D - Hunt",
-        "staffCount": 1
       }
     ],
-    "securityStaff": [],
-    "nurseInCharge1": "Judith Gutierrez",
-    "nurseInCharge2": "Art Gutierrez",
-    "isDayShift": false,
+    "securityStaff": [
+      "Caroline Bates"
+    ],
+    "nurseInCharge1": "Brett Snyder",
+    "nurseInCharge2": "Jorge Little",
+    "isDayShift": true,
     "isDarkMode": true
   }
-} }
 }
