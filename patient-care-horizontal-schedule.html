@@ -516,7 +516,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
-                        <div>Unassigned</div>
+                        <div>Patient Unassigned</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-security"></div>
@@ -535,7 +535,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
-                        <div>Unassigned</div>
+                        <div>Patient Unassigned</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-security"></div>
@@ -2034,10 +2034,11 @@ function renderStaffTable(schedule, staff) {
                         cell.style.color = textColor;
                     }
                 } else {
-                    cell.textContent = "UNASSIGNED";
-                    cell.style.backgroundColor = "#ffeaa7";
-                    cell.style.color = "#000000";
-                    cell.classList.add('staff-unassigned');
+                    // Leave cell empty when staff is not assigned to any patient
+                    cell.textContent = "";
+                    cell.style.backgroundColor = "";
+                    cell.style.color = "";
+                    cell.classList.remove('staff-unassigned');
                 }
             }
             row.appendChild(cell);
