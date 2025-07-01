@@ -2,280 +2,322 @@
   "schedules": {
     "schedule_2025-07-01": {
       "schedule": {
-        "20:00-21:00": {
+        "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Brett Cook"
+            "Patient A - Lawson": [
+              "Scarlett Morrison"
             ],
-            "Patient B - Pierce": [
-              "Nora Davis",
-              "Brian Peters",
-              "Earl Lewis"
+            "Patient B - Hart": [
+              "Lucas Or Luke Wells",
+              "Suzanne Anderson"
             ],
-            "Patient C - Craig": [
-              "Linda Murphy",
-              "Meghan Lynch"
+            "Patient C - Rodriquez": [
+              "Sheryl Reynolds",
+              "Fred Lowe",
+              "Jean Simmons"
+            ],
+            "Patient D - Garcia": [
+              "Felicia Fernandez"
             ]
           },
           "staffBreaks": {
-            "Landon Willis": "SECURITY DUTY"
+            "Leonard West": "SECURITY DUTY"
           }
         },
-        "21:00-22:00": {
+        "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Earl Lewis"
+            "Patient A - Lawson": [
+              "Jean Simmons"
             ],
-            "Patient B - Pierce": [
-              "Connie Castro",
-              "Anna Wagner",
-              "Jeff Long"
+            "Patient B - Hart": [
+              "Sheryl Reynolds",
+              "Fred Lowe"
             ],
-            "Patient C - Craig": [
-              "Nora Davis",
-              "Brian Peters"
+            "Patient C - Rodriquez": [
+              "Lucy Smith",
+              "Lucas Or Luke Wells",
+              "Suzanne Anderson"
+            ],
+            "Patient D - Garcia": [
+              "Felicia Fernandez"
             ]
           },
           "staffBreaks": {
-            "Landon Willis": "SECURITY DUTY"
+            "Scarlett Morrison": "30-MIN BREAK",
+            "Earl Barnett": "30-MIN BREAK",
+            "Leonard West": "SECURITY DUTY"
           }
         },
-        "22:00-23:00": {
+        "10:00-11:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Jeff Long"
+            "Patient A - Lawson": [
+              "Fred Lowe"
             ],
-            "Patient B - Pierce": [
-              "Linda Murphy",
-              "Meghan Lynch",
-              "Brett Cook"
+            "Patient B - Hart": [
+              "Jean Simmons",
+              "Sheryl Reynolds"
             ],
-            "Patient C - Craig": [
-              "Connie Castro",
-              "Anna Wagner"
+            "Patient C - Rodriquez": [
+              "Earl Barnett",
+              "Scarlett Morrison",
+              "Felicia Fernandez"
+            ],
+            "Patient D - Garcia": [
+              "Suzanne Anderson"
+            ]
+          },
+          "staffBreaks": {
+            "Lucas Or Luke Wells": "30-MIN BREAK",
+            "Lucy Smith": "30-MIN BREAK"
+          }
+        },
+        "11:00-12:00": {
+          "patientAssignments": {
+            "Patient A - Lawson": [
+              "Suzanne Anderson"
+            ],
+            "Patient B - Hart": [
+              "Scarlett Morrison",
+              "Leonard West"
+            ],
+            "Patient C - Rodriquez": [
+              "Lucy Smith",
+              "Earl Barnett",
+              "Lucas Or Luke Wells"
+            ],
+            "Patient D - Garcia": [
+              "Fred Lowe"
+            ]
+          },
+          "staffBreaks": {
+            "Sheryl Reynolds": "30-MIN BREAK",
+            "Jean Simmons": "30-MIN BREAK",
+            "Felicia Fernandez": "30-MIN BREAK"
+          }
+        },
+        "12:00-13:00": {
+          "patientAssignments": {
+            "Patient A - Lawson": [
+              "Lucas Or Luke Wells"
+            ],
+            "Patient B - Hart": [
+              "Lucy Smith",
+              "Earl Barnett"
+            ],
+            "Patient C - Rodriquez": [
+              "Sheryl Reynolds",
+              "Jean Simmons",
+              "Scarlett Morrison"
+            ],
+            "Patient D - Garcia": [
+              "Leonard West"
+            ]
+          },
+          "staffBreaks": {
+            "Fred Lowe": "30-MIN BREAK",
+            "Suzanne Anderson": "30-MIN BREAK"
+          }
+        },
+        "13:00-14:00": {
+          "patientAssignments": {
+            "Patient A - Lawson": [
+              "Sheryl Reynolds"
+            ],
+            "Patient B - Hart": [
+              "Lucy Smith",
+              "Earl Barnett"
+            ],
+            "Patient C - Rodriquez": [
+              "Felicia Fernandez",
+              "Fred Lowe",
+              "Suzanne Anderson"
+            ],
+            "Patient D - Garcia": [
+              "Jean Simmons"
             ]
           },
           "staffBreaks": {}
         },
-        "23:00-00:00": {
+        "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Linda Murphy"
+            "Patient A - Lawson": [
+              "Lucy Smith"
             ],
-            "Patient B - Pierce": [
-              "Nora Davis",
-              "Brian Peters",
-              "Earl Lewis"
+            "Patient B - Hart": [
+              "Felicia Fernandez",
+              "Fred Lowe"
             ],
-            "Patient C - Craig": [
-              "Brett Cook",
-              "Jeff Long"
+            "Patient C - Rodriquez": [
+              "Leonard West",
+              "Lucas Or Luke Wells",
+              "Scarlett Morrison"
+            ],
+            "Patient D - Garcia": [
+              "Earl Barnett"
             ]
           },
           "staffBreaks": {}
         },
-        "00:00-01:00": {
+        "15:00-16:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Brett Cook"
+            "Patient A - Lawson": [
+              "Earl Barnett"
             ],
-            "Patient B - Pierce": [
-              "Meghan Lynch",
-              "Anna Wagner",
-              "Landon Willis"
+            "Patient B - Hart": [
+              "Lucas Or Luke Wells",
+              "Jean Simmons"
             ],
-            "Patient C - Craig": [
-              "Earl Lewis",
-              "Brian Peters"
+            "Patient C - Rodriquez": [
+              "Suzanne Anderson",
+              "Felicia Fernandez",
+              "Sheryl Reynolds"
+            ],
+            "Patient D - Garcia": [
+              "Scarlett Morrison"
             ]
           },
           "staffBreaks": {
-            "Nora Davis": "NIGHT BREAK",
-            "Linda Murphy": "NIGHT BREAK",
-            "Connie Castro": "NIGHT BREAK",
-            "Landon Willis": "NIGHT BREAK"
+            "Sheryl Reynolds": "2ND BREAK",
+            "Jean Simmons": "2ND BREAK",
+            "Scarlett Morrison": "2ND BREAK",
+            "Lucy Smith": "2ND BREAK"
           }
         },
-        "01:00-02:00": {
+        "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Brian Peters"
+            "Patient A - Lawson": [
+              "Felicia Fernandez"
             ],
-            "Patient B - Pierce": [
-              "Jeff Long",
-              "Brett Cook",
-              "Meghan Lynch"
+            "Patient B - Hart": [
+              "Suzanne Anderson",
+              "Scarlett Morrison"
             ],
-            "Patient C - Craig": [
-              "Anna Wagner",
-              "Landon Willis"
+            "Patient C - Rodriquez": [
+              "Lucy Smith",
+              "Leonard West",
+              "Fred Lowe"
+            ],
+            "Patient D - Garcia": [
+              "Sheryl Reynolds"
             ]
           },
           "staffBreaks": {
-            "Nora Davis": "NIGHT BREAK",
-            "Linda Murphy": "NIGHT BREAK",
-            "Connie Castro": "NIGHT BREAK",
-            "Landon Willis": "NIGHT BREAK"
+            "Earl Barnett": "2ND BREAK"
           }
         },
-        "02:00-03:00": {
+        "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Landon Willis"
+            "Patient A - Lawson": [
+              "Earl Barnett"
             ],
-            "Patient B - Pierce": [
-              "Connie Castro",
-              "Linda Murphy",
-              "Nora Davis"
+            "Patient B - Hart": [
+              "Felicia Fernandez",
+              "Leonard West"
             ],
-            "Patient C - Craig": [
-              "Earl Lewis",
-              "Jeff Long"
+            "Patient C - Rodriquez": [
+              "Jean Simmons",
+              "Lucy Smith",
+              "Lucas Or Luke Wells"
+            ],
+            "Patient D - Garcia": [
+              "Sheryl Reynolds"
             ]
           },
           "staffBreaks": {
-            "Brian Peters": "NIGHT BREAK",
-            "Meghan Lynch": "NIGHT BREAK",
-            "Anna Wagner": "NIGHT BREAK"
+            "Fred Lowe": "2ND BREAK",
+            "Lucas Or Luke Wells": "2ND BREAK",
+            "Suzanne Anderson": "2ND BREAK",
+            "Felicia Fernandez": "2ND BREAK",
+            "Leonard West": "2ND BREAK"
           }
         },
-        "03:00-04:00": {
+        "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Jeff Long"
+            "Patient A - Lawson": [
+              "Lucy Smith"
             ],
-            "Patient B - Pierce": [
-              "Connie Castro",
-              "Linda Murphy",
-              "Earl Lewis"
+            "Patient B - Hart": [
+              "Lucas Or Luke Wells",
+              "Scarlett Morrison"
             ],
-            "Patient C - Craig": [
-              "Nora Davis",
-              "Brett Cook"
+            "Patient C - Rodriquez": [
+              "Fred Lowe",
+              "Jean Simmons",
+              "Suzanne Anderson"
+            ],
+            "Patient D - Garcia": [
+              "Earl Barnett"
             ]
           },
           "staffBreaks": {
-            "Brian Peters": "NIGHT BREAK",
-            "Meghan Lynch": "NIGHT BREAK",
-            "Anna Wagner": "NIGHT BREAK"
+            "Leonard West": "SECURITY DUTY"
           }
         },
-        "04:00-05:00": {
+        "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Davidson": [
-              "Nora Davis"
+            "Patient A - Lawson": [
+              "Lucas Or Luke Wells"
             ],
-            "Patient B - Pierce": [
-              "Anna Wagner",
-              "Brian Peters",
-              "Landon Willis"
+            "Patient B - Hart": [
+              "Fred Lowe",
+              "Jean Simmons"
             ],
-            "Patient C - Craig": [
-              "Meghan Lynch",
-              "Connie Castro"
+            "Patient C - Rodriquez": [
+              "Sheryl Reynolds",
+              "Scarlett Morrison",
+              "Felicia Fernandez"
+            ],
+            "Patient D - Garcia": [
+              "Lucy Smith"
             ]
           },
           "staffBreaks": {
-            "Earl Lewis": "NIGHT BREAK",
-            "Brett Cook": "NIGHT BREAK",
-            "Jeff Long": "NIGHT BREAK"
-          }
-        },
-        "05:00-06:00": {
-          "patientAssignments": {
-            "Patient A - Davidson": [
-              "Connie Castro"
-            ],
-            "Patient B - Pierce": [
-              "Anna Wagner",
-              "Nora Davis",
-              "Brian Peters"
-            ],
-            "Patient C - Craig": [
-              "Linda Murphy",
-              "Meghan Lynch"
-            ]
-          },
-          "staffBreaks": {
-            "Earl Lewis": "NIGHT BREAK",
-            "Brett Cook": "NIGHT BREAK",
-            "Jeff Long": "NIGHT BREAK"
-          }
-        },
-        "06:00-07:00": {
-          "patientAssignments": {
-            "Patient A - Davidson": [
-              "Meghan Lynch"
-            ],
-            "Patient B - Pierce": [
-              "Brett Cook",
-              "Jeff Long",
-              "Earl Lewis"
-            ],
-            "Patient C - Craig": [
-              "Linda Murphy",
-              "Connie Castro"
-            ]
-          },
-          "staffBreaks": {
-            "Landon Willis": "SECURITY DUTY"
-          }
-        },
-        "07:00-08:00": {
-          "patientAssignments": {
-            "Patient A - Davidson": [
-              "Earl Lewis"
-            ],
-            "Patient B - Pierce": [
-              "Brett Cook",
-              "Jeff Long",
-              "Nora Davis"
-            ],
-            "Patient C - Craig": [
-              "Anna Wagner",
-              "Brian Peters"
-            ]
-          },
-          "staffBreaks": {
-            "Landon Willis": "SECURITY DUTY"
+            "Leonard West": "SECURITY DUTY"
           }
         }
       },
-      "createdAt": "2025-07-01T21:54:28.597Z",
-      "updatedAt": "2025-07-01T21:54:28.597Z"
+      "createdAt": "2025-07-01T21:57:15.436Z",
+      "updatedAt": "2025-07-01T21:57:15.436Z"
     }
   },
   "settings": {
     "staff": [
-      "Nora Davis",
-      "Brian Peters",
-      "Earl Lewis",
-      "Linda Murphy",
-      "Meghan Lynch",
-      "Brett Cook",
-      "Connie Castro"
+      "Sheryl Reynolds",
+      "Fred Lowe",
+      "Jean Simmons",
+      "Lucas Or Luke Wells",
+      "Suzanne Anderson",
+      "Scarlett Morrison",
+      "Felicia Fernandez"
     ],
     "patients": [
       {
-        "name": "Patient A - Davidson",
+        "name": "Patient A - Lawson",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Pierce",
+        "name": "Patient B - Hart",
+        "staffCount": 2
+      },
+      {
+        "name": "Patient C - Rodriquez",
         "staffCount": 3
       },
       {
-        "name": "Patient C - Craig",
-        "staffCount": 2
+        "name": "Patient D - Garcia",
+        "staffCount": 1
       }
     ],
     "securityStaff": [
-      "Landon Willis"
+      "Leonard West"
     ],
-    "nurseInCharge1": "Anna Wagner",
-    "nurseInCharge2": "Jeff Long",
-    "isDayShift": false,
+    "nurseInCharge1": "Lucy Smith",
+    "nurseInCharge2": "Earl Barnett",
+    "isDayShift": true,
     "isDarkMode": true
   }
-} }
+}
+    "isDayShift": true,
+    "isDarkMode": true
+  }
 }
