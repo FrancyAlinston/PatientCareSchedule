@@ -2286,14 +2286,8 @@ function renderSchedule(schedule, staff, patients) {
                 cell.classList.add('staff-unassigned');
             } else {
                 // Display all assigned staff for this patient
-                if (assignedStaff.length === 1) {
-                    // Single staff - show initials
-                    cell.textContent = getInitials(assignedStaff[0]);
-                } else {
-                    // Multiple staff - show count and initials
-                    const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-                    cell.textContent = `${assignedStaff.length}: ${staffInitials}`;
-                }
+                const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
+                cell.textContent = staffInitials;
 
                 cell.title = assignedStaff.join(", "); // Full names on hover
 
