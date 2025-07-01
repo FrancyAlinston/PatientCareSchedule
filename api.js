@@ -1,6 +1,6 @@
 // AJAX utility functions for Patient Care Schedule
 class ScheduleAPI {
-    constructor(baseURL = 'http://localhost:3000/api') {
+    constructor(baseURL = 'http://localhost:3001/api') {
         this.baseURL = baseURL;
     }
 

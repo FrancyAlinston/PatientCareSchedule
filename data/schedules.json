@@ -2,171 +2,296 @@
   "schedules": {
     "schedule_2025-07-01": {
       "schedule": {
-        "20:00-21:00": {
+        "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [
-              "Deborah Elliott"
+            "Patient A - Hicks": [
+              "Kathryn Richardson"
             ],
-            "Patient B - Medina": [
-              "Annie Walters"
+            "Patient B - Baker": [
+              "Linda Berry",
+              "Sean Wallace"
             ],
-            "Patient C - Williams": [
-              "Suzy Robinson"
+            "Patient C - Carpenter": [
+              "Patsy Diaz"
+            ],
+            "Patient D - Ferguson": [
+              "Landon Stephens"
             ]
           },
           "staffBreaks": {
-            "Jesse Jennings": "NIGHT BREAK"
+            "Ritthy Fleming": "SECURITY DUTY"
           }
         },
-        "21:00-22:00": {
+        "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Connor Horton"
+            ],
+            "Patient B - Baker": [
+              "Greg Soto",
+              "Jessica Barnett"
+            ],
+            "Patient C - Carpenter": [
+              "Hannah Bryant"
+            ],
+            "Patient D - Ferguson": [
+              "Linda Berry"
+            ]
+          },
+          "staffBreaks": {
+            "Kathryn Richardson": "30-MIN BREAK",
+            "Ritthy Fleming": "SECURITY DUTY"
+          }
+        },
+        "10:00-11:00": {
+          "patientAssignments": {
+            "Patient A - Hicks": [
+              "Sean Wallace"
+            ],
+            "Patient B - Baker": [
+              "Kathryn Richardson",
+              "Landon Stephens"
+            ],
+            "Patient C - Carpenter": [
+              "Greg Soto"
+            ],
+            "Patient D - Ferguson": [
+              "Connor Horton"
+            ]
+          },
+          "staffBreaks": {
+            "Patsy Diaz": "30-MIN BREAK",
+            "Jessica Barnett": "30-MIN BREAK"
+          }
+        },
+        "11:00-12:00": {
+          "patientAssignments": {
+            "Patient A - Hicks": [
+              "Jessica Barnett"
+            ],
+            "Patient B - Baker": [
+              "Patsy Diaz",
+              "Hannah Bryant"
+            ],
+            "Patient C - Carpenter": [
+              "Linda Berry"
+            ],
+            "Patient D - Ferguson": [
+              "Kathryn Richardson"
+            ]
+          },
+          "staffBreaks": {
+            "Sean Wallace": "30-MIN BREAK",
+            "Landon Stephens": "30-MIN BREAK",
+            "Connor Horton": "30-MIN BREAK",
+            "Ritthy Fleming": "30-MIN BREAK"
+          }
+        },
+        "12:00-13:00": {
+          "patientAssignments": {
+            "Patient A - Hicks": [
+              "Patsy Diaz"
+            ],
+            "Patient B - Baker": [
+              "Connor Horton",
+              "Sean Wallace"
+            ],
+            "Patient C - Carpenter": [
+              "Landon Stephens"
+            ],
+            "Patient D - Ferguson": [
+              "Jessica Barnett"
+            ]
+          },
+          "staffBreaks": {
+            "Linda Berry": "30-MIN BREAK",
+            "Greg Soto": "30-MIN BREAK",
+            "Hannah Bryant": "30-MIN BREAK"
+          }
+        },
+        "13:00-14:00": {
+          "patientAssignments": {
+            "Patient A - Hicks": [
+              "Linda Berry"
+            ],
+            "Patient B - Baker": [
+              "Greg Soto",
+              "Hannah Bryant"
+            ],
+            "Patient C - Carpenter": [
+              "Sean Wallace"
+            ],
+            "Patient D - Ferguson": [
+              "Patsy Diaz"
+            ]
           },
           "staffBreaks": {}
         },
-        "22:00-23:00": {
+        "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Hannah Bryant"
+            ],
+            "Patient B - Baker": [
+              "Ritthy Fleming",
+              "Kathryn Richardson"
+            ],
+            "Patient C - Carpenter": [
+              "Jessica Barnett"
+            ],
+            "Patient D - Ferguson": [
+              "Sean Wallace"
+            ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Linda Berry": "2ND BREAK",
+            "Landon Stephens": "2ND BREAK",
+            "Greg Soto": "2ND BREAK",
+            "Ritthy Fleming": "2ND BREAK"
+          }
         },
-        "23:00-00:00": {
+        "15:00-16:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Greg Soto"
+            ],
+            "Patient B - Baker": [
+              "Landon Stephens",
+              "Connor Horton"
+            ],
+            "Patient C - Carpenter": [
+              "Kathryn Richardson"
+            ],
+            "Patient D - Ferguson": [
+              "Hannah Bryant"
+            ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Jessica Barnett": "2ND BREAK"
+          }
         },
-        "00:00-01:00": {
+        "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Landon Stephens"
+            ],
+            "Patient B - Baker": [
+              "Linda Berry",
+              "Patsy Diaz"
+            ],
+            "Patient C - Carpenter": [
+              "Connor Horton"
+            ],
+            "Patient D - Ferguson": [
+              "Greg Soto"
+            ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Hannah Bryant": "2ND BREAK"
+          }
         },
-        "01:00-02:00": {
+        "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Linda Berry"
+            ],
+            "Patient B - Baker": [
+              "Jessica Barnett",
+              "Ritthy Fleming"
+            ],
+            "Patient C - Carpenter": [
+              "Landon Stephens"
+            ],
+            "Patient D - Ferguson": [
+              "Greg Soto"
+            ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Sean Wallace": "2ND BREAK",
+            "Kathryn Richardson": "2ND BREAK",
+            "Patsy Diaz": "2ND BREAK",
+            "Connor Horton": "2ND BREAK"
+          }
         },
-        "02:00-03:00": {
+        "18:00-19:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Patsy Diaz"
+            ],
+            "Patient B - Baker": [
+              "Sean Wallace",
+              "Kathryn Richardson"
+            ],
+            "Patient C - Carpenter": [
+              "Jessica Barnett"
+            ],
+            "Patient D - Ferguson": [
+              "Connor Horton"
+            ]
           },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Ritthy Fleming": "SECURITY DUTY"
+          }
         },
-        "03:00-04:00": {
+        "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
+            "Patient A - Hicks": [
+              "Sean Wallace"
+            ],
+            "Patient B - Baker": [
+              "Hannah Bryant",
+              "Linda Berry"
+            ],
+            "Patient C - Carpenter": [
+              "Kathryn Richardson"
+            ],
+            "Patient D - Ferguson": [
+              "Patsy Diaz"
+            ]
           },
-          "staffBreaks": {}
-        },
-        "04:00-05:00": {
-          "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
-          },
-          "staffBreaks": {}
-        },
-        "05:00-06:00": {
-          "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
-          },
-          "staffBreaks": {}
-        },
-        "06:00-07:00": {
-          "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
-          },
-          "staffBreaks": {}
-        },
-        "07:00-08:00": {
-          "patientAssignments": {
-            "Patient A - Murphy": [],
-            "Patient B - Medina": [],
-            "Patient C - Williams": []
-          },
-          "staffBreaks": {}
+          "staffBreaks": {
+            "Ritthy Fleming": "SECURITY DUTY"
+          }
         }
       },
-      "createdAt": "2025-07-01T20:39:20.175Z",
-      "updatedAt": "2025-07-01T20:39:20.175Z"
+      "createdAt": "2025-07-01T20:46:27.647Z",
+      "updatedAt": "2025-07-01T20:46:27.647Z"
     }
   },
   "settings": {
     "staff": [
-      "Freddie Carter",
-      "Rose Wallace",
-      "Suzy Robinson",
-      "Harvey Webb",
-      "Evan Thomas",
-      "Deborah Elliott",
-      "Annie Walters"
+      "Linda Berry",
+      "Sean Wallace",
+      "Kathryn Richardson",
+      "Patsy Diaz",
+      "Landon Stephens",
+      "Greg Soto",
+      "Jessica Barnett"
     ],
     "patients": [
       {
-        "name": "Patient A - Murphy",
+        "name": "Patient A - Hicks",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Medina",
+        "name": "Patient B - Baker",
         "staffCount": 2
       },
       {
-        "name": "Patient C - Williams",
+        "name": "Patient C - Carpenter",
+        "staffCount": 1
+      },
+      {
+        "name": "Patient D - Ferguson",
         "staffCount": 1
       }
     ],
     "securityStaff": [
-      "Jesse Jennings"
+      "Ritthy Fleming"
     ],
-    "nurseInCharge1": "Juan Garcia",
-    "nurseInCharge2": "Donna Carter",
-    "isDayShift": false,
-    "isDarkMode": true
-  }
-}homas",
-      "Deborah Elliott",
-      "Annie Walters"
-    ],
-    "patients": [
-      {
-        "name": "Patient A - Murphy",
-        "staffCount": 1
-      },
-      {
-        "name": "Patient B - Medina",
-        "staffCount": 2
-      },
-      {
-        "name": "Patient C - Williams",
-        "staffCount": 1
-      }
-    ],
-    "securityStaff": [
-      "Jesse Jennings"
-    ],
-    "nurseInCharge1": "Juan Garcia",
-    "nurseInCharge2": "Donna Carter",
-    "isDayShift": false,
+    "nurseInCharge1": "Connor Horton",
+    "nurseInCharge2": "Hannah Bryant",
+    "isDayShift": true,
     "isDarkMode": true
   }
 }
