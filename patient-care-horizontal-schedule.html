@@ -625,17 +625,105 @@
         }
 
         // Debounced save function for AJAX
-        const debouncedSaveToServer = debounce(async () => {
-            await saveToServer();
-        }, 500);
+        // Debounced cookie save function
+        const debouncedSaveToCookies = debounce(saveInputsToCookies, 300);
 
-        function showError(message, color = '#f44336') {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            errorDiv.style.backgroundColor = color;
-            document.body.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
+        // Cookie-based storage functions (temporary data only)
+        function setCookie(name, value, days = 1) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+
+        function saveInputsToCookies() {
+            // Only save current input values to cookies (temporary storage)
+            const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
+            const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+                return {
+                    name: container.querySelector('.patient-name').value.trim(),
+                    staffCount: parseInt(container.querySelector('.staff-count').value)
+                };
+            });
+            const securityStaff = document.querySelector('.security-name')?.value.trim() || '';
+            const nurse1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
+            const nurse2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
+
+            setCookie('tempStaff', JSON.stringify(staffInputs));
+            setCookie('tempPatients', JSON.stringify(patientInputs));
+            setCookie('tempSecurity', securityStaff);
+            setCookie('tempNurse1', nurse1);
+            setCookie('tempNurse2', nurse2);
+        }
+
+        function loadInputsFromCookies() {
+            // Load only if cookies exist
+            const staffData = getCookie('tempStaff');
+            const patientData = getCookie('tempPatients');
+            const securityData = getCookie('tempSecurity');
+            const nurse1Data = getCookie('tempNurse1');
+            const nurse2Data = getCookie('tempNurse2');
+
+            if (staffData) {
+                const staff = JSON.parse(staffData);
+                const staffInputs = document.getElementById('staffInputs');
+                staffInputs.innerHTML = '';
+                staff.forEach(name => {
+                    addStaffInput();
+                    const inputs = document.querySelectorAll('.staff-name');
+                    inputs[inputs.length - 1].value = name;
+                });
+            }
+
+            if (patientData) {
+                const patients = JSON.parse(patientData);
+                const patientInputs = document.getElementById('patientInputs');
+                patientInputs.innerHTML = '';
+                patients.forEach(patient => {
+                    addPatientInput();
+                    const containers = document.querySelectorAll('.patient-container');
+                    const lastContainer = containers[containers.length - 1];
+                    lastContainer.querySelector('.patient-name').value = patient.name;
+                    lastContainer.querySelector('.staff-count').value = patient.staffCount;
+                });
+            }
+
+            if (securityData) {
+                const securityInput = document.querySelector('.security-name');
+                if (securityInput) securityInput.value = securityData;
+            }
+
+            if (nurse1Data) {
+                const nurse1Input = document.getElementById('nurseInChargeInput');
+                if (nurse1Input) nurse1Input.value = nurse1Data;
+            }
+
+            if (nurse2Data) {
+                const nurse2Input = document.getElementById('nurseInCharge2Input');
+                if (nurse2Input) nurse2Input.value = nurse2Data;
+            }
+        }
+
+        function clearAllCookies() {
+            deleteCookie('tempStaff');
+            deleteCookie('tempPatients');
+            deleteCookie('tempSecurity');
+            deleteCookie('tempNurse1');
+            deleteCookie('tempNurse2');
         }
 
         // AJAX-based save function to replace localStorage
@@ -789,7 +877,7 @@
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'staff-name';
-                newInput.addEventListener('input', debouncedSaveToServer);
+                newInput.addEventListener('input', debouncedSaveToCookies);
 
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
@@ -818,11 +906,11 @@
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'patient-name';
-                newInput.addEventListener('input', debouncedSaveToServer);
+                newInput.addEventListener('input', debouncedSaveToCookies);
 
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
-                staffCountSelect.addEventListener('change', debouncedSaveToServer);
+                staffCountSelect.addEventListener('change', debouncedSaveToCookies);
 
                 const option1 = document.createElement('option');
                 option1.value = 1;
@@ -857,7 +945,7 @@
 
             // Get the existing security input field
             const securityInput = document.querySelector('.security-name');
-            
+
             if (securityStaffData.length > 0) {
                 // Load the first security staff name (we only have one input field now)
                 const name = securityStaffData[0];
@@ -876,7 +964,7 @@
 
             // Add event listener to the input if it doesn't have one
             if (securityInput && !securityInput.hasAttribute('data-listener-added')) {
-                securityInput.addEventListener('input', debouncedSaveToServer);
+                securityInput.addEventListener('input', debouncedSaveToCookies);
                 securityInput.setAttribute('data-listener-added', 'true');
             }
         }
@@ -919,9 +1007,9 @@ function addStaffInput() {
     staffInputs.appendChild(staffContainer);
 
     // Add event listener to the new input
-    newInput.addEventListener('input', debouncedSaveToServer);
+    newInput.addEventListener('input', debouncedSaveToCookies);
 
-    saveToServer();
+    saveInputsToCookies();
 }
 
 // Function to add patient input
@@ -965,10 +1053,10 @@ function addPatientInput() {
     patientInputs.appendChild(patientContainer);
 
     // Add event listeners to the new elements
-    newInput.addEventListener('input', debouncedSaveToServer);
-    staffCountSelect.addEventListener('change', debouncedSaveToServer);
+    newInput.addEventListener('input', debouncedSaveToCookies);
+    staffCountSelect.addEventListener('change', debouncedSaveToCookies);
 
-    saveToServer();
+    saveInputsToCookies();
 }
 
 // Function to check if time is restricted for security
@@ -1288,7 +1376,7 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
     }
 
     const totalHours = timeSlots.length;
-    
+
     // Initialize continuous assignment tracker for OBS
     const obsAssignmentTracker = {};
     regularStaff.forEach(s => {
@@ -1299,7 +1387,7 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
     if (!staffPatientHistory) {
         staffPatientHistory = {};
     }
-    
+
     // Ensure all staff have OBS history initialized
     regularStaff.forEach(s => {
         if (!staffPatientHistory[s]) {
@@ -1314,12 +1402,12 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
     timeSlots.forEach((time, timeIndex) => {
         // Get available staff for this time slot (those not on break)
         const availableStaff = regularStaff.filter(s => !schedule[time].staffBreaks[s]);
-        
+
         let allAvailableStaff = availableStaff.length > 0 ? availableStaff : regularStaff;
 
         // For first 2 and last 2 hours, prefer continuity but still allow rotation
         const isFixedPeriod = timeIndex < 2 || timeIndex >= totalHours - 2;
-        
+
         // If we have multiple staff, use fair rotation logic
         if (allAvailableStaff.length > 1) {
             // Sort staff based on assignment history and continuous hours
@@ -1327,7 +1415,7 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
                 // Continuous hours penalty (to prevent long continuous assignments)
                 const continuousHoursA = obsAssignmentTracker[a] || 0;
                 const continuousHoursB = obsAssignmentTracker[b] || 0;
-                
+
                 // Apply penalty for continuous assignments (more than 2 hours)
                 const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
                 const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
@@ -1369,7 +1457,7 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
             // Only one staff available
             const selectedStaff = allAvailableStaff[0];
             schedule[time].patientAssignments["OBS"] = [selectedStaff];
-            
+
             // Update tracking
             if (staffPatientHistory[selectedStaff]) {
                 staffPatientHistory[selectedStaff]["OBS"]++;
@@ -1702,7 +1790,7 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         setTimeout(() => confirmationDiv.remove(), 3000);
 
         // Save to server
-        await saveToServer();
+        await saveInputsToCookies();
     } catch (error) {
         console.error("Error fetching random names:", error);
 
@@ -1744,7 +1832,7 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
             }
         });
 
-        await saveToServer();
+        await saveInputsToCookies();
     }
 });
 
@@ -1852,7 +1940,7 @@ function regenerateScheduleStats() {
     renderStaffRotationStats(patients, allStaff);
 
     // Save to server
-    saveToServer();
+    saveInputsToCookies();
     saveScheduleToServer();
 }
 
@@ -2164,20 +2252,24 @@ function renderStaffTable(schedule, staff) {
 // Connection status and page initialization
 async function initializeApp() {
     try {
-        // Check server connection
-        await api.healthCheck();
-        console.log("Connected to server successfully");
-        showConnectionStatus(true);
+        console.log("Initializing app with cookie-based storage");
 
-        // Load data from server
-        await loadFromServer();
+        // Load data from cookies instead of server
+        loadInputsFromCookies();
+        
+        // If no cookies exist, add default inputs
+        if (!getCookie('tempStaff')) {
+            addStaffInput();
+        }
+        if (!getCookie('tempPatients')) {
+            addPatientInput();
+        }
 
-        // Set up event listeners for real-time save
+        // Set up event listeners for cookie save
         setupEventListeners();
 
     } catch (error) {
-        console.error("Failed to connect to server:", error);
-        showConnectionStatus(false);
+        console.error("Failed to initialize app:", error);
         showError("Cannot connect to server. Please ensure the server is running on localhost:3001");
     }
 }
@@ -2216,8 +2308,8 @@ function showConnectionStatus(isConnected) {
 
 function setupEventListeners() {
     // Nurse in charge inputs
-    document.getElementById('nurseInChargeInput')?.addEventListener('input', debouncedSaveToServer);
-    document.getElementById('nurseInCharge2Input')?.addEventListener('input', debouncedSaveToServer);
+    document.getElementById('nurseInChargeInput')?.addEventListener('input', debouncedSaveToCookies);
+    document.getElementById('nurseInCharge2Input')?.addEventListener('input', debouncedSaveToCookies);
 
     // Button event listeners
     document.getElementById('addStaffBtn')?.addEventListener('click', addStaffInput);
@@ -2230,102 +2322,106 @@ function setupEventListeners() {
     document.getElementById('toggleModeBtn')?.addEventListener('click', toggleDarkMode);
 
     // Reset button
-    document.getElementById('resetBtn')?.addEventListener('click', resetAll);
+    document.getElementById('resetBtn')?.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent form submission/page refresh
+        resetAll();
+    });
 }
 
 async function resetAll() {
     console.log('🔴 Reset button clicked!');
-    
+
     if (confirm('Are you sure you want to reset all data? This will clear all settings and schedules.')) {
-        try {
-            console.log('🔄 User confirmed reset, calling API...');
-            
-            // Call server reset API
-            const response = await api.resetData();
-            console.log('✅ Server reset response:', response);
-            
-            console.log('🧹 Clearing all input fields...');
-            
-            // Clear health care worker inputs
-            const staffInputs = document.getElementById('staffInputs');
-            staffInputs.innerHTML = '';
-            console.log('Cleared staff inputs');
-            
-            // Clear patient inputs  
-            const patientInputs = document.getElementById('patientInputs');
-            patientInputs.innerHTML = '';
-            console.log('Cleared patient inputs');
-            
-            // Clear security staff input value but keep the field
-            const securityInput = document.querySelector('.security-name');
-            if (securityInput) {
-                securityInput.value = '';
-                console.log('Cleared security input');
-            }
-            
-            // Clear nurse inputs
-            const nurse1 = document.getElementById('nurseInChargeInput');
-            const nurse2 = document.getElementById('nurseInCharge2Input');
-            if (nurse1) nurse1.value = '';
-            if (nurse2) nurse2.value = '';
-            console.log('Cleared nurse inputs');
-            
-            // Clear all display tables
-            const scheduleHeader = document.getElementById('scheduleHeader');
-            const scheduleBody = document.getElementById('scheduleBody');
-            const staffHeader = document.getElementById('staffHeader');
-            const staffBody = document.getElementById('staffBody');
-            const breakTableBody = document.querySelector('#breakHoursTable tbody');
-            const stats = document.getElementById('stats');
-            const rotationStats = document.getElementById('rotationStats');
-            
-            if (scheduleHeader) scheduleHeader.innerHTML = '';
-            if (scheduleBody) scheduleBody.innerHTML = '';
-            if (staffHeader) staffHeader.innerHTML = '';
-            if (staffBody) staffBody.innerHTML = '';
-            if (breakTableBody) breakTableBody.innerHTML = '';
-            if (stats) stats.innerHTML = '';
-            if (rotationStats) rotationStats.innerHTML = '';
-            console.log('Cleared all display tables');
-            
-            // Reset global variables
-            window.schedule = {};
-            window.isDayShift = true;
-            window.timeSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
-            window.securityStaff = [];
-            console.log('Reset global variables');
-            
-            // Add back one empty staff and patient input
-            addStaffInput();
-            addPatientInput();
-            console.log('Added default empty inputs');
-            
-            // Reset UI elements
-            const siteTitle = document.getElementById('siteTitle');
-            const toggleBtn = document.getElementById('toggleShiftBtn');
-            const modeBtn = document.getElementById('toggleModeBtn');
-            
-            if (siteTitle) siteTitle.textContent = "Day Shift Allocation";
-            if (toggleBtn) toggleBtn.textContent = "Switch to Night Shift";
-            if (modeBtn) modeBtn.textContent = '🌙';
-            
-            // Remove dark mode
-            document.body.classList.remove('dark-mode');
-            console.log('Reset UI elements');
-            
-            // Show success message
-            showError("✅ All data has been reset successfully!", "#4CAF50");
-            
-            console.log('🎉 Reset completed successfully!');
-            
-        } catch (error) {
-            console.error('❌ Reset error:', error);
-            showError(`Failed to reset data: ${error.message}`);
+        console.log('🔄 User confirmed reset');
+
+        // Clear all cookies (temporary storage)
+        clearAllCookies();
+        console.log('🍪 Cleared all cookies');
+
+        // Clear health care worker inputs
+        const staffInputs = document.getElementById('staffInputs');
+        staffInputs.innerHTML = '';
+        console.log('Cleared staff inputs');
+
+        // Clear patient inputs
+        const patientInputs = document.getElementById('patientInputs');
+        patientInputs.innerHTML = '';
+        console.log('Cleared patient inputs');
+
+        // Clear security staff input value but keep the field
+        const securityInput = document.querySelector('.security-name');
+        if (securityInput) {
+            securityInput.value = '';
+            console.log('Cleared security input');
         }
+
+        // Clear nurse inputs
+        const nurse1 = document.getElementById('nurseInChargeInput');
+        const nurse2 = document.getElementById('nurseInCharge2Input');
+        if (nurse1) nurse1.value = '';
+        if (nurse2) nurse2.value = '';
+        console.log('Cleared nurse inputs');
+
+        // Clear all display tables
+        const scheduleHeader = document.getElementById('scheduleHeader');
+        const scheduleBody = document.getElementById('scheduleBody');
+        const staffHeader = document.getElementById('staffHeader');
+        const staffBody = document.getElementById('staffBody');
+        const breakTableBody = document.querySelector('#breakHoursTable tbody');
+        const stats = document.getElementById('stats');
+        const rotationStats = document.getElementById('rotationStats');
+
+        if (scheduleHeader) scheduleHeader.innerHTML = '';
+        if (scheduleBody) scheduleBody.innerHTML = '';
+        if (staffHeader) staffHeader.innerHTML = '';
+        if (staffBody) staffBody.innerHTML = '';
+        if (breakTableBody) breakTableBody.innerHTML = '';
+        if (stats) stats.innerHTML = '';
+        if (rotationStats) rotationStats.innerHTML = '';
+        console.log('Cleared all display tables');
+
+        // Reset global variables
+        window.schedule = {};
+        window.isDayShift = true;
+        window.timeSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
+        window.securityStaff = [];
+        console.log('Reset global variables');
+
+        // Add back one empty staff and patient input
+        addStaffInput();
+        addPatientInput();
+        console.log('Added default empty inputs');
+
+        // Reset UI elements
+        const siteTitle = document.getElementById('siteTitle');
+        const toggleBtn = document.getElementById('toggleShiftBtn');
+        const modeBtn = document.getElementById('toggleModeBtn');
+
+        if (siteTitle) siteTitle.textContent = "Day Shift Allocation";
+        if (toggleBtn) toggleBtn.textContent = "Switch to Night Shift";
+        if (modeBtn) modeBtn.textContent = '🌙';
+
+        // Remove dark mode
+        document.body.classList.remove('dark-mode');
+        console.log('Reset UI elements');
+
+        // Show success message
+        showError("✅ All data has been reset successfully!", "#4CAF50");
+
+        console.log('🎉 Reset completed successfully!');
     } else {
         console.log('❌ User cancelled reset');
     }
 }
+
+        function showError(message, color = '#f44336') {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.backgroundColor = color;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
 
 function toggleShift() {
     isDayShift = !isDayShift;
@@ -2335,14 +2431,14 @@ function toggleShift() {
     document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
 
     updateLegend();
-    saveToServer();
+    saveInputsToCookies();
 }
 
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     document.getElementById('toggleModeBtn').textContent = isDark ? '☀️' : '🌙';
-    saveToServer();
+    saveInputsToCookies();
 }
 
 // Helper functions for removing items
@@ -2350,7 +2446,7 @@ function removeStaffInput() {
     const staffContainers = document.querySelectorAll('.staff-container');
     if (staffContainers.length > 1) {
         staffContainers[staffContainers.length - 1].remove();
-        saveToServer();
+        saveInputsToCookies();
     }
 }
 
@@ -2358,7 +2454,7 @@ function removePatientInput() {
     const patientContainers = document.querySelectorAll('.patient-container');
     if (patientContainers.length > 1) {
         patientContainers[patientContainers.length - 1].remove();
-        saveToServer();
+        saveInputsToCookies();
     }
 }
 
@@ -2449,7 +2545,7 @@ function renderSchedule(schedule, staff, patients) {
 
     // Add OBS (Ward Observation) row first
     const obsRow = document.createElement('tr');
-    
+
     // Add OBS label cell
     const obsCell = document.createElement('td');
     obsCell.textContent = "OBS";

@@ -4,281 +4,217 @@
       "schedule": {
         "08:00-09:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Rose Soto"
+            "Patient A - Hughes": [
+              "Brayden Elliott"
             ],
-            "Patient B - Walters": [
-              "Jay Lawson",
-              "Randy Ramirez"
-            ],
-            "Patient C - Flores": [
-              "Russell Reyes",
-              "Caroline Herrera",
-              "Derrick Willis"
+            "Patient B - Boyd": [
+              "Clyde Owens",
+              "Leslie Stephens"
             ],
             "OBS": [
-              "Russell Reyes"
+              "Clyde Owens"
             ]
           },
           "staffBreaks": {
-            "Caleb Pena": "SECURITY DUTY"
+            "Bob Griffin": "SECURITY DUTY"
           }
         },
         "09:00-10:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Derrick Willis"
+            "Patient A - Hughes": [
+              "Penny Silva"
             ],
-            "Patient B - Walters": [
-              "Russell Reyes",
-              "Caroline Herrera"
-            ],
-            "Patient C - Flores": [
-              "Marion Alexander",
-              "Jay Lawson",
-              "Randy Ramirez"
+            "Patient B - Boyd": [
+              "Suzanna Gilbert",
+              "Gabriel Daniels"
             ],
             "OBS": [
-              "Caroline Herrera"
+              "Brayden Elliott"
             ]
           },
           "staffBreaks": {
-            "Kristin Herrera": "30-MIN BREAK",
-            "Priscilla Miles": "30-MIN BREAK",
-            "Caleb Pena": "SECURITY DUTY"
+            "Leslie Stephens": "30-MIN BREAK",
+            "Travis Davis": "30-MIN BREAK",
+            "Bob Griffin": "SECURITY DUTY"
           }
         },
         "10:00-11:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Russell Reyes"
+            "Patient A - Hughes": [
+              "Leslie Stephens"
             ],
-            "Patient B - Walters": [
-              "Marion Alexander",
-              "Derrick Willis"
-            ],
-            "Patient C - Flores": [
-              "Kristin Herrera",
-              "Priscilla Miles",
-              "Rose Soto"
+            "Patient B - Boyd": [
+              "Travis Davis",
+              "Brayden Elliott"
             ],
             "OBS": [
-              "Derrick Willis"
+              "Leslie Stephens"
             ]
           },
           "staffBreaks": {
-            "Caroline Herrera": "30-MIN BREAK"
+            "Clyde Owens": "30-MIN BREAK",
+            "Gabriel Daniels": "30-MIN BREAK"
           }
         },
         "11:00-12:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Caleb Pena"
+            "Patient A - Hughes": [
+              "Suzanna Gilbert"
             ],
-            "Patient B - Walters": [
-              "Rose Soto",
-              "Marion Alexander"
-            ],
-            "Patient C - Flores": [
-              "Kristin Herrera",
-              "Priscilla Miles",
-              "Caroline Herrera"
+            "Patient B - Boyd": [
+              "Penny Silva",
+              "Clyde Owens"
             ],
             "OBS": [
-              "Rose Soto"
+              "Suzanna Gilbert"
             ]
           },
           "staffBreaks": {
-            "Jay Lawson": "30-MIN BREAK",
-            "Randy Ramirez": "30-MIN BREAK",
-            "Caleb Pena": "30-MIN BREAK"
+            "Brayden Elliott": "30-MIN BREAK"
           }
         },
         "12:00-13:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Caroline Herrera"
+            "Patient A - Hughes": [
+              "Clyde Owens"
             ],
-            "Patient B - Walters": [
-              "Kristin Herrera",
-              "Priscilla Miles"
-            ],
-            "Patient C - Flores": [
-              "Jay Lawson",
-              "Randy Ramirez",
-              "Caleb Pena"
+            "Patient B - Boyd": [
+              "Travis Davis",
+              "Gabriel Daniels"
             ],
             "OBS": [
-              "Jay Lawson"
+              "Travis Davis"
             ]
           },
           "staffBreaks": {
-            "Russell Reyes": "30-MIN BREAK",
-            "Derrick Willis": "30-MIN BREAK",
-            "Rose Soto": "30-MIN BREAK",
-            "Marion Alexander": "30-MIN BREAK"
+            "Suzanna Gilbert": "30-MIN BREAK",
+            "Penny Silva": "30-MIN BREAK"
           }
         },
         "13:00-14:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Kristin Herrera"
+            "Patient A - Hughes": [
+              "Travis Davis"
             ],
-            "Patient B - Walters": [
-              "Jay Lawson",
-              "Randy Ramirez"
-            ],
-            "Patient C - Flores": [
-              "Russell Reyes",
-              "Derrick Willis",
-              "Rose Soto"
+            "Patient B - Boyd": [
+              "Leslie Stephens",
+              "Brayden Elliott"
             ],
             "OBS": [
-              "Randy Ramirez"
+              "Clyde Owens"
             ]
           },
           "staffBreaks": {}
         },
         "14:00-15:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Caleb Pena"
+            "Patient A - Hughes": [
+              "Gabriel Daniels"
             ],
-            "Patient B - Walters": [
-              "Rose Soto",
-              "Kristin Herrera"
-            ],
-            "Patient C - Flores": [
-              "Caroline Herrera",
-              "Derrick Willis",
-              "Jay Lawson"
+            "Patient B - Boyd": [
+              "Suzanna Gilbert",
+              "Penny Silva"
             ],
             "OBS": [
-              "Kristin Herrera"
+              "Leslie Stephens"
             ]
           },
           "staffBreaks": {
-            "Russell Reyes": "2ND BREAK",
-            "Randy Ramirez": "2ND BREAK",
-            "Priscilla Miles": "2ND BREAK",
-            "Marion Alexander": "2ND BREAK",
-            "Caleb Pena": "2ND BREAK"
+            "Brayden Elliott": "2ND BREAK",
+            "Travis Davis": "2ND BREAK"
           }
         },
         "15:00-16:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Jay Lawson"
+            "Patient A - Hughes": [
+              "Brayden Elliott"
             ],
-            "Patient B - Walters": [
-              "Priscilla Miles",
-              "Caroline Herrera"
-            ],
-            "Patient C - Flores": [
-              "Marion Alexander",
-              "Russell Reyes",
-              "Randy Ramirez"
+            "Patient B - Boyd": [
+              "Bob Griffin",
+              "Leslie Stephens"
             ],
             "OBS": [
-              "Russell Reyes"
+              "Brayden Elliott"
             ]
           },
           "staffBreaks": {
-            "Rose Soto": "2ND BREAK",
-            "Kristin Herrera": "2ND BREAK"
+            "Clyde Owens": "2ND BREAK"
           }
         },
         "16:00-17:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Randy Ramirez"
+            "Patient A - Hughes": [
+              "Gabriel Daniels"
             ],
-            "Patient B - Walters": [
-              "Russell Reyes",
-              "Priscilla Miles"
-            ],
-            "Patient C - Flores": [
-              "Marion Alexander",
-              "Rose Soto",
-              "Caleb Pena"
+            "Patient B - Boyd": [
+              "Clyde Owens",
+              "Travis Davis"
             ],
             "OBS": [
-              "Randy Ramirez"
+              "Travis Davis"
             ]
           },
           "staffBreaks": {
-            "Caroline Herrera": "2ND BREAK",
-            "Derrick Willis": "2ND BREAK",
-            "Jay Lawson": "2ND BREAK"
+            "Suzanna Gilbert": "2ND BREAK",
+            "Bob Griffin": "2ND BREAK"
           }
         },
         "17:00-18:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Priscilla Miles"
+            "Patient A - Hughes": [
+              "Clyde Owens"
             ],
-            "Patient B - Walters": [
-              "Derrick Willis",
-              "Caleb Pena"
-            ],
-            "Patient C - Flores": [
-              "Russell Reyes",
-              "Caroline Herrera",
-              "Jay Lawson"
+            "Patient B - Boyd": [
+              "Suzanna Gilbert",
+              "Bob Griffin"
             ],
             "OBS": [
-              "Caroline Herrera"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "18:00-19:00": {
-          "patientAssignments": {
-            "Patient A - Reed": [
-              "Marion Alexander"
-            ],
-            "Patient B - Walters": [
-              "Kristin Herrera",
-              "Derrick Willis"
-            ],
-            "Patient C - Flores": [
-              "Randy Ramirez",
-              "Rose Soto",
-              "Russell Reyes"
-            ],
-            "OBS": [
-              "Derrick Willis"
+              "Suzanna Gilbert"
             ]
           },
           "staffBreaks": {
-            "Caleb Pena": "SECURITY DUTY"
+            "Leslie Stephens": "2ND BREAK",
+            "Gabriel Daniels": "2ND BREAK",
+            "Penny Silva": "2ND BREAK"
+          }
+        },
+        "18:00-19:00": {
+          "patientAssignments": {
+            "Patient A - Hughes": [
+              "Leslie Stephens"
+            ],
+            "Patient B - Boyd": [
+              "Penny Silva",
+              "Brayden Elliott"
+            ],
+            "OBS": [
+              "Clyde Owens"
+            ]
+          },
+          "staffBreaks": {
+            "Bob Griffin": "SECURITY DUTY"
           }
         },
         "19:00-20:00": {
           "patientAssignments": {
-            "Patient A - Reed": [
-              "Kristin Herrera"
+            "Patient A - Hughes": [
+              "Travis Davis"
             ],
-            "Patient B - Walters": [
-              "Rose Soto",
-              "Russell Reyes"
-            ],
-            "Patient C - Flores": [
-              "Caroline Herrera",
-              "Jay Lawson",
-              "Randy Ramirez"
+            "Patient B - Boyd": [
+              "Gabriel Daniels",
+              "Suzanna Gilbert"
             ],
             "OBS": [
-              "Jay Lawson"
+              "Leslie Stephens"
             ]
           },
           "staffBreaks": {
-            "Caleb Pena": "SECURITY DUTY"
+            "Bob Griffin": "SECURITY DUTY"
           }
         }
       },
-      "createdAt": "2025-07-01T22:45:31.041Z",
-      "updatedAt": "2025-07-01T22:45:31.041Z"
+      "createdAt": "2025-07-01T22:53:21.419Z",
+      "updatedAt": "2025-07-01T22:53:21.419Z"
     }
   },
   "settings": {
