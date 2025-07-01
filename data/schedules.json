@@ -1,0 +1,172 @@
+{
+  "schedules": {
+    "schedule_2025-07-01": {
+      "schedule": {
+        "20:00-21:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [
+              "Deborah Elliott"
+            ],
+            "Patient B - Medina": [
+              "Annie Walters"
+            ],
+            "Patient C - Williams": [
+              "Suzy Robinson"
+            ]
+          },
+          "staffBreaks": {
+            "Jesse Jennings": "NIGHT BREAK"
+          }
+        },
+        "21:00-22:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "22:00-23:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "23:00-00:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "00:00-01:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "01:00-02:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "02:00-03:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "03:00-04:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "04:00-05:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "05:00-06:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "06:00-07:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        },
+        "07:00-08:00": {
+          "patientAssignments": {
+            "Patient A - Murphy": [],
+            "Patient B - Medina": [],
+            "Patient C - Williams": []
+          },
+          "staffBreaks": {}
+        }
+      },
+      "createdAt": "2025-07-01T20:39:20.175Z",
+      "updatedAt": "2025-07-01T20:39:20.175Z"
+    }
+  },
+  "settings": {
+    "staff": [
+      "Freddie Carter",
+      "Rose Wallace",
+      "Suzy Robinson",
+      "Harvey Webb",
+      "Evan Thomas",
+      "Deborah Elliott",
+      "Annie Walters"
+    ],
+    "patients": [
+      {
+        "name": "Patient A - Murphy",
+        "staffCount": 1
+      },
+      {
+        "name": "Patient B - Medina",
+        "staffCount": 2
+      },
+      {
+        "name": "Patient C - Williams",
+        "staffCount": 1
+      }
+    ],
+    "securityStaff": [
+      "Jesse Jennings"
+    ],
+    "nurseInCharge1": "Juan Garcia",
+    "nurseInCharge2": "Donna Carter",
+    "isDayShift": false,
+    "isDarkMode": true
+  }
+}homas",
+      "Deborah Elliott",
+      "Annie Walters"
+    ],
+    "patients": [
+      {
+        "name": "Patient A - Murphy",
+        "staffCount": 1
+      },
+      {
+        "name": "Patient B - Medina",
+        "staffCount": 2
+      },
+      {
+        "name": "Patient C - Williams",
+        "staffCount": 1
+      }
+    ],
+    "securityStaff": [
+      "Jesse Jennings"
+    ],
+    "nurseInCharge1": "Juan Garcia",
+    "nurseInCharge2": "Donna Carter",
+    "isDayShift": false,
+    "isDarkMode": true
+  }
+}
