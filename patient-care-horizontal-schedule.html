@@ -615,9 +615,158 @@
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Simplified saveToLocalStorage function that only stores essential data
-        function saveToLocalStorage() {
+        // AJAX Configuration
+        const AJAX_CONFIG = {
+            baseURL: '/api',  // Change this to your server's API endpoint
+            timeout: 10000,   // 10 second timeout
+            retryAttempts: 3,
+            retryDelay: 1000  // 1 second delay between retries
+        };
+
+        // AJAX Utility Functions
+        function makeAjaxRequest(method, endpoint, data = null, options = {}) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                const url = `${AJAX_CONFIG.baseURL}${endpoint}`;
+                
+                // Set timeout
+                xhr.timeout = options.timeout || AJAX_CONFIG.timeout;
+                
+                // Configure request
+                xhr.open(method.toUpperCase(), url, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                
+                // Add any custom headers
+                if (options.headers) {
+                    Object.keys(options.headers).forEach(key => {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+
+                // Handle response
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+                                resolve(response);
+                            } catch (e) {
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                        }
+                    }
+                };
+
+                // Handle network errors
+                xhr.onerror = () => reject(new Error('Network error occurred'));
+                xhr.ontimeout = () => reject(new Error('Request timeout'));
+
+                // Send request
+                try {
+                    const payload = data ? JSON.stringify(data) : null;
+                    xhr.send(payload);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        // Retry mechanism for failed requests
+        async function makeAjaxRequestWithRetry(method, endpoint, data = null, options = {}) {
+            const maxAttempts = options.retryAttempts || AJAX_CONFIG.retryAttempts;
+            const retryDelay = options.retryDelay || AJAX_CONFIG.retryDelay;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    return await makeAjaxRequest(method, endpoint, data, options);
+                } catch (error) {
+                    console.warn(`AJAX attempt ${attempt} failed:`, error.message);
+                    
+                    if (attempt === maxAttempts) {
+                        throw error;
+                    }
+                    
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                }
+            }
+        }
+
+        // Show loading indicator
+        function showLoadingIndicator(message = 'Loading...') {
+            const existingLoader = document.querySelector('.ajax-loader');
+            if (existingLoader) {
+                existingLoader.remove();
+            }
+
+            const loader = document.createElement('div');
+            loader.className = 'ajax-loader';
+            loader.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background-color: #2563eb; color: white; 
+                     padding: 15px; border-radius: 5px; z-index: 2000; display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 20px; height: 20px; border: 2px solid #ffffff; border-top: 2px solid transparent; 
+                         border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Add CSS animation for spinner
+            if (!document.querySelector('#ajax-spinner-styles')) {
+                const style = document.createElement('style');
+                style.id = 'ajax-spinner-styles';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(loader);
+            return loader;
+        }
+
+        // Hide loading indicator
+        function hideLoadingIndicator() {
+            const loader = document.querySelector('.ajax-loader');
+            if (loader) {
+                loader.remove();
+            }
+        }
+
+        // Enhanced error handling with user-friendly messages
+        function handleAjaxError(error, action = 'perform operation') {
+            hideLoadingIndicator();
+            
+            let userMessage = `Failed to ${action}. `;
+            
+            if (error.message.includes('timeout')) {
+                userMessage += 'The server is taking too long to respond. Please try again.';
+            } else if (error.message.includes('Network error')) {
+                userMessage += 'Please check your internet connection and try again.';
+            } else if (error.message.includes('HTTP 404')) {
+                userMessage += 'The requested resource was not found on the server.';
+            } else if (error.message.includes('HTTP 500')) {
+                userMessage += 'There was a server error. Please try again later.';
+            } else if (error.message.includes('HTTP 401')) {
+                userMessage += 'You are not authorized to perform this action.';
+            } else {
+                userMessage += 'An unexpected error occurred. Please try again.';
+            }
+            
+            showError(userMessage);
+            console.error(`AJAX Error [${action}]:`, error);
+        }
+
+        // AJAX-based save function (replaces localStorage)
+        async function saveDataToServer() {
             try {
+                showLoadingIndicator('Saving data...');
+
                 // Get all current input values
                 const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
                 const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
@@ -631,25 +780,64 @@
                 const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
                 const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
 
-                // Save only essential data: names, preferences, and input fields
+                // Prepare data payload
                 const data = {
                     staff: staffInputs,
                     nurseInCharge1,
                     nurseInCharge2,
                     patients: patientInputs,
                     securityStaff: securityStaffValues,
-                    isDayShift, // Day/night shift toggle
-                    isDarkMode: document.body.classList.contains('dark-mode') // Dark/light mode toggle
+                    isDayShift,
+                    isDarkMode: document.body.classList.contains('dark-mode'),
+                    schedule: schedule,
+                    lastUpdated: new Date().toISOString()
                 };
 
-                localStorage.setItem('patientCareData', JSON.stringify(data));
-                return true;
+                // Send to server
+                const response = await makeAjaxRequestWithRetry('POST', '/schedule/save', data);
+                
+                hideLoadingIndicator();
+                
+                // Show success message briefly
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; background-color: #22c55e; color: white; 
+                    padding: 15px; border-radius: 5px; z-index: 1000;
+                `;
+                successDiv.textContent = 'Data saved successfully!';
+                document.body.appendChild(successDiv);
+                setTimeout(() => successDiv.remove(), 2000);
+
+                return response;
             } catch (error) {
-                console.error("Error saving to localStorage:", error);
-                showError("Failed to save your changes. Your browser storage might be full or restricted.");
+                handleAjaxError(error, 'save data');
+                
+                // Fallback to localStorage as backup
+                try {
+                    const data = {
+                        staff: Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()),
+                        patients: Array.from(document.querySelectorAll('.patient-container')).map(container => ({
+                            name: container.querySelector('.patient-name').value.trim(),
+                            staffCount: parseInt(container.querySelector('.staff-count').value)
+                        })),
+                        securityStaff: Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim()),
+                        nurseInCharge1: document.getElementById('nurseInChargeInput')?.value.trim() || '',
+                        nurseInCharge2: document.getElementById('nurseInCharge2Input')?.value.trim() || '',
+                        isDayShift,
+                        isDarkMode: document.body.classList.contains('dark-mode')
+                    };
+                    localStorage.setItem('patientCareData_backup', JSON.stringify(data));
+                    showError('Data saved locally as backup due to server issues.');
+                } catch (backupError) {
+                    showError('Failed to save data both to server and locally.');
+                }
                 return false;
             }
         }
+
+        // Debounced save function
+        const debouncedSaveToServer = debounce(saveDataToServer, 2000);
 
         // Simplified loadFromLocalStorage function to match
         function loadFromLocalStorage() {
