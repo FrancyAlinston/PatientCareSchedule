@@ -354,10 +354,12 @@
             <div style="display: flex; gap: 40px; align-items: flex-start;">
                 <!-- Security Staff Section -->
                 <div>
-                    <h2>Security Staff</h2>
-                    <div class="security-staff-inputs" id="securityStaffInputs"></div>
-                    <button id="addSecurityStaffBtn">Add Security Staff</button>
-                    <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+                    <h2>Security Staff <span style="color: red;">*</span></h2>
+                    <div class="security-staff-inputs" id="securityStaffInputs">
+                        <div class="security-container">
+                            <input type="text" placeholder="Enter Security Staff Name" class="security-name" required>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Combined Nurses Section -->
@@ -849,29 +851,33 @@
         }
 
         function loadSecurityStaffFromData(securityStaffData) {
-            const securityStaffInputs = document.getElementById('securityStaffInputs');
-            securityStaffInputs.innerHTML = '';
-
             // Reset the global array
             securityStaff = [];
 
-            securityStaffData.forEach(name => {
+            // Get the existing security input field
+            const securityInput = document.querySelector('.security-name');
+            
+            if (securityStaffData.length > 0) {
+                // Load the first security staff name (we only have one input field now)
+                const name = securityStaffData[0];
                 if (!securityStaff.includes(name)) {
                     securityStaff.push(name);
                 }
+                if (securityInput) {
+                    securityInput.value = name;
+                }
+            } else {
+                // Clear the input if no data
+                if (securityInput) {
+                    securityInput.value = '';
+                }
+            }
 
-                const securityContainer = document.createElement('div');
-                securityContainer.className = 'security-container';
-
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
-                newInput.value = name;
-                newInput.className = 'security-name';
-                newInput.addEventListener('input', debouncedSaveToServer);
-
-                securityContainer.appendChild(newInput);
-                securityStaffInputs.appendChild(securityContainer);
-            });
+            // Add event listener to the input if it doesn't have one
+            if (securityInput && !securityInput.hasAttribute('data-listener-added')) {
+                securityInput.addEventListener('input', debouncedSaveToServer);
+                securityInput.setAttribute('data-listener-added', 'true');
+            }
         }
 
         function clearAllData() {
@@ -960,33 +966,6 @@ function addPatientInput() {
     // Add event listeners to the new elements
     newInput.addEventListener('input', debouncedSaveToServer);
     staffCountSelect.addEventListener('change', debouncedSaveToServer);
-
-    saveToServer();
-}
-
-// Function to add security staff input
-function addSecurityStaffInput() {
-    const securityStaffInputs = document.getElementById('securityStaffInputs');
-
-    // Check if we've reached the 1 security staff limit
-    if (securityStaffInputs.children.length >= 1) {
-        showError("Maximum of 1 security staff allowed");
-        return;
-    }
-
-    const securityContainer = document.createElement('div');
-    securityContainer.className = 'security-container';
-
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'Enter Security Staff Name';
-    newInput.className = 'security-name';
-
-    securityContainer.appendChild(newInput);
-    securityStaffInputs.appendChild(securityContainer);
-
-    // Add event listener to the new input
-    newInput.addEventListener('input', debouncedSaveToServer);
 
     saveToServer();
 }
@@ -1160,15 +1139,23 @@ function validateInputs() {
         return false;
     }
 
-    // Get all staff (including security and nurses in charge)
+    // Check if security staff is provided (mandatory)
     const securityStaffInputs = Array.from(document.querySelectorAll('.security-name'))
         .map(input => input.value.trim())
         .filter(name => name);
 
+    if (securityStaffInputs.length === 0) {
+        showError("Security Staff is mandatory. Please enter a security staff name.");
+        return false;
+    }
+
+    // Get all staff (including security and nurses in charge)
+    const allSecurityStaff = securityStaffInputs;
+
     const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
     const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
 
-    const allStaff = [...staffInputs, ...securityStaffInputs];
+    const allStaff = [...staffInputs, ...allSecurityStaff];
     if (nurseInCharge1) allStaff.push(nurseInCharge1);
     if (nurseInCharge2) allStaff.push(nurseInCharge2);
 
@@ -2236,8 +2223,6 @@ function setupEventListeners() {
     document.getElementById('removeStaffBtn')?.addEventListener('click', removeStaffInput);
     document.getElementById('addPatientBtn')?.addEventListener('click', addPatientInput);
     document.getElementById('removePatientBtn')?.addEventListener('click', removePatientInput);
-    document.getElementById('addSecurityStaffBtn')?.addEventListener('click', addSecurityStaffInput);
-    document.getElementById('removeSecurityStaffBtn')?.addEventListener('click', removeSecurityStaffInput);
 
     // Shift and mode toggles
     document.getElementById('toggleShiftBtn')?.addEventListener('click', toggleShift);
@@ -2289,14 +2274,6 @@ function removePatientInput() {
     const patientContainers = document.querySelectorAll('.patient-container');
     if (patientContainers.length > 1) {
         patientContainers[patientContainers.length - 1].remove();
-        saveToServer();
-    }
-}
-
-function removeSecurityStaffInput() {
-    const securityContainers = document.querySelectorAll('.security-container');
-    if (securityContainers.length > 0) {
-        securityContainers[securityContainers.length - 1].remove();
         saveToServer();
     }
 }
