@@ -6,10 +6,11 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 2.1.0
+    Version: 2.2.0
     Date: July 3, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
-             Patient Care Ratio Enforcement, Night Shift Cleaning Duties, Break Management
+             Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
+             Break Management, Interactive Cleaning Duty Assignment
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -429,7 +430,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v2.1.0)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v2.2.0)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -1252,7 +1253,7 @@ function generateSchedule() {
 
         // Make schedule globally accessible for popup functionality
         window.schedule = schedule;
-        
+
         // Store original staffStats for reference during regeneration
         window.originalStaffStats = JSON.parse(JSON.stringify(staffStats));
 
@@ -2185,13 +2186,13 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
             if (assignment) {
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td title="${assignment.staff}">${getInitials(assignment.staff)} (${assignment.staff})</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #e7f3ff; border: 1px solid #0077ff; padding: 8px;" title="Click to reassign - ${assignment.staff}">${getInitials(assignment.staff)} (${assignment.staff})</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td>Not Assigned</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #fff3cd; border: 1px solid #ffc107; padding: 8px;" title="Click to assign staff">Not Assigned</td>
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
             }
@@ -2654,6 +2655,7 @@ $(document).ready(function() {
     function closePopup() {
         $('#popupOverlay').hide();
         $('#staffPopup').hide();
+        $('#cleaningDutyPopup').hide(); // Also close cleaning duty popup
     }
 
     // Close popup on overlay click
@@ -2766,6 +2768,169 @@ $(document).ready(function() {
         $('#popupOverlay').hide();
         $('#staffPopup').hide();
     });
+
+    // Cleaning Duty Assignment Popup Functionality
+    $(document).on('click', '.cleaning-duty-assignable', function() {
+        const duty = $(this).attr('data-duty');
+
+        console.log("Opening cleaning duty popup for:", duty);
+
+        // Store duty on popup element
+        $('#cleaningDutyPopup').data('duty', duty);
+
+        // Update popup title
+        $('#cleaningDutyTitle').text(duty);
+
+        // Show overlay and popup
+        $('#popupOverlay').show();
+        $('#cleaningDutyPopup').show();
+
+        // Get available staff (regular staff only, no security or nurses in charge)
+        let availableStaff = [];
+        $('.staff-name').each(function() {
+            const name = $(this).val().trim();
+            if (name) availableStaff.push(name);
+        });
+
+        // Filter out security staff and nurses in charge
+        const securityStaffNames = [];
+        $('.security-name').each(function() {
+            const name = $(this).val().trim();
+            if (name) securityStaffNames.push(name);
+        });
+
+        const nurseInCharge1 = $('#nurseInChargeInput').val().trim();
+        const nurseInCharge2 = $('#nurseInCharge2Input').val().trim();
+
+        availableStaff = availableStaff.filter(name =>
+            !securityStaffNames.includes(name) &&
+            name !== nurseInCharge1 &&
+            name !== nurseInCharge2
+        );
+
+        // Find currently assigned staff for this duty
+        let currentlyAssigned = null;
+        if (window.originalStaffStats) {
+            for (const staffName in window.originalStaffStats) {
+                if (window.originalStaffStats[staffName].cleaningDuties) {
+                    const assignedDuty = window.originalStaffStats[staffName].cleaningDuties.find(d => d.duty === duty);
+                    if (assignedDuty) {
+                        currentlyAssigned = staffName;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Build staff list
+        let html = '';
+
+        // Status header
+        const statusColor = currentlyAssigned ? '#28a745' : '#ffc107';
+        const statusText = currentlyAssigned ? `Currently assigned to: ${currentlyAssigned}` : 'Not assigned';
+        html += `<div style="background-color: ${statusColor}; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+            ${statusText}
+        </div>`;
+
+        // Calculate current cleaning duty count for each staff
+        const staffDutyCount = {};
+        availableStaff.forEach(staffName => {
+            staffDutyCount[staffName] = 0;
+            if (window.originalStaffStats && window.originalStaffStats[staffName] && window.originalStaffStats[staffName].cleaningDuties) {
+                staffDutyCount[staffName] = window.originalStaffStats[staffName].cleaningDuties.length;
+            }
+        });
+
+        // Add staff buttons
+        availableStaff.forEach(function(name) {
+            const isAssigned = currentlyAssigned === name;
+            const dutyCount = staffDutyCount[name] || 0;
+            let buttonStyle, buttonText, buttonClass;
+
+            if (isAssigned) {
+                buttonStyle = 'background-color: #28a745; color: white;';
+                buttonText = `${name} (Currently Assigned) [${dutyCount} duties]`;
+                buttonClass = 'select-cleaning-staff-btn';
+            } else {
+                buttonStyle = 'background-color: #9c27b0; color: white;';
+                buttonText = `${name} [${dutyCount} current duties]`;
+                buttonClass = 'select-cleaning-staff-btn';
+            }
+
+            html += `<button class="${buttonClass}" data-name="${name}"
+                     style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
+                     ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${buttonText}</button>`;
+        });
+
+        $('#cleaningStaffList').html(html);
+    });
+
+    // Close cleaning duty popup functions
+    function closeCleaningPopup() {
+        $('#popupOverlay').hide();
+        $('#cleaningDutyPopup').hide();
+    }
+
+    // Close cleaning popup on Cancel button click
+    $('#closeCleaningPopupBtn').click(closeCleaningPopup);
+
+    // Select cleaning staff button click handler
+    $(document).on('click', '.select-cleaning-staff-btn', function() {
+        const staffName = $(this).attr('data-name');
+        const duty = $('#cleaningDutyPopup').data('duty');
+
+        console.log("Assigning cleaning duty:", duty, "to staff:", staffName);
+
+        // Update the staff stats
+        if (window.originalStaffStats) {
+            // First, remove this duty from any other staff member
+            for (const existingStaffName in window.originalStaffStats) {
+                if (window.originalStaffStats[existingStaffName].cleaningDuties) {
+                    window.originalStaffStats[existingStaffName].cleaningDuties =
+                        window.originalStaffStats[existingStaffName].cleaningDuties.filter(d => d.duty !== duty);
+                }
+            }
+
+            // Add the duty to the selected staff member
+            if (!window.originalStaffStats[staffName]) {
+                window.originalStaffStats[staffName] = { cleaningDuties: [] };
+            }
+            if (!window.originalStaffStats[staffName].cleaningDuties) {
+                window.originalStaffStats[staffName].cleaningDuties = [];
+            }
+
+            window.originalStaffStats[staffName].cleaningDuties.push({ duty: duty });
+
+            // Regenerate stats to reflect changes
+            regenerateScheduleStats();
+        }
+
+        // Close popup
+        closeCleaningPopup();
+    });
+
+    // Remove cleaning staff assignment button click handler
+    $('#removeCleaningStaffBtn').click(function() {
+        const duty = $('#cleaningDutyPopup').data('duty');
+
+        console.log("Removing cleaning duty assignment for:", duty);
+
+        // Remove this duty from all staff members
+        if (window.originalStaffStats) {
+            for (const staffName in window.originalStaffStats) {
+                if (window.originalStaffStats[staffName].cleaningDuties) {
+                    window.originalStaffStats[staffName].cleaningDuties =
+                        window.originalStaffStats[staffName].cleaningDuties.filter(d => d.duty !== duty);
+                }
+            }
+
+            // Regenerate stats to reflect changes
+            regenerateScheduleStats();
+        }
+
+        // Close popup
+        closeCleaningPopup();
+    });
 });
 
 // Add renderStaffRotationStats function if it's missing
@@ -2815,6 +2980,19 @@ function renderStaffRotationStats(patients, staff) {
     <div style="display: flex; justify-content: space-between; margin-top: 15px;">
         <button id="removeAllStaffBtn" style="background-color: #f44336; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Remove All Staff</button>
         <button id="closePopupBtn" style="background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+    </div>
+</div>
+
+<!-- Cleaning Duty Assignment Popup -->
+<div id="cleaningDutyPopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-30%);
+     background-color: var(--container-bg-color); color: var(--text-color); border:2px solid #9c27b0;
+     border-radius:8px; z-index:2000; padding:20px; min-width:350px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <h3>Assign Staff to Cleaning Duty</h3>
+    <div id="cleaningDutyTitle" style="background-color: #9c27b0; color: white; padding: 10px; margin: -20px -20px 15px -20px; border-radius: 6px 6px 0 0; font-weight: bold; text-align: center;"></div>
+    <div id="cleaningStaffList" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+        <button id="removeCleaningStaffBtn" style="background-color: #f44336; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Remove Assignment</button>
+        <button id="closeCleaningPopupBtn" style="background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
     </div>
 </div>
 </body>
