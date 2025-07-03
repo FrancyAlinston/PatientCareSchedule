@@ -12,7 +12,7 @@ Successfully implemented OBS (Ward Observation) functionality from the master ba
 - **Staff Pool**: Regular staff only (excludes security and nurses in charge)
 
 ### 2. OBS Assignment Algorithm
-- **Multi-factor scoring system**: 
+- **Multi-factor scoring system**:
   - Continuous hours penalty (prevents >3 hour assignments)
   - Historical assignment tracking (ensures fair rotation)
   - Overall workload balancing
@@ -30,6 +30,13 @@ Successfully implemented OBS (Ward Observation) functionality from the master ba
 - **Staff History**: OBS tracking added to `staffPatientHistory`
 - **Work Hours**: OBS assignments count toward staff work hours
 - **Continuity Tracking**: OBS included in continuous assignment monitoring
+
+### 5. Enhanced Popup Validation (NEW)
+- **Staff Ratio Enforcement**: Popup now validates 1:1, 2:1, 3:1 patient care ratios
+- **Visual Status Display**: Shows current vs required staff count with color coding
+- **Smart Button States**: Disables assignment when patient at capacity
+- **OBS Special Handling**: Allows only one staff per OBS assignment
+- **User Feedback**: Clear alerts when attempting to exceed care ratios
 
 ## Code Changes Made
 
@@ -68,6 +75,15 @@ const obsRow = document.createElement('tr');
 </div>
 ```
 
+### 6. Enhanced Popup Validation
+```javascript
+// Check if adding staff would exceed required ratio
+if (currentAssignments.length >= requiredStaffCount) {
+    alert(`⚠️ Patient ${patient} requires ${requiredStaffCount}:1 care ratio.\n\nCannot add more staff.`);
+    return; // Prevent over-assignment
+}
+```
+
 ## How OBS Works
 
 ### Assignment Process
@@ -82,6 +98,18 @@ const obsRow = document.createElement('tr');
 - **Manual Override**: Users can click OBS cells to manually reassign staff
 - **Visual Feedback**: Green cells clearly indicate OBS assignments
 - **Popup Integration**: Full popup functionality for staff selection
+
+### Enhanced Popup Features (NEW)
+- **Smart Validation**: Prevents over-assignment beyond patient care ratios
+- **Visual Status**: Color-coded header shows assignment status:
+  - 🟢 **Green**: Optimal staffing (matches required ratio)
+  - 🟡 **Yellow**: Under-assigned (needs more staff)  
+  - 🔴 **Red**: Over-assigned (exceeds ratio)
+- **Button States**: 
+  - **Green buttons**: Currently assigned staff (click to remove)
+  - **Blue buttons**: Available for assignment
+  - **Gray buttons**: Cannot assign (patient at capacity)
+- **Intelligent Alerts**: User-friendly messages when attempting invalid assignments
 
 ### Statistics Integration
 - OBS assignments count toward staff work hours
@@ -117,6 +145,16 @@ OBS functionality has been successfully implemented and is ready for use.
       "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
   ];
   ```
+
+- **Fixed popup schedule access error**: Resolved "Cannot update schedule - schedule object structure is invalid"
+  - Changed `window.schedule` references to direct `schedule` variable access
+  - Added `window.schedule = schedule;` after successful schedule generation
+  - Fixed both staff assignment toggle and "Remove All Staff" functionality
+
+- **Enhanced popup validation**: Added patient care ratio enforcement
+  - Validates 1:1, 2:1, 3:1 staff limits before allowing assignments
+  - Special OBS handling (single staff assignment)
+  - Visual status indicators and user-friendly error messages
 
 ## Final Status: ✅ FULLY TESTED AND WORKING
 All OBS functionality is now operational and error-free.

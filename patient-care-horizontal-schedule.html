@@ -1243,6 +1243,9 @@ function generateSchedule() {
             return false;
         }
 
+        // Make schedule globally accessible for popup functionality
+        window.schedule = schedule;
+
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
 
@@ -2477,6 +2480,28 @@ $(document).ready(function() {
         // Store these values on the popup element
         $('#staffPopup').data('time', time).data('patient', patient);
 
+        // Get patient's required staff count for display
+        let requiredStaffCount = 1; // Default
+        let patientDisplayName = patient;
+        
+        if (patient !== "OBS") {
+            const patientInputs = Array.from(document.querySelectorAll('.patient-container'));
+            for (const container of patientInputs) {
+                const patientName = container.querySelector('.patient-name').value.trim();
+                if (patientName === patient) {
+                    requiredStaffCount = parseInt(container.querySelector('.staff-count').value) || 1;
+                    break;
+                }
+            }
+        }
+
+        // Update popup title to show staff requirements
+        if (patient === "OBS") {
+            $('#staffPopup h3').text('Select Staff for OBS (Ward Observation)');
+        } else {
+            $('#staffPopup h3').text(`Select Staff for ${patient} (${requiredStaffCount}:1 Care Ratio)`);
+        }
+
         // Show overlay and popup
         $('#popupOverlay').show();
         $('#staffPopup').show();
@@ -2500,20 +2525,57 @@ $(document).ready(function() {
 
         // Get currently assigned staff for this patient/time
         let currentlyAssigned = [];
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments && window.schedule[time].patientAssignments[patient]) {
-            currentlyAssigned = window.schedule[time].patientAssignments[patient] || [];
+        if (schedule && schedule[time] && schedule[time].patientAssignments && schedule[time].patientAssignments[patient]) {
+            currentlyAssigned = schedule[time].patientAssignments[patient] || [];
         }
 
         // Build staff list with current assignments highlighted
         let html = '';
+        
+        // Add status header for regular patients
+        if (patient !== "OBS") {
+            const statusColor = currentlyAssigned.length === requiredStaffCount ? '#28a745' : 
+                               currentlyAssigned.length > requiredStaffCount ? '#dc3545' : '#ffc107';
+            const statusText = currentlyAssigned.length === requiredStaffCount ? 'Optimal' :
+                              currentlyAssigned.length > requiredStaffCount ? 'Over-assigned' : 'Under-assigned';
+            
+            html += `<div style="background-color: ${statusColor}; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+                Current: ${currentlyAssigned.length}/${requiredStaffCount} staff (${statusText})
+            </div>`;
+        } else {
+            // OBS status
+            const obsStatus = currentlyAssigned.length > 0 ? 'Assigned' : 'Unassigned';
+            const obsColor = currentlyAssigned.length > 0 ? '#28a745' : '#ffc107';
+            html += `<div style="background-color: ${obsColor}; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+                OBS Status: ${obsStatus}
+            </div>`;
+        }
+
+        // Add staff buttons
         staff.forEach(function(name) {
             const isAssigned = currentlyAssigned.includes(name);
-            const buttonStyle = isAssigned
-                ? 'background-color: #28a745; color: white;'
-                : 'background-color: var(--button-bg-color); color: white;';
-            html += `<button class="select-staff-btn" data-name="${name}"
+            let buttonStyle, buttonText, buttonClass;
+            
+            if (isAssigned) {
+                // Currently assigned staff - green button
+                buttonStyle = 'background-color: #28a745; color: white;';
+                buttonText = `${name} (Currently Assigned)`;
+                buttonClass = 'select-staff-btn';
+            } else if (patient !== "OBS" && currentlyAssigned.length >= requiredStaffCount) {
+                // Patient at capacity - disabled style
+                buttonStyle = 'background-color: #6c757d; color: white; opacity: 0.6;';
+                buttonText = `${name} (Patient at capacity)`;
+                buttonClass = 'select-staff-btn';
+            } else {
+                // Available for assignment
+                buttonStyle = 'background-color: var(--button-bg-color); color: white;';
+                buttonText = name;
+                buttonClass = 'select-staff-btn';
+            }
+            
+            html += `<button class="${buttonClass}" data-name="${name}"
                      style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
-                     ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${name} ${isAssigned ? '(Currently Assigned)' : ''}</button>`;
+                     ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${buttonText}</button>`;
         });
         $('#staffList').html(html);
     });
@@ -2538,30 +2600,76 @@ $(document).ready(function() {
 
         console.log("Toggling staff:", staffName, "for patient:", patient, "at time:", time);
 
-        // Update the assignment in schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
-            // Make sure patient entry exists
-            if (!window.schedule[time].patientAssignments[patient]) {
-                window.schedule[time].patientAssignments[patient] = [];
+        // Special handling for OBS (no staff limits)
+        if (patient === "OBS") {
+            // OBS can only have one staff member at a time
+            if (schedule && schedule[time] && schedule[time].patientAssignments) {
+                if (!schedule[time].patientAssignments[patient]) {
+                    schedule[time].patientAssignments[patient] = [];
+                }
+
+                const currentAssignments = schedule[time].patientAssignments[patient];
+                const staffIndex = currentAssignments.indexOf(staffName);
+
+                if (staffIndex > -1) {
+                    // Remove staff from OBS
+                    currentAssignments.splice(staffIndex, 1);
+                    console.log(`Removed ${staffName} from OBS`);
+                } else {
+                    // For OBS, replace any existing assignment with the new one
+                    schedule[time].patientAssignments[patient] = [staffName];
+                    console.log(`Assigned ${staffName} to OBS (replaced any existing assignment)`);
+                }
+
+                regenerateScheduleStats();
             }
-
-            const currentAssignments = window.schedule[time].patientAssignments[patient];
-            const staffIndex = currentAssignments.indexOf(staffName);
-
-            if (staffIndex > -1) {
-                // Staff is currently assigned, remove them
-                currentAssignments.splice(staffIndex, 1);
-                console.log(`Removed ${staffName} from assignment`);
-            } else {
-                // Staff is not assigned, add them
-                currentAssignments.push(staffName);
-                console.log(`Added ${staffName} to assignment`);
-            }
-
-            // Regenerate all stats and redraw tables
-            regenerateScheduleStats();
         } else {
-            console.error("Cannot update schedule - schedule object structure is invalid", window.schedule);
+            // Regular patient - check staff ratio limits
+            // Get patient's required staff count
+            let requiredStaffCount = 1; // Default to 1:1
+            const patientInputs = Array.from(document.querySelectorAll('.patient-container'));
+            
+            for (const container of patientInputs) {
+                const patientName = container.querySelector('.patient-name').value.trim();
+                if (patientName === patient) {
+                    requiredStaffCount = parseInt(container.querySelector('.staff-count').value) || 1;
+                    break;
+                }
+            }
+
+            // Update the assignment in schedule object
+            if (schedule && schedule[time] && schedule[time].patientAssignments) {
+                // Make sure patient entry exists
+                if (!schedule[time].patientAssignments[patient]) {
+                    schedule[time].patientAssignments[patient] = [];
+                }
+
+                const currentAssignments = schedule[time].patientAssignments[patient];
+                const staffIndex = currentAssignments.indexOf(staffName);
+
+                if (staffIndex > -1) {
+                    // Staff is currently assigned, remove them
+                    currentAssignments.splice(staffIndex, 1);
+                    console.log(`Removed ${staffName} from assignment`);
+                } else {
+                    // Check if adding this staff would exceed the required ratio
+                    if (currentAssignments.length >= requiredStaffCount) {
+                        // Show warning message
+                        alert(`⚠️ Patient ${patient} requires ${requiredStaffCount}:1 care ratio.\n\nCurrent assignments: ${currentAssignments.length}/${requiredStaffCount}\n\nCannot add more staff. Remove existing staff first if you want to reassign.`);
+                        console.warn(`Cannot assign ${staffName} to ${patient}: would exceed ${requiredStaffCount}:1 ratio`);
+                        return; // Don't add the staff
+                    }
+                    
+                    // Staff is not assigned and within limits, add them
+                    currentAssignments.push(staffName);
+                    console.log(`Added ${staffName} to assignment (${currentAssignments.length}/${requiredStaffCount})`);
+                }
+
+                // Regenerate all stats and redraw tables
+                regenerateScheduleStats();
+            } else {
+                console.error("Cannot update schedule - schedule object structure is invalid", schedule);
+            }
         }
 
         // Close popup after assignment
@@ -2577,8 +2685,8 @@ $(document).ready(function() {
         console.log("Removing all staff for", patient, "at", time);
 
         // Clear the assignment in your schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
-            window.schedule[time].patientAssignments[patient] = [];
+        if (schedule && schedule[time] && schedule[time].patientAssignments[patient]) {
+            schedule[time].patientAssignments[patient] = [];
 
             // Regenerate all stats and redraw tables
             regenerateScheduleStats();
