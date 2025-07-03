@@ -560,11 +560,11 @@
         let nurseInCharge1 = '';
         let nurseInCharge2 = '';
         let staffPatientHistory = {};
-        
+
         // Time slot definitions
         const dayShiftSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
         const nightShiftSlots = ["20:00-21:00", "21:00-22:00", "22:00-23:00", "23:00-00:00", "00:00-01:00", "01:00-02:00", "02:00-03:00", "03:00-04:00", "04:00-05:00", "05:00-06:00", "06:00-07:00", "07:00-08:00"];
-        
+
         // Initialize time slots
         timeSlots = [...dayShiftSlots];
 
@@ -2170,18 +2170,18 @@ function getAllStaffNames() {
     const staff = Array.from(document.querySelectorAll('.staff-name'))
         .map(input => input.value.trim())
         .filter(name => name);
-    
+
     const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
         .map(input => input.value.trim())
         .filter(name => name);
-    
+
     const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
     const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
-    
+
     const allStaff = [...staff, ...securityStaffValues];
     if (nurseInCharge1) allStaff.push(nurseInCharge1);
     if (nurseInCharge2) allStaff.push(nurseInCharge2);
-    
+
     return allStaff;
 }
 
