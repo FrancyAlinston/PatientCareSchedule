@@ -2551,25 +2551,48 @@ $(document).ready(function() {
             </div>`;
         }
 
+        // Calculate total allocations for each staff member across all patients and time slots
+        const staffAllocationCounts = {};
+        staff.forEach(function(staffName) {
+            let totalAllocations = 0;
+            
+            if (schedule) {
+                timeSlots.forEach(time => {
+                    if (schedule[time] && schedule[time].patientAssignments) {
+                        // Count regular patient assignments
+                        Object.keys(schedule[time].patientAssignments).forEach(patientName => {
+                            const assignments = schedule[time].patientAssignments[patientName] || [];
+                            if (assignments.includes(staffName)) {
+                                totalAllocations++;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            staffAllocationCounts[staffName] = totalAllocations;
+        });
+
         // Add staff buttons
         staff.forEach(function(name) {
             const isAssigned = currentlyAssigned.includes(name);
+            const totalAllocations = staffAllocationCounts[name] || 0;
             let buttonStyle, buttonText, buttonClass;
             
             if (isAssigned) {
                 // Currently assigned staff - green button
                 buttonStyle = 'background-color: #28a745; color: white;';
-                buttonText = `${name} (Currently Assigned)`;
+                buttonText = `${name} (Currently Assigned) [${totalAllocations} total]`;
                 buttonClass = 'select-staff-btn';
             } else if (patient !== "OBS" && currentlyAssigned.length >= requiredStaffCount) {
                 // Patient at capacity - disabled style
                 buttonStyle = 'background-color: #6c757d; color: white; opacity: 0.6;';
-                buttonText = `${name} (Patient at capacity)`;
+                buttonText = `${name} (Patient at capacity) [${totalAllocations} total]`;
                 buttonClass = 'select-staff-btn';
             } else {
                 // Available for assignment
                 buttonStyle = 'background-color: var(--button-bg-color); color: white;';
-                buttonText = name;
+                buttonText = `${name} [${totalAllocations} total allocations]`;
                 buttonClass = 'select-staff-btn';
             }
             
