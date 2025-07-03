@@ -511,6 +511,10 @@
                         <div class="legend-color legend-security"></div>
                         <div>Security Duty</div>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4CAF50;"></div>
+                        <div>OBS</div>
+                    </div>
                 `;
             } else {
                 legendDiv.innerHTML = `
@@ -529,6 +533,10 @@
                     <div class="legend-item">
                         <div class="legend-color legend-security"></div>
                         <div>Security Duty</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4CAF50;"></div>
+                        <div>OBS</div>
                     </div>
                 `;
             }
@@ -1156,6 +1164,9 @@ function generateSchedule() {
             patients.forEach(patient => {
                 schedule[time].patientAssignments[patient.name] = [];
             });
+
+            // Initialize OBS (Ward Observation) assignment
+            schedule[time].patientAssignments["OBS"] = [];
         });
 
         // Initialize staffPatientHistory if it doesn't exist
@@ -1174,6 +1185,11 @@ function generateSchedule() {
                     staffPatientHistory[s][patient.name] = 0;
                 }
             });
+
+            // Initialize OBS history for each staff member
+            if (staffPatientHistory[s]["OBS"] === undefined) {
+                staffPatientHistory[s]["OBS"] = 0;
+            }
         });
 
         // Initialize stats object to track staff workload
@@ -1194,6 +1210,8 @@ function generateSchedule() {
             patients.forEach(patient => {
                 continuousAssignmentTracker[s][patient.name] = 0;
             });
+            // Initialize OBS tracking
+            continuousAssignmentTracker[s]["OBS"] = 0;
         });
 
         // First, assign break times
@@ -1201,6 +1219,9 @@ function generateSchedule() {
 
         // Then, assign security duties for security staff (if any)
         assignSecurityDuties(securityStaff, staffStats);
+
+        // Assign OBS (Ward Observation) duties
+        assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats);
 
         // Next, assign cleaning duties for night shift (if applicable)
         if (!isDayShift) {
@@ -1416,6 +1437,112 @@ function assignSecurityDuties(securityStaff, staffStats) {
             if (isSecurityRestrictedHour(i, totalHours)) {
                 schedule[timeSlots[i]].staffBreaks[s] = "SECURITY DUTY";
             }
+        }
+    });
+}
+
+// Observation duties assignment
+function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCharge2, staffStats) {
+    // Find regular staff (not security staff and not nurse in charge)
+    const regularStaff = staff.filter(s =>
+        !securityStaff.includes(s) &&
+        s !== nurseInCharge1 &&
+        s !== nurseInCharge2
+    );
+
+    if (regularStaff.length === 0) {
+        console.warn("No regular staff available for OBS duties");
+        return;
+    }
+
+    const totalHours = timeSlots.length;
+
+    // Initialize continuous assignment tracker for OBS
+    const obsAssignmentTracker = {};
+    regularStaff.forEach(s => {
+        obsAssignmentTracker[s] = 0; // Track consecutive hours for each staff
+    });
+
+    // Track OBS assignment history for rotation
+    if (!staffPatientHistory) {
+        staffPatientHistory = {};
+    }
+
+    // Ensure all staff have OBS history initialized
+    regularStaff.forEach(s => {
+        if (!staffPatientHistory[s]) {
+            staffPatientHistory[s] = {};
+        }
+        if (staffPatientHistory[s]["OBS"] === undefined) {
+            staffPatientHistory[s]["OBS"] = 0;
+        }
+    });
+
+    // Process each time slot for OBS assignment
+    timeSlots.forEach((time, timeIndex) => {
+        // Get available staff for this time slot (those not on break)
+        const availableStaff = regularStaff.filter(s => !schedule[time].staffBreaks[s]);
+
+        let allAvailableStaff = availableStaff.length > 0 ? availableStaff : regularStaff;
+
+        // For first 2 and last 2 hours, prefer continuity but still allow rotation
+        const isFixedPeriod = timeIndex < 2 || timeIndex >= totalHours - 2;
+
+        // If we have multiple staff, use fair rotation logic
+        if (allAvailableStaff.length > 1) {
+            // Sort staff based on assignment history and continuous hours
+            const sortedStaff = [...allAvailableStaff].sort((a, b) => {
+                // Continuous hours penalty (to prevent long continuous assignments)
+                const continuousHoursA = obsAssignmentTracker[a] || 0;
+                const continuousHoursB = obsAssignmentTracker[b] || 0;
+
+                // Apply penalty for continuous assignments (more than 2 hours)
+                const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+                const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+
+                // OBS assignment history (for fair rotation)
+                const obsHistoryA = staffPatientHistory[a]["OBS"] || 0;
+                const obsHistoryB = staffPatientHistory[b]["OBS"] || 0;
+
+                // Overall workload
+                const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
+                const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
+
+                // Combined score (lower is better)
+                const scoreA = continuityPenaltyA + (obsHistoryA * 10) + workloadA;
+                const scoreB = continuityPenaltyB + (obsHistoryB * 10) + workloadB;
+
+                return scoreA - scoreB;
+            });
+
+            // Select the best candidate
+            const selectedStaff = sortedStaff[0];
+            schedule[time].patientAssignments["OBS"] = [selectedStaff];
+
+            // Update tracking
+            if (staffPatientHistory[selectedStaff]) {
+                staffPatientHistory[selectedStaff]["OBS"]++;
+            }
+
+            // Update continuous assignment tracking
+            regularStaff.forEach(s => {
+                if (s === selectedStaff) {
+                    obsAssignmentTracker[s] = (obsAssignmentTracker[s] || 0) + 1;
+                } else {
+                    obsAssignmentTracker[s] = 0; // Reset if not assigned
+                }
+            });
+
+        } else if (allAvailableStaff.length === 1) {
+            // Only one staff available
+            const selectedStaff = allAvailableStaff[0];
+            schedule[time].patientAssignments["OBS"] = [selectedStaff];
+
+            // Update tracking
+            if (staffPatientHistory[selectedStaff]) {
+                staffPatientHistory[selectedStaff]["OBS"]++;
+            }
+            obsAssignmentTracker[selectedStaff] = (obsAssignmentTracker[selectedStaff] || 0) + 1;
         }
     });
 }
@@ -1749,6 +1876,46 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     });
 
     scheduleHeader.appendChild(headerRow);
+
+    // Add OBS (Ward Observation) row first
+    const obsRow = document.createElement('tr');
+
+    // Add OBS label cell
+    const obsCell = document.createElement('td');
+    obsCell.textContent = "OBS";
+    obsCell.className = 'row-header';
+    obsCell.style.fontWeight = "bold";
+    obsRow.appendChild(obsCell);
+
+    // Add cells for each time slot
+    timeSlots.forEach(time => {
+        const cell = document.createElement('td');
+        cell.className = 'assignable-staff-cell';
+        cell.setAttribute('data-time', time);
+        cell.setAttribute('data-patient', "OBS");
+
+        const assignedStaff = schedule[time]?.patientAssignments?.["OBS"] || [];
+
+        if (assignedStaff.length === 0) {
+            cell.textContent = "";
+            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
+            cell.style.color = "#666666";
+        } else {
+            // Display assigned staff for OBS
+            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
+            cell.textContent = staffInitials;
+            cell.title = assignedStaff.join(", "); // Full names on hover
+
+            // Add special styling for OBS - green background
+            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
+            cell.style.color = "#ffffff"; // White text
+            cell.style.fontWeight = "bold";
+        }
+
+        obsRow.appendChild(cell);
+    });
+
+    scheduleBody.appendChild(obsRow);
 
     // Create rows for each patient
     patients.forEach(patient => {
@@ -2142,6 +2309,8 @@ function regenerateScheduleStats() {
         patients.forEach(patient => {
             continuousAssignmentTracker[s][patient] = 0;
         });
+        // Initialize OBS tracking
+        continuousAssignmentTracker[s]["OBS"] = 0;
     });
 
     // Process each time slot to recalculate work hours
@@ -2153,6 +2322,14 @@ function regenerateScheduleStats() {
                     staffStats[staffMember].workHours++;
                 }
             });
+        });
+
+        // Count OBS assignments
+        const obsAssignedStaff = schedule[time].patientAssignments["OBS"] || [];
+        obsAssignedStaff.forEach(staffMember => {
+            if (staffStats[staffMember]) {
+                staffStats[staffMember].workHours++;
+            }
         });
     });
 
