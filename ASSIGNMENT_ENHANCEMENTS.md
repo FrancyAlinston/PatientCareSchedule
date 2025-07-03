@@ -28,6 +28,13 @@
 - Enhanced the allocation algorithms while maintaining core functionality
 - Ensured compatibility with existing popup and interactive features
 
+### 6. Security Staff Button Removal (Reference Commit c1ef86274af96d84142d66054c2c5404e0612c1c)
+- **Removed "Add Security Staff" and "Remove Security Staff" buttons** to match the reference commit
+- **Added static security staff input field** with required asterisk (*)
+- **Added mandatory security staff validation** - users must enter at least one security staff member
+- **Updated clearAllData function** to clear security staff input value instead of removing the input element
+- **Removed addSecurityStaffInput function** as it's no longer needed with the static approach
+
 ## Key Guarantees
 
 1. **NO UNASSIGNED PATIENTS**: The system mathematically guarantees every patient will have staff assigned

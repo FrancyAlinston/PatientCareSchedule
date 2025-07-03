@@ -354,10 +354,12 @@
             <div style="display: flex; gap: 40px; align-items: flex-start;">
                 <!-- Security Staff Section -->
                 <div>
-                    <h2>Security Staff</h2>
-                    <div class="security-staff-inputs" id="securityStaffInputs"></div>
-                    <button id="addSecurityStaffBtn">Add Security Staff</button>
-                    <button id="removeSecurityStaffBtn">Remove Security Staff</button>
+                    <h2>Security Staff <span style="color: red;">*</span></h2>
+                    <div class="security-staff-inputs" id="securityStaffInputs">
+                        <div class="security-container">
+                            <input type="text" placeholder="Enter Security Staff Name" class="security-name" required>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Combined Nurses Section -->
@@ -869,7 +871,13 @@ function createMessageDiv() {
             // Clear all input containers
             document.getElementById('staffInputs').innerHTML = '';
             document.getElementById('patientInputs').innerHTML = '';
-            document.getElementById('securityStaffInputs').innerHTML = '';
+
+            // Clear security staff input value (but keep the static input)
+            const securityInput = document.querySelector('.security-name');
+            if (securityInput) {
+                securityInput.value = '';
+            }
+
             document.getElementById('nurseInChargeInput').value = '';
             document.getElementById('nurseInCharge2Input').value = '';
 
@@ -951,33 +959,6 @@ function addPatientInput() {
     // Add event listeners to the new elements
     newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
     staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
-
-    saveToLocalStorage();
-}
-
-// Function to add security staff input
-function addSecurityStaffInput() {
-    const securityStaffInputs = document.getElementById('securityStaffInputs');
-
-    // Check if we've reached the 1 security staff limit
-    if (securityStaffInputs.children.length >= 1) {
-        showError("Maximum of 1 security staff allowed");
-        return;
-    }
-
-    const securityContainer = document.createElement('div');
-    securityContainer.className = 'security-container';
-
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'Enter Security Staff Name';
-    newInput.className = 'security-name';
-
-    securityContainer.appendChild(newInput);
-    securityStaffInputs.appendChild(securityContainer);
-
-    // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
 
     saveToLocalStorage();
 }
@@ -1290,6 +1271,16 @@ function validateInputs() {
 
     if (patientInputs.length === 0) {
         showError("Please add at least one patient.");
+        return false;
+    }
+
+    // Check if security staff is provided (mandatory)
+    const securityStaffInputs = Array.from(document.querySelectorAll('.security-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+
+    if (securityStaffInputs.length === 0) {
+        showError("Security Staff is mandatory. Please enter a security staff name.");
         return false;
     }
 
