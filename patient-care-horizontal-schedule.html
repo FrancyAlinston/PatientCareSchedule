@@ -388,6 +388,49 @@
             opacity: 0.8;
             transform: scale(1.02);
         }
+
+        /* Debug panel styles */
+        #debugPanel {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 400px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            overflow: auto;
+            z-index: 1000;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        #debugPanel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid white;
+        }
+
+        #debugOutput {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        #toggleDebugBtn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
@@ -1502,158 +1545,304 @@ function renderBreakHoursTable(staffStats, staff) {
     });
 }
 
-// Helper function to show error messages
-function showError(message, color = '#f44336') {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    errorDiv.style.backgroundColor = color;
-    errorDiv.style.position = 'fixed';
-    errorDiv.style.top = '20px';
-    errorDiv.style.right = '20px';
-    errorDiv.style.color = 'white';
-    errorDiv.style.padding = '15px';
-    errorDiv.style.borderRadius = '5px';
-    errorDiv.style.zIndex = '1000';
-    document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 5000);
+// Function to generate staff colors for visual distinction
+function generateStaffColors(staff) {
+    const colors = [
+        { bgColor: '#ffb3ba', textColor: '#000000' }, // Light pink
+        { bgColor: '#bae1ff', textColor: '#000000' }, // Light blue
+        { bgColor: '#baffc9', textColor: '#000000' }, // Light green
+        { bgColor: '#ffffba', textColor: '#000000' }, // Light yellow
+        { bgColor: '#ffdfba', textColor: '#000000' }, // Light orange
+        { bgColor: '#e0bbff', textColor: '#000000' }, // Light purple
+        { bgColor: '#ffb3d9', textColor: '#000000' }, // Light magenta
+        { bgColor: '#c9ffba', textColor: '#000000' }, // Light lime
+        { bgColor: '#ffcccb', textColor: '#000000' }, // Light red
+        { bgColor: '#add8e6', textColor: '#000000' }  // Light blue-2
+    ];
+
+    const staffColors = {};
+    staff.forEach((s, index) => {
+        staffColors[s] = colors[index % colors.length];
+    });
+
+    return staffColors;
 }
 
-// Function to add staff input
-function addStaffInput() {
-    const staffInputs = document.getElementById('staffInputs');
-    if (!staffInputs) return;
+// Function to render statistics
+function renderStats(staffStats, staff, patients) {
+    const statsDiv = document.getElementById('stats');
+    if (!statsDiv) return;
 
-    const staffContainer = document.createElement('div');
-    staffContainer.className = 'staff-container';
+    let statsHTML = '<h2>Staff Statistics</h2>';
+    
+    // Overall statistics
+    const totalStaff = staff.length;
+    const totalPatients = patients.length;
+    const totalSlots = timeSlots.length;
+    
+    statsHTML += `<div style="margin-bottom: 20px;">
+        <p><strong>Total Staff:</strong> ${totalStaff}</p>
+        <p><strong>Total Patients:</strong> ${totalPatients}</p>
+        <p><strong>Total Time Slots:</strong> ${totalSlots}</p>
+    </div>`;
 
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'Enter HCW Name';
-    newInput.className = 'staff-name';
-
-    staffContainer.appendChild(newInput);
-    staffInputs.appendChild(staffContainer);
-
-    // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-
-    saveToLocalStorage();
-}
-
-// Function to add patient input
-function addPatientInput() {
-    const patientInputs = document.getElementById('patientInputs');
-    if (!patientInputs) return;
-
-    const patientContainer = document.createElement('div');
-    patientContainer.className = 'patient-container';
-
-    const inputWrapper = document.createElement('div');
-    inputWrapper.style.display = 'flex';
-    inputWrapper.style.alignItems = 'center';
-    inputWrapper.style.gap = '10px';
-
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'Enter Patient Name';
-    newInput.className = 'patient-name';
-
-    const staffCountSelect = document.createElement('select');
-    staffCountSelect.className = 'staff-count';
-
-    const option1 = document.createElement('option');
-    option1.value = 1;
-    option1.textContent = '1:1';
-    const option2 = document.createElement('option');
-    option2.value = 2;
-    option2.textContent = '2:1';
-    const option3 = document.createElement('option');
-    option3.value = 3;
-    option3.textContent = '3:1';
-
-    staffCountSelect.appendChild(option1);
-    staffCountSelect.appendChild(option2);
-    staffCountSelect.appendChild(option3);
-    staffCountSelect.value = 1; // Default to 1:1
-
-    inputWrapper.appendChild(newInput);
-    inputWrapper.appendChild(staffCountSelect);
-    patientContainer.appendChild(inputWrapper);
-    patientInputs.appendChild(patientContainer);
-
-    // Add event listeners to the new elements
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
-
-    saveToLocalStorage();
-}
-
-// Function to add security staff input
-function addSecurityStaffInput() {
-    const securityStaffInputs = document.getElementById('securityStaffInputs');
-    if (!securityStaffInputs) return;
-
-    // Check if we've reached the 1 security staff limit
-    if (securityStaffInputs.children.length >= 1) {
-        showError("Maximum of 1 security staff allowed");
-        return;
+    // Individual staff statistics
+    if (staff.length > 0) {
+        statsHTML += '<h3>Individual Staff Hours</h3>';
+        statsHTML += '<table style="width: 100%; border-collapse: collapse;">';
+        statsHTML += '<tr><th style="border: 1px solid #ddd; padding: 8px;">Staff</th><th style="border: 1px solid #ddd; padding: 8px;">Work Hours</th><th style="border: 1px solid #ddd; padding: 8px;">Break Hours</th></tr>';
+        
+        staff.forEach(s => {
+            const workHours = staffStats[s]?.workHours || 0;
+            const breakHours = staffStats[s]?.breakTime || 0;
+            statsHTML += `<tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${s}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${workHours}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${breakHours}</td>
+            </tr>`;
+        });
+        
+        statsHTML += '</table>';
     }
 
-    const securityContainer = document.createElement('div');
-    securityContainer.className = 'security-container';
-
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'Enter Security Staff Name';
-    newInput.className = 'security-name';
-
-    securityContainer.appendChild(newInput);
-    securityStaffInputs.appendChild(securityContainer);
-
-    // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-
-    saveToLocalStorage();
+    statsDiv.innerHTML = statsHTML;
 }
 
-// Simplified saveToLocalStorage function that only stores essential data
-function saveToLocalStorage() {
+// Main schedule generation function
+function generateSchedule() {
     try {
-        // Get all current input values
-        const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
-        const patientInputs = Array.from(document.querySelectorAll('.patient-container')).map(container => {
+        // Get staff and patient data
+        const staff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()).filter(name => name);
+        const patients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
             return {
                 name: container.querySelector('.patient-name').value.trim(),
                 staffCount: parseInt(container.querySelector('.staff-count').value)
             };
+        }).filter(patient => patient.name);
+
+        // Validate inputs
+        if (staff.length === 0) {
+            showError("Please add at least one staff member");
+            return;
+        }
+
+        if (patients.length === 0) {
+            showError("Please add at least one patient");
+            return;
+        }
+
+        // Initialize schedule structure
+        schedule = {};
+        timeSlots.forEach(time => {
+            schedule[time] = {
+                patientAssignments: {},
+                staffBreaks: {}
+            };
         });
 
-        const securityStaffValues = Array.from(document.querySelectorAll('.security-name')).map(input => input.value.trim());
-        const nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value.trim() || '';
-        const nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value.trim() || '';
+        // Assign patients to staff for each time slot
+        patients.forEach(patient => {
+            timeSlots.forEach(time => {
+                // Initialize patient assignment array
+                schedule[time].patientAssignments[patient.name] = [];
+                
+                // Assign required number of staff to each patient
+                const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+                
+                for (let i = 0; i < Math.min(patient.staffCount, availableStaff.length); i++) {
+                    const assignedStaff = availableStaff[i % availableStaff.length];
+                    if (!schedule[time].patientAssignments[patient.name].includes(assignedStaff)) {
+                        schedule[time].patientAssignments[patient.name].push(assignedStaff);
+                    }
+                }
+            });
+        });
 
-        // Save only essential data: names, preferences, and input fields
-        const data = {
-            staff: staffInputs,
-            nurseInCharge1,
-            nurseInCharge2,
-            patients: patientInputs,
-            securityStaff: securityStaffValues,
-            isDayShift, // Day/night shift toggle
-            isDarkMode: document.body.classList.contains('dark-mode') // Dark/light mode toggle
-        };
+        // Assign breaks to staff
+        assignStaffBreaks(staff);
 
-        localStorage.setItem('patientCareData', JSON.stringify(data));
-        return true;
+        // Generate and display the schedule
+        regenerateScheduleStats();
+        
+        showError("Schedule generated successfully!", '#4CAF50');
+        
     } catch (error) {
-        console.error("Error saving to localStorage:", error);
-        showError("Failed to save your changes. Your browser storage might be full or restricted.");
-        return false;
+        console.error("Error generating schedule:", error);
+        showError("Failed to generate schedule. Please try again.");
     }
 }
 
-// ...existing code...
+// Function to assign breaks to staff
+function assignStaffBreaks(staff) {
+    staff.forEach((s, index) => {
+        if (isDayShift) {
+            // Day shift: 30-min break + 1-hour 2nd break
+            const breakSlot = timeSlots[2 + (index % 4)]; // Spread breaks across different times
+            const lunchSlot = timeSlots[5 + (index % 3)]; // Spread lunch breaks
+            
+            if (schedule[breakSlot]) {
+                schedule[breakSlot].staffBreaks[s] = "30-MIN BREAK";
+            }
+            if (schedule[lunchSlot]) {
+                schedule[lunchSlot].staffBreaks[s] = "2ND BREAK";
+            }
+        } else {
+            // Night shift: 2-hour break (split into 2 consecutive hours)
+            const breakStart = 3 + (index % 6); // Start break between 23:00-05:00
+            const breakSlot1 = timeSlots[breakStart];
+            const breakSlot2 = timeSlots[breakStart + 1];
+            
+            if (schedule[breakSlot1]) {
+                schedule[breakSlot1].staffBreaks[s] = "NIGHT BREAK";
+            }
+            if (schedule[breakSlot2]) {
+                schedule[breakSlot2].staffBreaks[s] = "NIGHT BREAK";
+            }
+        }
+    });
+}
+
+// Popup functionality for staff assignment
+function showStaffPopup(patient, timeSlot) {
+    const popup = document.getElementById('staffPopup');
+    const overlay = document.getElementById('popupOverlay');
+    const patientNameSpan = document.getElementById('popupPatientName');
+    const timeSlotSpan = document.getElementById('popupTimeSlot');
+    const staffList = document.getElementById('staffList');
+
+    if (!popup || !overlay || !patientNameSpan || !timeSlotSpan || !staffList) {
+        console.error("Popup elements not found");
+        return;
+    }
+
+    // Set popup title
+    patientNameSpan.textContent = patient;
+    timeSlotSpan.textContent = timeSlot;
+
+    // Get all available staff
+    const allStaff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()).filter(name => name);
+    const currentlyAssigned = schedule[timeSlot]?.patientAssignments?.[patient] || [];
+
+    // Clear previous content
+    staffList.innerHTML = '';
+
+    // Add staff options
+    allStaff.forEach(staffName => {
+        const isAssigned = currentlyAssigned.includes(staffName);
+        const isOnBreak = schedule[timeSlot]?.staffBreaks?.[staffName];
+        
+        const staffDiv = document.createElement('div');
+        staffDiv.style.display = 'flex';
+        staffDiv.style.alignItems = 'center';
+        staffDiv.style.marginBottom = '10px';
+        staffDiv.style.padding = '8px';
+        staffDiv.style.border = '1px solid #ddd';
+        staffDiv.style.borderRadius = '4px';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `staff-${staffName}`;
+        checkbox.checked = isAssigned;
+        checkbox.disabled = isOnBreak;
+        checkbox.style.marginRight = '10px';
+
+        const label = document.createElement('label');
+        label.htmlFor = `staff-${staffName}`;
+        label.textContent = staffName;
+        label.style.flex = '1';
+        
+        if (isOnBreak) {
+            label.textContent += ` (On ${isOnBreak})`;
+            label.style.color = '#666';
+            staffDiv.style.backgroundColor = '#f5f5f5';
+        }
+
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                addStaffToPatient(patient, timeSlot, staffName);
+            } else {
+                removeStaffFromPatient(patient, timeSlot, staffName);
+            }
+        });
+
+        staffDiv.appendChild(checkbox);
+        staffDiv.appendChild(label);
+        staffList.appendChild(staffDiv);
+    });
+
+    // Show popup
+    overlay.style.display = 'block';
+    popup.style.display = 'block';
+}
+
+// Helper functions for staff assignment
+function addStaffToPatient(patient, timeSlot, staffName) {
+    if (!schedule[timeSlot]) {
+        schedule[timeSlot] = { patientAssignments: {}, staffBreaks: {} };
+    }
+    if (!schedule[timeSlot].patientAssignments[patient]) {
+        schedule[timeSlot].patientAssignments[patient] = [];
+    }
+    
+    if (!schedule[timeSlot].patientAssignments[patient].includes(staffName)) {
+        schedule[timeSlot].patientAssignments[patient].push(staffName);
+        regenerateScheduleStats();
+    }
+}
+
+function removeStaffFromPatient(patient, timeSlot, staffName) {
+    if (schedule[timeSlot]?.patientAssignments?.[patient]) {
+        const index = schedule[timeSlot].patientAssignments[patient].indexOf(staffName);
+        if (index > -1) {
+            schedule[timeSlot].patientAssignments[patient].splice(index, 1);
+            regenerateScheduleStats();
+        }
+    }
+}
+
+function removeAllStaffFromPatient(patient, timeSlot) {
+    if (schedule[timeSlot]?.patientAssignments?.[patient]) {
+        schedule[timeSlot].patientAssignments[patient] = [];
+        regenerateScheduleStats();
+    }
+}
+
+function closeStaffPopup() {
+    const popup = document.getElementById('staffPopup');
+    const overlay = document.getElementById('popupOverlay');
+    
+    if (popup) popup.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+}
+
+// Debug panel functionality
+document.getElementById('toggleDebugBtn')?.addEventListener('click', function() {
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel.style.display === 'none') {
+        debugPanel.style.display = 'block';
+    } else {
+        debugPanel.style.display = 'none';
+    }
+});
+
+document.getElementById('clearDebugBtn')?.addEventListener('click', function() {
+    document.getElementById('debugOutput').innerHTML = '';
+});
+
+// Override console.log to show in debug panel
+const originalLog = console.log;
+console.log = function(...args) {
+    originalLog.apply(console, args);
+    const debugOutput = document.getElementById('debugOutput');
+    if (debugOutput) {
+        const logEntry = document.createElement('div');
+        logEntry.textContent = args.join(' ');
+        logEntry.style.borderBottom = '1px solid #333';
+        logEntry.style.padding = '2px 0';
+        debugOutput.appendChild(logEntry);
+        debugOutput.scrollTop = debugOutput.scrollHeight;
+    }
+};
 
 // Initialize the application when page loads
 window.addEventListener('DOMContentLoaded', function() {
@@ -1710,6 +1899,66 @@ window.addEventListener('DOMContentLoaded', function() {
         if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
             localStorage.removeItem('patientCareData');
             location.reload();
+        }
+    });
+
+    // Generate Schedule button
+    document.getElementById('generateBtn')?.addEventListener('click', generateSchedule);
+
+    // Debug Fill button (for testing)
+    document.getElementById('debugFillBtn')?.addEventListener('click', function() {
+        // Fill with sample data for testing
+        const sampleStaff = ['Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson'];
+        const samplePatients = [
+            { name: 'Patient A', staffCount: 1 },
+            { name: 'Patient B', staffCount: 2 },
+            { name: 'Patient C', staffCount: 1 }
+        ];
+
+        // Clear existing inputs
+        document.getElementById('staffInputs').innerHTML = '';
+        document.getElementById('patientInputs').innerHTML = '';
+
+        // Add sample staff
+        sampleStaff.forEach(name => {
+            addStaffInput();
+            const inputs = document.querySelectorAll('.staff-name');
+            inputs[inputs.length - 1].value = name;
+        });
+
+        // Add sample patients
+        samplePatients.forEach(patient => {
+            addPatientInput();
+            const containers = document.querySelectorAll('.patient-container');
+            const lastContainer = containers[containers.length - 1];
+            lastContainer.querySelector('.patient-name').value = patient.name;
+            lastContainer.querySelector('.staff-count').value = patient.staffCount;
+        });
+
+        saveToLocalStorage();
+        showError('Sample data loaded successfully!', '#4CAF50');
+    });
+
+    // Popup event listeners
+    document.getElementById('closePopupBtn')?.addEventListener('click', closeStaffPopup);
+    document.getElementById('popupOverlay')?.addEventListener('click', closeStaffPopup);
+    
+    document.getElementById('removeAllStaffBtn')?.addEventListener('click', function() {
+        const patientName = document.getElementById('popupPatientName').textContent;
+        const timeSlot = document.getElementById('popupTimeSlot').textContent;
+        removeAllStaffFromPatient(patientName, timeSlot);
+        closeStaffPopup();
+    });
+
+    // Add click listeners to schedule cells (for popup functionality)
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('assignable-staff-cell')) {
+            const patient = event.target.getAttribute('data-patient');
+            const timeSlot = event.target.getAttribute('data-time');
+            
+            if (patient && timeSlot) {
+                showStaffPopup(patient, timeSlot);
+            }
         }
     });
 
