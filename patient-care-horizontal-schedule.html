@@ -326,14 +326,13 @@
             max-height: 70vh;
             overflow-y: auto;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         #staffPopup h3 {
             margin-top: 0;
             margin-bottom: 15px;
-            color: var(--button-bg-color);
-            border-bottom: 2px solid var(--button-bg-color);
-            padding-bottom: 10px;
+            color: var(--text-color);
         }
 
         #staffList {
@@ -342,16 +341,11 @@
             margin: 15px 0;
         }
 
-        /* Hover effects for staff buttons */
-        .select-staff-btn:hover {
-            opacity: 0.8;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
         /* Style for popup buttons */
         #staffPopup button {
-            transition: all 0.2s ease;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 14px;
         }
 
         #staffPopup #removeAllStaffBtn {
@@ -373,15 +367,26 @@
         }
 
         /* Popup overlay for better focus */
-        #staffPopup::before {
-            content: '';
+        #popupOverlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.4);
-            z-index: -1;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        /* Clickable cell cursor */
+        .assignable-staff-cell {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .assignable-staff-cell:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
         }
     </style>
 </head>
@@ -515,7 +520,7 @@
 
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
-    <!-- Add this popup HTML at the end of your body, just before the closing </body> tag -->
+    <!-- Staff selection popup with overlay -->
 <div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
      background-color: rgba(0,0,0,0.5); z-index:1999;"></div>
 
@@ -2120,8 +2125,16 @@ $(document).ready(function() {
 
         console.log("Opening popup for:", time, patient);
 
+        // Update popup title with patient and time info
+        $('#popupPatientName').text(patient);
+        $('#popupTimeSlot').text(time);
+
         // Store these values as HTML attributes for more reliable access
-        $('#staffPopup').attr('data-time', time).attr('data-patient', patient).show();
+        $('#staffPopup').attr('data-time', time).attr('data-patient', patient);
+        
+        // Show overlay and popup
+        $('#popupOverlay').show();
+        $('#staffPopup').show();
 
         // Get all staff members
         let allStaff = [];
@@ -2191,9 +2204,15 @@ $(document).ready(function() {
         $('#staffList').html(html);
     });
 
-    // Close popup
-    $('#closePopupBtn').click(function() {
+    // Close popup when clicking overlay or cancel button
+    $('#popupOverlay, #closePopupBtn').click(function() {
+        $('#popupOverlay').hide();
         $('#staffPopup').hide();
+    });
+
+    // Prevent popup from closing when clicking inside the popup
+    $('#staffPopup').click(function(e) {
+        e.stopPropagation();
     });
 
     // Select staff button click handler
@@ -2234,10 +2253,10 @@ $(document).ready(function() {
         regenerateScheduleStats();
 
         // Update the popup to reflect current assignments (refresh the popup)
-        $(this).closest('.assignable-staff-cell').trigger('click');
+        $('.assignable-staff-cell[data-time="' + time + '"][data-patient="' + patient + '"]').trigger('click');
     });
 
-    // Remove staff button click handler - clears ALL staff from the patient
+    // Remove all staff button click handler - clears ALL staff from the patient
     $('#removeAllStaffBtn').click(function() {
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
@@ -2271,6 +2290,7 @@ $(document).ready(function() {
         regenerateScheduleStats();
 
         // Close popup
+        $('#popupOverlay').hide();
         $('#staffPopup').hide();
     });
 });
@@ -2454,7 +2474,7 @@ function setupEventListeners() {
 async function resetAll() {
     console.log('🔴 Reset button clicked!');
 
-    if (confirm('Are you sure you want to reset all data? This will clear all settings and schedules.')) {
+    if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
         console.log('🔄 User confirmed reset');
 
         // Clear all cookies (temporary storage)
@@ -2569,7 +2589,7 @@ function removeStaffInput() {
     const staffContainers = document.querySelectorAll('.staff-container');
     if (staffContainers.length > 1) {
         staffContainers[staffContainers.length - 1].remove();
-        saveInputsToCookies();
+        saveToLocalStorage();
     }
 }
 
@@ -2577,7 +2597,7 @@ function removePatientInput() {
     const patientContainers = document.querySelectorAll('.patient-container');
     if (patientContainers.length > 1) {
         patientContainers[patientContainers.length - 1].remove();
-        saveInputsToCookies();
+        saveToLocalStorage();
     }
 }
 
@@ -2604,6 +2624,32 @@ function generateStaffColors(staff) {
     });
 
     return staffColors;
+}
+
+// Function to render statistics
+function renderStats(staffStats, allStaff, patients) {
+    const statsDiv = document.getElementById('stats');
+    let statsHTML = '<h3>Schedule Statistics</h3>';
+    
+    // Basic stats
+    statsHTML += `<p><strong>Total Staff:</strong> ${allStaff.length}</p>`;
+    statsHTML += `<p><strong>Total Patients:</strong> ${patients.length}</p>`;
+    
+    // Work hours summary
+    let totalWorkHours = 0;
+    let totalBreakHours = 0;
+    
+    allStaff.forEach(staff => {
+        if (staffStats[staff]) {
+            totalWorkHours += staffStats[staff].workHours || 0;
+            totalBreakHours += staffStats[staff].breakTime || 0;
+        }
+    });
+    
+    statsHTML += `<p><strong>Total Work Hours:</strong> ${totalWorkHours}</p>`;
+    statsHTML += `<p><strong>Total Break Hours:</strong> ${totalBreakHours}</p>`;
+    
+    statsDiv.innerHTML = statsHTML;
 }
 
 // Helper function to get available staff for a specific time slot
@@ -2721,6 +2767,70 @@ function toggleStaffAssignment(staffName, patientName, time) {
         return 'added';
     }
 }
+
+// Initialize the application when page loads
+window.addEventListener('DOMContentLoaded', function() {
+    // Load data from localStorage
+    loadFromLocalStorage();
+    
+    // Set up event listeners for buttons
+    document.getElementById('addStaffBtn')?.addEventListener('click', addStaffInput);
+    document.getElementById('removeStaffBtn')?.addEventListener('click', () => {
+        const staffContainers = document.querySelectorAll('.staff-container');
+        if (staffContainers.length > 1) {
+            staffContainers[staffContainers.length - 1].remove();
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('addPatientBtn')?.addEventListener('click', addPatientInput);
+    document.getElementById('removePatientBtn')?.addEventListener('click', () => {
+        const patientContainers = document.querySelectorAll('.patient-container');
+        if (patientContainers.length > 1) {
+            patientContainers[patientContainers.length - 1].remove();
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('addSecurityStaffBtn')?.addEventListener('click', addSecurityStaffInput);
+    document.getElementById('removeSecurityStaffBtn')?.addEventListener('click', () => {
+        const securityContainers = document.querySelectorAll('.security-container');
+        if (securityContainers.length > 0) {
+            securityContainers[securityContainers.length - 1].remove();
+            saveToLocalStorage();
+        }
+    });
+    
+    document.getElementById('toggleShiftBtn')?.addEventListener('click', () => {
+        isDayShift = !isDayShift;
+        timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+        
+        document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+        document.getElementById('toggleShiftBtn').textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+        
+        updateLegend();
+        saveToLocalStorage();
+    });
+    
+    document.getElementById('toggleModeBtn')?.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        document.getElementById('toggleModeBtn').textContent = isDark ? '☀️' : '🌙';
+        saveToLocalStorage();
+    });
+    
+    document.getElementById('resetBtn')?.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+            localStorage.removeItem('patientCareData');
+            location.reload();
+        }
+    });
+    
+    // Initialize dark mode button text
+    const isDark = document.body.classList.contains('dark-mode');
+    document.getElementById('toggleModeBtn').textContent = isDark ? '☀️' : '🌙';
+});
+
     </script>
 </body>
 </html>
