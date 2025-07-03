@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Care Schedule Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Testing Patient Care Schedule Popup</h1>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Open the main patient care schedule file</li>
+        <li>Add some staff names in the "Health Care Workers" section</li>
+        <li>Add some patient names in the "Patient Names" section</li>
+        <li>Click "Generate Schedule" button</li>
+        <li>Click on any patient cell in the schedule table to test the popup</li>
+    </ol>
+
+    <h2>Expected Behavior:</h2>
+    <ul>
+        <li>Clicking on a patient cell should open a popup</li>
+        <li>The popup should show available staff</li>
+        <li>Clicking on a staff name should assign them to the patient</li>
+        <li>The schedule should update immediately</li>
+    </ul>
+
+    <h2>Common Issues and Solutions:</h2>
+    <ul>
+        <li><strong>Popup doesn't open:</strong> Make sure you've generated a schedule first</li>
+        <li><strong>No staff shown:</strong> Add staff names in the setup sections</li>
+        <li><strong>Can't assign staff:</strong> Check if staff are on break or overloaded</li>
+    </ul>
+
+    <a href="patient-care-horizontal-schedule.html" target="_blank">
+        <button style="padding: 15px 30px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px;">
+            Open Patient Care Schedule
+        </button>
+    </a>
+</body>
+</html>
