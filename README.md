@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Patient Care Schedule Generator
 
 **Version 1.5.0** | Last Updated: June 23, 2025
@@ -258,7 +257,7 @@ Data is stored in `data/schedules.json` file on the server. The structure includ
 
 The application includes comprehensive error handling for:
 - Network connectivity issues
-- Server errors  
+- Server errors
 - Data validation errors
 - Automatic retry mechanisms
 >>>>>>> Beta
