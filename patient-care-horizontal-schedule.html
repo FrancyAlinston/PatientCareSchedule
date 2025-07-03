@@ -1730,12 +1730,12 @@ function renderStats(staffStats, staff, patients) {
     if (!statsDiv) return;
 
     let statsHTML = '<h2>Staff Statistics</h2>';
-    
+
     // Overall statistics
     const totalStaff = staff.length;
     const totalPatients = patients.length;
     const totalSlots = timeSlots.length;
-    
+
     statsHTML += `<div style="margin-bottom: 20px;">
         <p><strong>Total Staff:</strong> ${totalStaff}</p>
         <p><strong>Total Patients:</strong> ${totalPatients}</p>
@@ -1747,7 +1747,7 @@ function renderStats(staffStats, staff, patients) {
         statsHTML += '<h3>Individual Staff Hours</h3>';
         statsHTML += '<table style="width: 100%; border-collapse: collapse;">';
         statsHTML += '<tr><th style="border: 1px solid #ddd; padding: 8px;">Staff</th><th style="border: 1px solid #ddd; padding: 8px;">Work Hours</th><th style="border: 1px solid #ddd; padding: 8px;">Break Hours</th></tr>';
-        
+
         staff.forEach(s => {
             const workHours = staffStats[s]?.workHours || 0;
             const breakHours = staffStats[s]?.breakTime || 0;
@@ -1757,7 +1757,7 @@ function renderStats(staffStats, staff, patients) {
                 <td style="border: 1px solid #ddd; padding: 8px;">${breakHours}</td>
             </tr>`;
         });
-        
+
         statsHTML += '</table>';
     }
 
@@ -1821,21 +1821,21 @@ function generateSchedule() {
 // Day shift staff assignment - enhanced to distribute across all time slots
 function assignDayShiftStaff(allStaff, patients) {
     const availableStaff = allStaff.filter(s => !securityStaff.includes(s));
-    
+
     if (availableStaff.length === 0) {
         console.warn("No available staff for patient assignment");
         return;
     }
 
     let staffIndex = 0;
-    
+
     // Assign staff to each patient for each time slot
     patients.forEach((patient, patientIndex) => {
         timeSlots.forEach((time, timeIndex) => {
             // Use round-robin to distribute staff fairly
             const assignedStaff = availableStaff[staffIndex % availableStaff.length];
             schedule[time].patientAssignments[patient] = [assignedStaff];
-            
+
             // Rotate to next staff member
             staffIndex++;
         });
@@ -1854,21 +1854,21 @@ function assignDayShiftStaff(allStaff, patients) {
 // Night shift staff assignment - enhanced to distribute across all time slots
 function assignNightShiftStaff(allStaff, patients) {
     const availableStaff = allStaff.filter(s => !securityStaff.includes(s));
-    
+
     if (availableStaff.length === 0) {
         console.warn("No available staff for patient assignment");
         return;
     }
 
     let staffIndex = 0;
-    
+
     // Assign staff to each patient for each time slot
     patients.forEach((patient, patientIndex) => {
         timeSlots.forEach((time, timeIndex) => {
             // Use round-robin to distribute staff fairly
             const assignedStaff = availableStaff[staffIndex % availableStaff.length];
             schedule[time].patientAssignments[patient] = [assignedStaff];
-            
+
             // Rotate to next staff member
             staffIndex++;
         });
@@ -1919,7 +1919,7 @@ function showStaffPopup(patient, timeSlot) {
     allStaff.forEach(staffName => {
         const isAssigned = currentlyAssigned.includes(staffName);
         const isOnBreak = schedule[timeSlot]?.staffBreaks?.[staffName];
-        
+
         const staffDiv = document.createElement('div');
         staffDiv.style.display = 'flex';
         staffDiv.style.alignItems = 'center';
@@ -1927,7 +1927,7 @@ function showStaffPopup(patient, timeSlot) {
         staffDiv.style.padding = '8px';
         staffDiv.style.border = '1px solid #ddd';
         staffDiv.style.borderRadius = '4px';
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = `staff-${staffName}`;
@@ -1939,7 +1939,7 @@ function showStaffPopup(patient, timeSlot) {
         label.htmlFor = `staff-${staffName}`;
         label.textContent = staffName;
         label.style.flex = '1';
-        
+
         if (isOnBreak) {
             label.textContent += ` (On ${isOnBreak})`;
             label.style.color = '#666';
@@ -1972,7 +1972,7 @@ function addStaffToPatient(patient, timeSlot, staffName) {
     if (!schedule[timeSlot].patientAssignments[patient]) {
         schedule[timeSlot].patientAssignments[patient] = [];
     }
-    
+
     if (!schedule[timeSlot].patientAssignments[patient].includes(staffName)) {
         schedule[timeSlot].patientAssignments[patient].push(staffName);
         regenerateScheduleStats();
@@ -1999,7 +1999,7 @@ function removeAllStaffFromPatient(patient, timeSlot) {
 function closeStaffPopup() {
     const popup = document.getElementById('staffPopup');
     const overlay = document.getElementById('popupOverlay');
-    
+
     if (popup) popup.style.display = 'none';
     if (overlay) overlay.style.display = 'none';
 }
@@ -2036,7 +2036,7 @@ console.log = function(...args) {
         // Initialize default shift to day shift
         isDayShift = true;
         timeSlots = [...dayShiftSlots];
-        
+
         // Load data from localStorage
         loadFromLocalStorage();
 
@@ -2133,7 +2133,7 @@ console.log = function(...args) {
     // Popup event listeners
     document.getElementById('closePopupBtn')?.addEventListener('click', closeStaffPopup);
     document.getElementById('popupOverlay')?.addEventListener('click', closeStaffPopup);
-    
+
     document.getElementById('removeAllStaffBtn')?.addEventListener('click', function() {
         const patientName = document.getElementById('popupPatientName').textContent;
         const timeSlot = document.getElementById('popupTimeSlot').textContent;
@@ -2146,7 +2146,7 @@ console.log = function(...args) {
         if (event.target.classList.contains('assignable-staff-cell')) {
             const patient = event.target.getAttribute('data-patient');
             const timeSlot = event.target.getAttribute('data-time');
-            
+
             if (patient && timeSlot) {
                 showStaffPopup(patient, timeSlot);
             }

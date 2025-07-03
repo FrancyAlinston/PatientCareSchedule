@@ -1,211 +1,25 @@
 {
-  "schedules": {
-    "schedule_2025-07-03": {
-      "schedule": {
-        "20:00-21:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Carol Davis"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "21:00-22:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Alice Johnson"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "Bob Smith"
-            ],
-            "Patient C": [
-              "Alice Johnson"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "22:00-23:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Carol Davis"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "23:00-00:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Bob Smith"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "David Wilson"
-            ]
-          },
-          "staffBreaks": {
-            "Alice Johnson": "NIGHT BREAK"
-          }
-        },
-        "00:00-01:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Carol Davis"
-            ]
-          },
-          "staffBreaks": {
-            "Alice Johnson": "NIGHT BREAK",
-            "Bob Smith": "NIGHT BREAK"
-          }
-        },
-        "01:00-02:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Alice Johnson"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Alice Johnson"
-            ]
-          },
-          "staffBreaks": {
-            "Bob Smith": "NIGHT BREAK",
-            "Carol Davis": "NIGHT BREAK"
-          }
-        },
-        "02:00-03:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Alice Johnson"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "Bob Smith"
-            ],
-            "Patient C": [
-              "Alice Johnson"
-            ]
-          },
-          "staffBreaks": {
-            "Carol Davis": "NIGHT BREAK",
-            "David Wilson": "NIGHT BREAK"
-          }
-        },
-        "03:00-04:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "Bob Smith"
-            ],
-            "Patient C": [
-              "Bob Smith"
-            ]
-          },
-          "staffBreaks": {
-            "David Wilson": "NIGHT BREAK"
-          }
-        },
-        "04:00-05:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Carol Davis"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "05:00-06:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Alice Johnson"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "Bob Smith"
-            ],
-            "Patient C": [
-              "Alice Johnson"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "06:00-07:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Carol Davis"
-            ],
-            "Patient B": [
-              "Carol Davis",
-              "David Wilson"
-            ],
-            "Patient C": [
-              "Carol Davis"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "07:00-08:00": {
-          "patientAssignments": {
-            "Patient A": [
-              "Alice Johnson"
-            ],
-            "Patient B": [
-              "Alice Johnson",
-              "Bob Smith"
-            ],
-            "Patient C": [
-              "Alice Johnson"
-            ]
-          },
-          "staffBreaks": {}
-        }
-      },
-      "createdAt": "2025-07-03T12:47:52.618Z",
-      "updatedAt": "2025-07-03T12:47:52.618Z"
-    }
-  },
+  "schedules": {},
   "settings": {
-    "staff": [],
-    "patients": [],
-    "securityStaff": [],
-    "nurseInCharge1": "",
-    "nurseInCharge2": "",
+    "staff": [
+      "Test Worker 1",
+      "Test Worker 2"
+    ],
+    "patients": [
+      {
+        "name": "Test Patient A",
+        "staffCount": 1
+      },
+      {
+        "name": "Test Patient B",
+        "staffCount": 2
+      }
+    ],
+    "securityStaff": [
+      "Test Security"
+    ],
+    "nurseInCharge1": "Test Nurse 1",
+    "nurseInCharge2": "Test Nurse 2",
     "isDayShift": true,
     "isDarkMode": false
   }
