@@ -1,4 +1,4 @@
-# OBS (Ward Observation) Implementation Summary
+# OBS (Ward Observation) Implementation Summary v2.1.0
 
 ## Overview
 Successfully implemented OBS (Ward Observation) functionality from the master backup commit c1ef862 into the current Patient Care Schedule application.
@@ -167,7 +167,7 @@ OBS functionality has been successfully implemented and is ready for use.
 ## Bug Fixes Applied
 - **Fixed cleaningDuties undefined error**: Added missing `cleaningDuties` array definition to global variables
   ```javascript
-  const cleaningDuties = [
+  let cleaningDuties = [
       "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
       "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
   ];
@@ -182,6 +182,15 @@ OBS functionality has been successfully implemented and is ready for use.
   - Validates 1:1, 2:1, 3:1 staff limits before allowing assignments
   - Special OBS handling (single staff assignment)
   - Visual status indicators and user-friendly error messages
+
+- **Fixed night shift break time display**: Corrected break hours table for night shift
+  - Changed from single "2-hour Break Time" column to separate "Break Hour 1" and "Break Hour 2" columns
+  - Updated break assignment logic to store individual hour slots instead of time ranges
+  - Staff break times now display correctly in the break hours table
+
+- **Fixed cleaning duties assignment display**: Resolved issue where cleaning duties appeared as "Not Assigned"
+  - Changed `cleaningDuties` from `const` to `let` with global scope access
+  - Cleaning duties now properly display assigned staff in the Night Shift Cleaning Duties Summary
 
 ## Final Status: ✅ FULLY TESTED AND WORKING
 All OBS functionality is now operational and error-free.

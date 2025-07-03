@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Care Schedule - Horizontal Layout</title>
+    <title>Patient Care Schedule v2.1.0 - Horizontal Layout</title>
     <style>
         /* Core styling for light and dark modes */
         :root {
@@ -422,7 +422,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule</h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v2.1.0)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -554,13 +554,14 @@
                 breakHoursTableHead.innerHTML = `
                 <tr>
                     <th>Staff</th>
-                    <th>2-hour Break Time</th>
-                    <th>Status</th>
+                    <th>Break Hour 1</th>
+                    <th>Break Hour 2</th>
                 </tr>`;
             }
         }
 
         // Global variables
+        const APP_VERSION = "2.1.0";
         let schedule = {};
         let isDayShift = true;
         let timeSlots = [];
@@ -568,9 +569,9 @@
         let nurseInCharge1 = '';
         let nurseInCharge2 = '';
         let staffPatientHistory = {};
-        
-        // Cleaning duties for night shift
-        const cleaningDuties = [
+
+        // Cleaning duties for night shift (global scope)
+        let cleaningDuties = [
             "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
             "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
         ];
@@ -1429,10 +1430,9 @@ function assignBreaks(allStaff, staffStats) {
                 // Update staff stats
                 staffStats[s].breakTime = 2; // Total break time is 2 hours
 
-                // Store break time info for display
-                const breakTimeDisplay = `${timeSlots[breakStartIndex]} to ${timeSlots[breakStartIndex + 1]}`;
-                staffStats[s].shortBreakTime = breakTimeDisplay;
-                staffStats[s].secondBreakTime = "N/A";
+                // Store break time info for display in table
+                staffStats[s].shortBreakTime = timeSlots[breakStartIndex];
+                staffStats[s].secondBreakTime = timeSlots[breakStartIndex + 1];
             });
         });
     }
@@ -2483,7 +2483,7 @@ $(document).ready(function() {
         // Get patient's required staff count for display
         let requiredStaffCount = 1; // Default
         let patientDisplayName = patient;
-        
+
         if (patient !== "OBS") {
             const patientInputs = Array.from(document.querySelectorAll('.patient-container'));
             for (const container of patientInputs) {
@@ -2531,14 +2531,14 @@ $(document).ready(function() {
 
         // Build staff list with current assignments highlighted
         let html = '';
-        
+
         // Add status header for regular patients
         if (patient !== "OBS") {
-            const statusColor = currentlyAssigned.length === requiredStaffCount ? '#28a745' : 
+            const statusColor = currentlyAssigned.length === requiredStaffCount ? '#28a745' :
                                currentlyAssigned.length > requiredStaffCount ? '#dc3545' : '#ffc107';
             const statusText = currentlyAssigned.length === requiredStaffCount ? 'Optimal' :
                               currentlyAssigned.length > requiredStaffCount ? 'Over-assigned' : 'Under-assigned';
-            
+
             html += `<div style="background-color: ${statusColor}; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
                 Current: ${currentlyAssigned.length}/${requiredStaffCount} staff (${statusText})
             </div>`;
@@ -2555,7 +2555,7 @@ $(document).ready(function() {
         const staffAllocationCounts = {};
         staff.forEach(function(staffName) {
             let totalAllocations = 0;
-            
+
             if (schedule) {
                 timeSlots.forEach(time => {
                     if (schedule[time] && schedule[time].patientAssignments) {
@@ -2569,7 +2569,7 @@ $(document).ready(function() {
                     }
                 });
             }
-            
+
             staffAllocationCounts[staffName] = totalAllocations;
         });
 
@@ -2578,7 +2578,7 @@ $(document).ready(function() {
             const isAssigned = currentlyAssigned.includes(name);
             const totalAllocations = staffAllocationCounts[name] || 0;
             let buttonStyle, buttonText, buttonClass;
-            
+
             if (isAssigned) {
                 // Currently assigned staff - green button
                 buttonStyle = 'background-color: #28a745; color: white;';
@@ -2595,7 +2595,7 @@ $(document).ready(function() {
                 buttonText = `${name} [${totalAllocations} total allocations]`;
                 buttonClass = 'select-staff-btn';
             }
-            
+
             html += `<button class="${buttonClass}" data-name="${name}"
                      style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
                      ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${buttonText}</button>`;
@@ -2651,7 +2651,7 @@ $(document).ready(function() {
             // Get patient's required staff count
             let requiredStaffCount = 1; // Default to 1:1
             const patientInputs = Array.from(document.querySelectorAll('.patient-container'));
-            
+
             for (const container of patientInputs) {
                 const patientName = container.querySelector('.patient-name').value.trim();
                 if (patientName === patient) {
@@ -2682,7 +2682,7 @@ $(document).ready(function() {
                         console.warn(`Cannot assign ${staffName} to ${patient}: would exceed ${requiredStaffCount}:1 ratio`);
                         return; // Don't add the staff
                     }
-                    
+
                     // Staff is not assigned and within limits, add them
                     currentAssignments.push(staffName);
                     console.log(`Added ${staffName} to assignment (${currentAssignments.length}/${requiredStaffCount})`);
