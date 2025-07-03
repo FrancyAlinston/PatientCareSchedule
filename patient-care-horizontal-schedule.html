@@ -1252,6 +1252,9 @@ function generateSchedule() {
 
         // Make schedule globally accessible for popup functionality
         window.schedule = schedule;
+        
+        // Store original staffStats for reference during regeneration
+        window.originalStaffStats = JSON.parse(JSON.stringify(staffStats));
 
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
@@ -2313,7 +2316,8 @@ function regenerateScheduleStats() {
             workHours: 0,
             breakTime: 0,
             shortBreakTime: "",
-            secondBreakTime: ""
+            secondBreakTime: "",
+            cleaningDuties: [] // Initialize cleaning duties array
         };
     });
 
@@ -2328,8 +2332,36 @@ function regenerateScheduleStats() {
         continuousAssignmentTracker[s]["OBS"] = 0;
     });
 
-    // Process each time slot to recalculate work hours
+    // Restore break times and other assignments from the schedule object
     timeSlots.forEach((time, timeIndex) => {
+        // Process break assignments
+        if (schedule[time] && schedule[time].staffBreaks) {
+            Object.keys(schedule[time].staffBreaks).forEach(staffName => {
+                const breakType = schedule[time].staffBreaks[staffName];
+                if (breakType && staffStats[staffName]) {
+                    if (breakType === "30-MIN BREAK") {
+                        staffStats[staffName].breakTime += 0.5;
+                        if (!staffStats[staffName].shortBreakTime) {
+                            staffStats[staffName].shortBreakTime = time;
+                        }
+                    } else if (breakType === "2ND BREAK") {
+                        staffStats[staffName].breakTime += 1;
+                        if (!staffStats[staffName].secondBreakTime) {
+                            staffStats[staffName].secondBreakTime = time;
+                        }
+                    } else if (breakType === "NIGHT BREAK") {
+                        staffStats[staffName].breakTime += 1;
+                        if (!staffStats[staffName].shortBreakTime) {
+                            staffStats[staffName].shortBreakTime = time;
+                        } else if (!staffStats[staffName].secondBreakTime) {
+                            staffStats[staffName].secondBreakTime = time;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Count patient assignment work hours
         patients.forEach(patient => {
             const assignedStaff = schedule[time].patientAssignments[patient] || [];
             assignedStaff.forEach(staffMember => {
@@ -2347,6 +2379,15 @@ function regenerateScheduleStats() {
             }
         });
     });
+
+    // Restore cleaning duties from existing staffStats if available (for night shift)
+    if (!isDayShift && window.originalStaffStats) {
+        allStaff.forEach(s => {
+            if (window.originalStaffStats[s] && window.originalStaffStats[s].cleaningDuties) {
+                staffStats[s].cleaningDuties = [...window.originalStaffStats[s].cleaningDuties];
+            }
+        });
+    }
 
     // Render the updated schedule and stats
     renderSchedule(schedule, allStaff, patients, staffStats);
