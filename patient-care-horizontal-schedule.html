@@ -1545,11 +1545,16 @@ function renderSchedule(schedule, staff, patients) {
                 cell.style.color = "#000000"; // Black text for contrast
                 cell.classList.add('staff-unassigned');
             } else {
-                // Use initials for display
-                cell.textContent = getInitials(assignedStaff[0]);
+                // Show multiple staff if assigned (for 2:1 or 3:1 ratios)
+                if (assignedStaff.length === 1) {
+                    cell.textContent = getInitials(assignedStaff[0]);
+                } else {
+                    // For multiple staff, show first initials + count
+                    cell.textContent = `${getInitials(assignedStaff[0])}+${assignedStaff.length - 1}`;
+                }
                 cell.title = assignedStaff.join(", "); // Full names on hover
 
-                // Add styling based on staff color
+                // Add styling based on first staff member's color
                 if (assignedStaff.length > 0 && staffColors[assignedStaff[0]]) {
                     const { bgColor, textColor } = staffColors[assignedStaff[0]];
                     cell.style.backgroundColor = bgColor;
@@ -1761,96 +1766,129 @@ function renderStats(staffStats, staff, patients) {
 
 // Main schedule generation function
 function generateSchedule() {
-    try {
-        // Get staff and patient data
-        const staff = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim()).filter(name => name);
-        const patients = Array.from(document.querySelectorAll('.patient-container')).map(container => {
-            return {
-                name: container.querySelector('.patient-name').value.trim(),
-                staffCount: parseInt(container.querySelector('.staff-count').value)
-            };
-        }).filter(patient => patient.name);
+    const allStaff = getAllStaffNames();
+    const patients = getAllPatientNames();
 
-        // Validate inputs
-        if (staff.length === 0) {
-            showError("Please add at least one staff member");
-            return;
-        }
-
-        if (patients.length === 0) {
-            showError("Please add at least one patient");
-            return;
-        }
-
-        // Initialize schedule structure
-        schedule = {};
-        timeSlots.forEach(time => {
-            schedule[time] = {
-                patientAssignments: {},
-                staffBreaks: {}
-            };
-        });
-
-        // Assign patients to staff for each time slot
-        patients.forEach(patient => {
-            timeSlots.forEach(time => {
-                // Initialize patient assignment array
-                schedule[time].patientAssignments[patient.name] = [];
-                
-                // Assign required number of staff to each patient
-                const availableStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
-                
-                for (let i = 0; i < Math.min(patient.staffCount, availableStaff.length); i++) {
-                    const assignedStaff = availableStaff[i % availableStaff.length];
-                    if (!schedule[time].patientAssignments[patient.name].includes(assignedStaff)) {
-                        schedule[time].patientAssignments[patient.name].push(assignedStaff);
-                    }
-                }
-            });
-        });
-
-        // Assign breaks to staff
-        assignStaffBreaks(staff);
-
-        // Generate and display the schedule
-        regenerateScheduleStats();
-        
-        showError("Schedule generated successfully!", '#4CAF50');
-        
-    } catch (error) {
-        console.error("Error generating schedule:", error);
-        showError("Failed to generate schedule. Please try again.");
+    // Validate inputs
+    if (allStaff.length === 0) {
+        showError("Please add staff members before generating schedule");
+        return;
     }
-}
 
-// Function to assign breaks to staff
-function assignStaffBreaks(staff) {
-    staff.forEach((s, index) => {
-        if (isDayShift) {
-            // Day shift: 30-min break + 1-hour 2nd break
-            const breakSlot = timeSlots[2 + (index % 4)]; // Spread breaks across different times
-            const lunchSlot = timeSlots[5 + (index % 3)]; // Spread lunch breaks
-            
-            if (schedule[breakSlot]) {
-                schedule[breakSlot].staffBreaks[s] = "30-MIN BREAK";
-            }
-            if (schedule[lunchSlot]) {
-                schedule[lunchSlot].staffBreaks[s] = "2ND BREAK";
-            }
-        } else {
-            // Night shift: 2-hour break (split into 2 consecutive hours)
-            const breakStart = 3 + (index % 6); // Start break between 23:00-05:00
-            const breakSlot1 = timeSlots[breakStart];
-            const breakSlot2 = timeSlots[breakStart + 1];
-            
-            if (schedule[breakSlot1]) {
-                schedule[breakSlot1].staffBreaks[s] = "NIGHT BREAK";
-            }
-            if (schedule[breakSlot2]) {
-                schedule[breakSlot2].staffBreaks[s] = "NIGHT BREAK";
-            }
+    if (patients.length === 0) {
+        showError("Please add patients before generating schedule");
+        return;
+    }
+
+    // Update security staff global array
+    securityStaff = [];
+    document.querySelectorAll('.security-name').forEach(input => {
+        const name = input.value.trim();
+        if (name && !securityStaff.includes(name)) {
+            securityStaff.push(name);
         }
     });
+
+    // Create a new schedule object
+    schedule = {};
+
+    // For each time slot, initialize patientAssignments and staffBreaks
+    timeSlots.forEach(time => {
+        schedule[time] = {
+            patientAssignments: {},
+            staffBreaks: {}
+        };
+
+        // Initialize empty assignment arrays for each patient
+        patients.forEach(patient => {
+            schedule[time].patientAssignments[patient] = [];
+        });
+    });
+
+    // Now assign staff to patients based on the current shift
+    if (isDayShift) {
+        assignDayShiftStaff(allStaff, patients);
+    } else {
+        assignNightShiftStaff(allStaff, patients);
+    }
+
+    // Generate stats and render the schedule
+    regenerateScheduleStats();
+
+    console.log("Schedule generated successfully");
+}
+
+// Day shift staff assignment - enhanced to distribute across all time slots
+function assignDayShiftStaff(allStaff, patients) {
+    const availableStaff = allStaff.filter(s => !securityStaff.includes(s));
+    
+    if (availableStaff.length === 0) {
+        console.warn("No available staff for patient assignment");
+        return;
+    }
+
+    let staffIndex = 0;
+    
+    // Assign staff to each patient for each time slot
+    patients.forEach((patient, patientIndex) => {
+        timeSlots.forEach((time, timeIndex) => {
+            // Use round-robin to distribute staff fairly
+            const assignedStaff = availableStaff[staffIndex % availableStaff.length];
+            schedule[time].patientAssignments[patient] = [assignedStaff];
+            
+            // Rotate to next staff member
+            staffIndex++;
+        });
+    });
+
+    // Assign security staff across all time slots
+    securityStaff.forEach(security => {
+        timeSlots.forEach(time => {
+            if (!schedule[time].staffBreaks[security]) {
+                schedule[time].staffBreaks[security] = "SECURITY DUTY";
+            }
+        });
+    });
+}
+
+// Night shift staff assignment - enhanced to distribute across all time slots
+function assignNightShiftStaff(allStaff, patients) {
+    const availableStaff = allStaff.filter(s => !securityStaff.includes(s));
+    
+    if (availableStaff.length === 0) {
+        console.warn("No available staff for patient assignment");
+        return;
+    }
+
+    let staffIndex = 0;
+    
+    // Assign staff to each patient for each time slot
+    patients.forEach((patient, patientIndex) => {
+        timeSlots.forEach((time, timeIndex) => {
+            // Use round-robin to distribute staff fairly
+            const assignedStaff = availableStaff[staffIndex % availableStaff.length];
+            schedule[time].patientAssignments[patient] = [assignedStaff];
+            
+            // Rotate to next staff member
+            staffIndex++;
+        });
+    });
+
+    // Assign security staff across all time slots
+    securityStaff.forEach(security => {
+        timeSlots.forEach(time => {
+            if (!schedule[time].staffBreaks[security]) {
+                schedule[time].staffBreaks[security] = "NIGHT BREAK";
+            }
+        });
+    });
+}
+
+// Simplified break assignment (now handled in generateSchedule)
+// This function is kept for compatibility but is no longer used
+function assignStaffBreaks(staff) {
+    // Break assignment is now handled directly in generateSchedule function
+    console.log("Note: Break assignment is handled in generateSchedule function");
 }
 
 // Popup functionality for staff assignment
@@ -1993,12 +2031,14 @@ console.log = function(...args) {
         debugOutput.appendChild(logEntry);
         debugOutput.scrollTop = debugOutput.scrollHeight;
     }
-};
-
-// Initialize the application when page loads
-window.addEventListener('DOMContentLoaded', function() {
-    // Load data from localStorage
-    loadFromLocalStorage();
+};    // Initialize the application when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+        // Initialize default shift to day shift
+        isDayShift = true;
+        timeSlots = [...dayShiftSlots];
+        
+        // Load data from localStorage
+        loadFromLocalStorage();
 
     // Set up event listeners for buttons
     document.getElementById('addStaffBtn')?.addEventListener('click', addStaffInput);
