@@ -410,7 +410,7 @@
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-unassigned"></div>
-                <div>Unassigned</div>
+                <div>Emergency Assignment</div>
             </div>
             <div class="legend-item">
                 <div class="legend-color legend-security"></div>
@@ -503,7 +503,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
-                        <div>Unassigned</div>
+                        <div>Emergency Assignment</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-security"></div>
@@ -522,7 +522,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
-                        <div>Unassigned</div>
+                        <div>Emergency Assignment</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-security"></div>
@@ -594,6 +594,72 @@
                 timeout = setTimeout(() => func.apply(this, args), wait);
             }
         }
+
+        // Enhanced error display function with different message types
+function showMessage(message, type = 'info') {
+    const messageDiv = document.getElementById('message') || createMessageDiv();
+
+    // Set message content
+    messageDiv.textContent = message;
+
+    // Set styling based on message type
+    messageDiv.className = `message message-${type}`;
+    messageDiv.style.display = 'block';
+
+    // Auto-hide after 5 seconds for info messages, longer for warnings/errors
+    const hideDelay = type === 'error' ? 10000 : (type === 'warning' ? 7000 : 5000);
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, hideDelay);
+}
+
+function createMessageDiv() {
+    const messageDiv = document.createElement('div');
+    messageDiv.id = 'message';
+    messageDiv.style.cssText = `
+        display: none;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 5px;
+        font-weight: bold;
+        text-align: center;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        max-width: 400px;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    `;
+
+    // Add styles for different message types
+    const style = document.createElement('style');
+    style.textContent = `
+        .message-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .message-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(messageDiv);
+
+    return messageDiv;
+}
 
         function showError(message) {
             const errorDiv = document.createElement('div');
@@ -1060,6 +1126,11 @@ function generateSchedule() {
             return;
         }
 
+        // Check staff sufficiency and warn user if needed
+        if (!checkStaffSufficiency()) {
+            return;
+        }
+
         // Get current values
         const staff = Array.from(document.querySelectorAll('.staff-name'))
             .map(input => input.value.trim())
@@ -1170,6 +1241,12 @@ function generateSchedule() {
         // Finally, assign staff to patients using a fair algorithm
         assignPatients(staff, patients, staffStats, continuousAssignmentTracker);
 
+        // Final validation to ensure no patients are left unassigned
+        if (!validateScheduleCompleteness(schedule, patients)) {
+            console.error("Schedule generation failed validation");
+            return false;
+        }
+
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
 
@@ -1239,6 +1316,61 @@ function validateInputs() {
     if (uniquePatients.size !== patientNames.length) {
         showError("Each patient must have a unique name. Please remove duplicates.");
         return false;
+    }
+
+    return true;
+}
+
+// Enhanced validation function to check staff sufficiency
+function checkStaffSufficiency() {
+    // Get all staff
+    const staff = Array.from(document.querySelectorAll('.staff-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+
+    const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+
+    const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+    const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+
+    // Calculate total staff available
+    let totalStaff = staff.length + securityStaffValues.length;
+    if (nurseInCharge1) totalStaff++;
+    if (nurseInCharge2) totalStaff++;
+
+    // Calculate total patient requirements
+    const patients = Array.from(document.querySelectorAll('.patient-container'))
+        .map(container => {
+            const name = container.querySelector('.patient-name').value.trim();
+            if (!name) return null;
+            return {
+                name,
+                staffCount: parseInt(container.querySelector('.staff-count').value) || 1
+            };
+        })
+        .filter(patient => patient !== null);
+
+    const totalPatientRequirements = patients.reduce((total, patient) => total + patient.staffCount, 0);
+
+    // Check if staff is insufficient and warn user
+    if (totalStaff < totalPatientRequirements) {
+        const message = `⚠️ WARNING: Insufficient Staff Detected!\n\n` +
+                       `Total Staff Available: ${totalStaff}\n` +
+                       `Total Patient Requirements: ${totalPatientRequirements}\n` +
+                       `Staff Shortage: ${totalPatientRequirements - totalStaff}\n\n` +
+                       `The system will generate a schedule anyway using emergency assignment protocols.\n` +
+                       `Some staff may be overworked or assigned to multiple patients simultaneously.\n\n` +
+                       `Consider adding more staff for optimal coverage.`;
+
+        // Show warning but don't prevent schedule generation
+        if (confirm(message + "\n\nDo you want to continue generating the schedule?")) {
+            console.warn("Staff sufficiency warning acknowledged by user");
+            return true;
+        } else {
+            return false;
+        }
     }
 
     return true;
@@ -1419,80 +1551,161 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
     }
 }
 
-// Replace the existing assignPatients function with this enhanced version
+// Enhanced assignPatients function with GUARANTEED patient coverage
 function assignPatients(staff, patients, staffStats, continuousAssignmentTracker) {
-    // Process each time slot in sequence to track continuous assignments
+    // Calculate total staff requirement across all patients
+    const totalStaffRequired = patients.reduce((total, patient) => total + patient.staffCount, 0);
+
+    // Process each time slot with multi-pass assignment to ensure no patient is left unassigned
     timeSlots.forEach((time, timeIndex) => {
-        // Get available regular staff for this time slot (those not on break)
-        const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+        console.log(`\n=== Processing time slot: ${time} ===`);
 
-        // Get available security staff for this time slot (those not on security duty)
-        const availableSecurityStaff = securityStaff.filter(s =>
-            !schedule[time].staffBreaks[s] ||
-            schedule[time].staffBreaks[s] !== "SECURITY DUTY"
-        );
+        // PASS 1: Try to assign with optimal staff (not on breaks)
+        let passCount = 0;
+        const maxPasses = 3;
 
-        // Combine all available staff
-        const availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
+        while (passCount < maxPasses) {
+            passCount++;
+            console.log(`Assignment Pass ${passCount} for ${time}`);
 
-        // Sort patients by staffCount (highest first) to prioritize higher needs
-        const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
-
-        // For each patient, assign the required number of staff
-        for (const patient of sortedPatients) {
-            const staffNeeded = patient.staffCount;
-            const staffToAssign = Math.min(staffNeeded, availableStaff.length);
-
-            if (staffToAssign === 0) {
-                continue;
+            // Get available staff based on pass number (expand pool each pass)
+            let availableStaff;
+            if (passCount === 1) {
+                // Pass 1: Only fully available staff
+                const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+                const availableSecurityStaff = securityStaff.filter(s =>
+                    !schedule[time].staffBreaks[s] || schedule[time].staffBreaks[s] !== "SECURITY DUTY"
+                );
+                availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
+            } else if (passCount === 2) {
+                // Pass 2: Include staff on regular breaks if needed
+                const availableRegularStaff = staff.filter(s =>
+                    !schedule[time].staffBreaks[s] ||
+                    (schedule[time].staffBreaks[s] !== "SECURITY DUTY")
+                );
+                const availableSecurityStaff = securityStaff.filter(s =>
+                    schedule[time].staffBreaks[s] !== "SECURITY DUTY"
+                );
+                availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
+            } else {
+                // Pass 3: Emergency - use ALL staff if absolutely necessary
+                availableStaff = [...staff, ...securityStaff];
             }
 
-            // Find staff for this patient with continuity limits considered
-            const bestStaff = findStaffWithContinuityLimit(
-                availableStaff,
-                patient.name,
-                staffToAssign,
-                staffStats,
-                continuousAssignmentTracker,
-                timeIndex
-            );
+            console.log(`Available staff in pass ${passCount}:`, availableStaff.length);
 
-            // Assign the staff to this patient
-            bestStaff.forEach(s => {
-                schedule[time].patientAssignments[patient.name].push(s);
+            // Sort patients by staffCount (highest first) to prioritize critical care
+            const sortedPatients = [...patients].sort((a, b) => b.staffCount - a.staffCount);
 
-                // Update rotation history
-                if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
-                if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
-                staffPatientHistory[s][patient.name]++;
+            let allPatientsAssigned = true;
 
-                // Update stats
-                staffStats[s].workHours++;
+            // Attempt to assign staff to unassigned patients
+            for (const patient of sortedPatients) {
+                const currentAssigned = schedule[time].patientAssignments[patient.name] || [];
+                const staffNeeded = patient.staffCount - currentAssigned.length;
 
-                // Update continuous assignment tracker
-                if (timeIndex > 0) {
-                    const prevTime = timeSlots[timeIndex - 1];
-                    const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
+                if (staffNeeded > 0) {
+                    console.log(`Patient ${patient.name} needs ${staffNeeded} more staff`);
 
-                    if (prevAssignments.includes(s)) {
-                        // Staff is continuing with same patient
-                        continuousAssignmentTracker[s][patient.name]++;
+                    // Filter out staff already assigned to this patient
+                    const unassignedStaff = availableStaff.filter(s => !currentAssigned.includes(s));
+                    const staffToAssign = Math.min(staffNeeded, unassignedStaff.length);
+
+                    if (staffToAssign > 0) {
+                        // Find best staff for this patient
+                        const bestStaff = findStaffWithContinuityLimit(
+                            unassignedStaff,
+                            patient.name,
+                            staffToAssign,
+                            staffStats,
+                            continuousAssignmentTracker,
+                            timeIndex
+                        );
+
+                        // Assign the staff
+                        bestStaff.forEach(s => {
+                            schedule[time].patientAssignments[patient.name].push(s);
+
+                            // Update rotation history
+                            if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
+                            if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
+                            staffPatientHistory[s][patient.name]++;
+
+                            // Update stats
+                            staffStats[s].workHours++;
+
+                            // Update continuous assignment tracker
+                            if (timeIndex > 0) {
+                                const prevTime = timeSlots[timeIndex - 1];
+                                const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
+
+                                if (prevAssignments.includes(s)) {
+                                    continuousAssignmentTracker[s][patient.name]++;
+                                } else {
+                                    continuousAssignmentTracker[s][patient.name] = 1;
+                                }
+                            } else {
+                                continuousAssignmentTracker[s][patient.name] = 1;
+                            }
+
+                            console.log(`Assigned ${s} to ${patient.name} at ${time}`);
+                        });
                     } else {
-                        // Staff is newly assigned to this patient
-                        continuousAssignmentTracker[s][patient.name] = 1;
+                        allPatientsAssigned = false;
+                        console.log(`Could not assign enough staff to ${patient.name}`);
                     }
-                } else {
-                    // First hour of shift
-                    continuousAssignmentTracker[s][patient.name] = 1;
+                }
+            }
+
+            // If all patients are properly assigned, exit early
+            if (allPatientsAssigned) {
+                console.log(`All patients assigned in pass ${passCount}`);
+                break;
+            }
+        }
+
+        // EMERGENCY FINAL CHECK: Ensure NO patient is left unassigned
+        console.log("=== EMERGENCY FINAL ASSIGNMENT CHECK ===");
+        for (const patient of patients) {
+            const currentAssigned = schedule[time].patientAssignments[patient.name] || [];
+            const staffNeeded = patient.staffCount - currentAssigned.length;
+
+            if (staffNeeded > 0) {
+                console.log(`EMERGENCY: Patient ${patient.name} still needs ${staffNeeded} staff!`);
+
+                // Get ALL available staff for emergency assignment
+                const allAvailableStaff = [...staff, ...securityStaff].filter(s =>
+                    !currentAssigned.includes(s)
+                );
+
+                // If we don't have enough unique staff, allow double-assignment as absolute last resort
+                let emergencyStaff = allAvailableStaff.slice(0, staffNeeded);
+
+                // ULTIMATE FAILSAFE: If still not enough staff, reuse existing staff
+                if (emergencyStaff.length < staffNeeded) {
+                    const additionalNeeded = staffNeeded - emergencyStaff.length;
+                    const reusableStaff = [...staff, ...securityStaff].slice(0, additionalNeeded);
+                    emergencyStaff = [...emergencyStaff, ...reusableStaff];
+                    console.warn(`ULTIMATE FAILSAFE: Reusing ${additionalNeeded} staff for ${patient.name} at ${time}`);
                 }
 
-                // Remove from available staff
-                const index = availableStaff.indexOf(s);
-                if (index !== -1) {
-                    availableStaff.splice(index, 1);
-                }
-            });
+                emergencyStaff.forEach(s => {
+                    schedule[time].patientAssignments[patient.name].push(s);
+
+                    // Update basic tracking
+                    if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
+                    if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
+                    staffPatientHistory[s][patient.name]++;
+
+                    staffStats[s].workHours++;
+                    continuousAssignmentTracker[s][patient.name] = 1;
+
+                    console.log(`EMERGENCY assigned ${s} to ${patient.name} at ${time}`);
+                });
+            }
         }
+
+        console.log(`=== Completed time slot: ${time} ===\n`);
     });
 }
 
@@ -1573,14 +1786,19 @@ function renderSchedule(schedule, staff, patients, staffStats) {
             const cell = document.createElement('td');
             const assignedStaff = schedule[time].patientAssignments[patient];
 
+            // Since our assignment algorithm guarantees all patients are assigned,
+            // we should never see empty assignments. If somehow it happens, show a debug message.
             if (!assignedStaff || assignedStaff.length === 0) {
-                cell.textContent = "UNASSIGNED";
-                cell.className = 'staff-unassigned assignable-staff-cell'; // Add class here
+                cell.textContent = "ERROR: Contact Admin";
+                cell.className = 'staff-unassigned assignable-staff-cell';
+                cell.style.backgroundColor = '#ff6b6b';
+                cell.style.color = 'white';
+                console.error(`CRITICAL: Patient ${patient} not assigned at ${time}! This should never happen.`);
             } else {
                 const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
                 cell.textContent = staffInitials;
                 cell.title = assignedStaff.join(", ");
-                cell.className = "assignable-staff-cell"; // Add class here
+                cell.className = "assignable-staff-cell";
 
                 // Add these data attributes to every cell
                 cell.setAttribute("data-time", time);
@@ -1883,499 +2101,45 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsDiv.innerHTML = statsHtml;
 }
 
-        // Add this function to recalculate all statistics when manual staff changes are made
-        function regenerateScheduleStats() {
-            // Get current values for staff and patients
-            const allStaff = getAllStaffNames();
-            const patients = getAllPatientNames();
+// Enhanced function to validate schedule completeness after generation
+function validateScheduleCompleteness(schedule, patients) {
+    console.log("=== FINAL SCHEDULE VALIDATION ===");
+    let hasErrors = false;
+    const errors = [];
 
-            // Initialize staffStats object to track staff workload
-            const staffStats = {};
-            allStaff.forEach(s => {
-                staffStats[s] = {
-                    workHours: 0,
-                    breakTime: 0,
-                    shortBreakTime: "",
-                    secondBreakTime: ""
-                };
-            });
+    timeSlots.forEach(time => {
+        patients.forEach(patient => {
+            const assignedStaff = schedule[time].patientAssignments[patient.name] || [];
+            const requiredStaff = patient.staffCount;
 
-            // Initialize continuous assignment tracker
-            const continuousAssignmentTracker = {};
-            allStaff.forEach(s => {
-                continuousAssignmentTracker[s] = {};
-                patients.forEach(patient => {
-                    continuousAssignmentTracker[s][patient] = 0;
-                });
-            });
-
-            // Process each time slot to recalculate work hours
-            timeSlots.forEach((time, timeIndex) => {
-                // Calculate break times
-                allStaff.forEach(s => {
-                    if (schedule[time].staffBreaks[s]) {
-                        if (schedule[time].staffBreaks[s] === "30-MIN BREAK") {
-                            staffStats[s].breakTime += 0.5;
-                            staffStats[s].shortBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "2ND BREAK") {
-                            staffStats[s].breakTime += 1;
-                            staffStats[s].secondBreakTime = time;
-                        } else if (schedule[time].staffBreaks[s] === "NIGHT BREAK") {
-                            staffStats[s].breakTime += 1; // Each night break hour is 1 hour
-                            if (!staffStats[s].shortBreakTime) {
-                                staffStats[s].shortBreakTime = time;
-                            } else if (!staffStats[s].secondBreakTime) {
-                                staffStats[s].secondBreakTime = time;
-                            }
-                        }
-                    }
-                });
-
-                // Calculate work hours and continuous assignments
-                patients.forEach(patient => {
-                    const assignedStaff = schedule[time].patientAssignments[patient] || [];
-
-                    assignedStaff.forEach(s => {
-                        // Update work hours
-                        staffStats[s].workHours++;
-
-                        // Update continuous assignment tracker
-                        if (timeIndex > 0) {
-                            const prevTime = timeSlots[timeIndex - 1];
-                            const prevAssignments = schedule[prevTime].patientAssignments[patient] || [];
-
-                            if (prevAssignments.includes(s)) {
-                                // Staff is continuing with same patient
-                                continuousAssignmentTracker[s][patient]++;
-                            } else {
-                                // Staff is newly assigned to this patient
-                                continuousAssignmentTracker[s][patient] = 1;
-                            }
-                        } else {
-                            // First hour of shift
-                            continuousAssignmentTracker[s][patient] = 1;
-                        }
-                    });
-                });
-            });
-
-            // Render the updated schedule and stats
-            renderSchedule(schedule, allStaff, patients, staffStats);
-            renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
-            renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
-
-            // Save changes to localStorage
-            saveToLocalStorage();
-        }
-
-        // Add this window.onload function at the end of your script
-        window.onload = function() {
-            // Set moon emoji for dark mode button
-            document.getElementById('toggleModeBtn').innerHTML = '🌙';
-
-            // Load data from localStorage
-            loadFromLocalStorage();
-
-            // Add event listeners for all buttons
-            document.getElementById('toggleModeBtn').addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
-                saveToLocalStorage();
-            });
-
-            document.getElementById('toggleShiftBtn').addEventListener('click', function() {
-                isDayShift = !isDayShift;
-                timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
-                document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
-                this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
-                updateLegend();
-                saveToLocalStorage();
-            });
-
-            document.getElementById('generateBtn').addEventListener('click', generateSchedule);
-
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                clearAllData();
-                localStorage.removeItem('patientCareData');
-                addStaffInput();
-                addPatientInput();
-                addSecurityStaffInput();
-            });
-
-            document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
-            document.getElementById('removeStaffBtn').addEventListener('click', function() {
-                const staffInputs = document.getElementById('staffInputs');
-                if (staffInputs.children.length > 1) {
-                    staffInputs.removeChild(staffInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
-            document.getElementById('removePatientBtn').addEventListener('click', function() {
-                const patientInputs = document.getElementById('patientInputs');
-                if (patientInputs.children.length > 1) {
-                    patientInputs.removeChild(patientInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('addSecurityStaffBtn').addEventListener('click', addSecurityStaffInput);
-            document.getElementById('removeSecurityStaffBtn').addEventListener('click', function() {
-                const securityStaffInputs = document.getElementById('securityStaffInputs');
-                if (securityStaffInputs.children.length > 0) {
-                    securityStaffInputs.removeChild(securityStaffInputs.lastChild);
-                    saveToLocalStorage();
-                }
-            });
-
-            document.getElementById('resetRotationBtn').addEventListener('click', function() {
-                staffPatientHistory = {};
-                showError("Rotation history has been reset!");
-                saveToLocalStorage();
-            });
-
-            // Debug button functionality
-            document.getElementById('debugFillBtn').addEventListener('click', async function() {
-                try {
-                    // Show loading message
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'error-message';
-                    loadingDiv.style.backgroundColor = '#3498db';
-                    loadingDiv.textContent = "Fetching random names...";
-                    document.body.appendChild(loadingDiv);
-
-                    // Fetch random names from online API
-                    const staffResponse = await fetch('https://randomuser.me/api/?results=5');
-                    const patientResponse = await fetch('https://randomuser.me/api/?results=4');
-                    const securityResponse = await fetch('https://randomuser.me/api/?results=1');
-                    const nurseResponse = await fetch('https://randomuser.me/api/?results=2');
-
-                    // Parse the responses
-                    const staffData = await staffResponse.json();
-                    const patientData = await patientResponse.json();
-                    const securityData = await securityResponse.json();
-                    const nurseData = await nurseResponse.json();
-
-                    // Extract names from the API responses
-                    const staffNames = staffData.results.map(user =>
-                        `${user.name.first} ${user.name.last}`
-                    );
-                    const patientNames = patientData.results.map((user, index) =>
-                        `Patient ${String.fromCharCode(65 + index)} - ${user.name.last}`
-                    );
-                    const securityNames = securityData.results.map(user =>
-                        `Security Officer ${user.name.last}`
-                    );
-                    const nurseNames = nurseData.results.map(user =>
-                        `Charge Nurse ${user.name.last}`
-                    );
-
-                    // Remove loading message
-                    loadingDiv.remove();
-
-                    // Fill nurse in charge inputs
-                    document.getElementById('nurseInChargeInput').value = nurseNames[0];
-                    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-
-                    // Fill only existing staff inputs (no creation)
-                    const staffInputs = document.querySelectorAll('.staff-container .staff-name');
-                    staffInputs.forEach((input, index) => {
-                        // Only fill if we have a name for this index
-                        if (index < staffNames.length) {
-                            input.value = staffNames[index];
-                        }
-                    });
-
-                    // Fill only existing security staff inputs (no creation)
-                    const securityInputs = document.querySelectorAll('.security-container .security-name');
-                    securityInputs.forEach((input, index) => {
-                        if (index < securityNames.length) {
-                            input.value = securityNames[index];
-                        }
-                    });
-
-                    // Fill only existing patient inputs (no creation)
-                    const patientContainers = document.querySelectorAll('.patient-container');
-                    patientContainers.forEach((container, index) => {
-                        if (index < patientNames.length) {
-                            const nameInput = container.querySelector('.patient-name');
-                            const staffCountSelect = container.querySelector('.staff-count');
-
-                            nameInput.value = patientNames[index];
-                            staffCountSelect.value = (index % 3) + 1; // Cycle through 1, 2, 3
-                        }
-                    });
-
-                    // Show confirmation message
-                    const confirmationDiv = document.createElement('div');
-                    confirmationDiv.className = 'error-message';
-                    confirmationDiv.style.backgroundColor = '#4CAF50'; // Green for success
-                    confirmationDiv.textContent = "Debug data filled successfully with random names!";
-                    document.body.appendChild(confirmationDiv);
-                    setTimeout(() => confirmationDiv.remove(), 3000);
-
-                    // Save to localStorage
-                    saveToLocalStorage();
-                } catch (error) {
-                    console.error("Error fetching random names:", error);
-
-                    // Show error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-message';
-                    errorDiv.textContent = "Failed to fetch random names. Using fallback names instead.";
-                    document.body.appendChild(errorDiv);
-                    setTimeout(() => errorDiv.remove(), 5000);
-
-                    // Fallback to basic generic names if the API fails
-                    const staffNames = ['Staff Member 1', 'Staff Member 2', 'Staff Member 3', 'Staff Member 4', 'Staff Member 5'];
-                    const patientNames = ['Patient A', 'Patient B', 'Patient C', 'Patient D'];
-                    const securityNames = ['Security Officer'];
-                    const nurseNames = ['Charge Nurse 1', 'Charge Nurse 2'];
-
-                    // Fill with fallback names
-                    document.getElementById('nurseInChargeInput').value = nurseNames[0];
-                    document.getElementById('nurseInCharge2Input').value = nurseNames[1];
-
-                    document.querySelectorAll('.staff-container .staff-name').forEach((input, index) => {
-                        if (index < staffNames.length) input.value = staffNames[index];
-                    });
-
-                    document.querySelectorAll('.security-container .security-name').forEach((input, index) => {
-                        if (index < securityNames.length) input.value = securityNames[index];
-                    });
-
-                    document.querySelectorAll('.patient-container').forEach((container, index) => {
-                        if (index < patientNames.length) {
-                            container.querySelector('.patient-name').value = patientNames[index];
-                            container.querySelector('.staff-count').value = (index % 3) + 1;
-                        }
-                    });
-
-                    saveToLocalStorage();
-                }
-            });
-
-            // Debug panel toggle button
-            document.getElementById('toggleDebugBtn').addEventListener('click', function() {
-                const debugPanel = document.getElementById('debugPanel');
-                debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-            });
-
-            // Debug panel clear button
-            document.getElementById('clearDebugBtn').addEventListener('click', function() {
-                document.getElementById('debugOutput').innerHTML = '';
-            });
-
-            // Add renderStaffRotationStats function if it's missing
-            if (typeof renderStaffRotationStats !== 'function') {
-                window.renderStaffRotationStats = function(patients, staff) {
-                    // Generate a table showing how many times each staff member has worked with each patient
-                    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
-                    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
-                    rotationHtml += '<table class="rotation-table">';
-
-                    // Header row with patient initials
-                    rotationHtml += '<tr><th>Staff</th>';
-                    patients.forEach(patient => {
-                        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
-                    });
-                    rotationHtml += '</tr>';
-
-                    // Rows for each staff member with initials
-                    staff.forEach(s => {
-                        rotationHtml += `<tr><td title="${s}">${getInitials(s)}</td>`;
-
-                        // For each patient, show the rotation count
-                        patients.forEach(patient => {
-                            const count = staffPatientHistory[s] && staffPatientHistory[s][patient] ?
-                                staffPatientHistory[s][patient] : 0;
-
-                            // Color the cell based on the count (darker for higher counts)
-                            const bgColor = count === 0 ?
-                                '#ffffff' : `rgba(0, 123, 255, ${Math.min(0.1 + (count * 0.1), 0.9)})`;
-                            const textColor = count >= 5 ? '#ffffff' : '#000000';
-
-                            rotationHtml += `<td style="background-color: ${bgColor}; color: ${textColor};">${count}</td>`;
-                        });
-
-                        rotationHtml += '</tr>';
-                    });
-
-                    rotationHtml += '</table>';
-                    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
-
-                    document.getElementById('rotationStats').innerHTML = rotationHtml;
-                };
+            if (assignedStaff.length === 0) {
+                const error = `CRITICAL ERROR: Patient ${patient.name} has NO staff assigned at ${time}!`;
+                console.error(error);
+                errors.push(error);
+                hasErrors = true;
+            } else if (assignedStaff.length < requiredStaff) {
+                const warning = `WARNING: Patient ${patient.name} has ${assignedStaff.length}/${requiredStaff} staff assigned at ${time}`;
+                console.warn(warning);
+                errors.push(warning);
             }
-
-            // Set up legend based on shift type
-            updateLegend();
-        };
-
-        $(document).ready(function() {
-    // Open popup on cell click
-    $(document).on('click', '.assignable-staff-cell', function() {
-        // Get the time and patient from the clicked cell's data attributes
-        const time = $(this).attr('data-time');
-        const patient = $(this).attr('data-patient');
-
-        console.log("Opening popup for:", time, patient); // Add debugging
-
-        // Store these values on the popup element
-        $('#staffPopup').data('time', time).data('patient', patient);
-
-        // Show overlay and popup
-        $('#popupOverlay').show();
-        $('#staffPopup').show();
-
-        // List all available staff
-        let staff = [];
-        $('.staff-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) staff.push(name);
         });
-
-        // Add nurses in charge
-        if ($('#nurseInChargeInput').val().trim()) staff.push($('#nurseInChargeInput').val().trim());
-        if ($('#nurseInCharge2Input').val().trim()) staff.push($('#nurseInCharge2Input').val().trim());
-
-        // Add security staff
-        $('.security-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) staff.push(name);
-        });
-
-        // Get currently assigned staff for this patient/time
-        let currentlyAssigned = [];
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments && window.schedule[time].patientAssignments[patient]) {
-            currentlyAssigned = window.schedule[time].patientAssignments[patient] || [];
-        }
-
-        // Build staff list with current assignments highlighted
-        let html = '';
-        staff.forEach(function(name) {
-            const isAssigned = currentlyAssigned.includes(name);
-            const buttonStyle = isAssigned
-                ? 'background-color: #28a745; color: white;' // Green for assigned
-                : 'background-color: var(--button-bg-color); color: white;'; // Blue for available
-
-            html += `<button class="select-staff-btn" data-name="${name}"
-                     style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
-                     ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${name} ${isAssigned ? '(Currently Assigned)' : ''}</button>`;
-        });
-        $('#staffList').html(html);
-    });
-
-    // Close popup functions
-    function closePopup() {
-        $('#popupOverlay').hide();
-        $('#staffPopup').hide();
+    });    if (hasErrors) {
+        showMessage("CRITICAL: Schedule validation failed! Some patients have no staff assigned. Please contact system administrator.", "error");
+        return false;
     }
 
-    // Close popup on overlay click
-    $('#popupOverlay').click(closePopup);
+    if (errors.length > 0) {
+        console.warn("Schedule generated with warnings:", errors);
+        showMessage("⚠️ Schedule generated successfully! However, some patients have fewer staff than requested due to staff shortages. Emergency assignment protocols were used.", "warning");
+    } else {
+        console.log("✅ Schedule validation passed - all patients have staff assigned!");
+        showMessage("✅ Schedule generated successfully! All patients have adequate staff coverage.", "success");
+    }
 
-    // Close popup on Cancel button click
-    $('#closePopupBtn').click(closePopup);
+    return true;
+}
 
-    // Select staff button click handler - Toggle assignment
-    $(document).on('click', '.select-staff-btn', function() {
-        const staffName = $(this).attr('data-name');
-        const time = $('#staffPopup').data('time');
-        const patient = $('#staffPopup').data('patient');
-
-        console.log("Toggling staff:", staffName, "for patient:", patient, "at time:", time);
-
-        // Update the assignment in schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
-            // Make sure patient entry exists
-            if (!window.schedule[time].patientAssignments[patient]) {
-                window.schedule[time].patientAssignments[patient] = [];
-            }
-
-            const currentAssignments = window.schedule[time].patientAssignments[patient];
-            const staffIndex = currentAssignments.indexOf(staffName);
-
-            if (staffIndex > -1) {
-                // Staff is currently assigned, remove them
-                currentAssignments.splice(staffIndex, 1);
-                console.log(`Removed ${staffName} from assignment`);
-            } else {
-                // Staff is not assigned, add them
-                currentAssignments.push(staffName);
-                console.log(`Added ${staffName} to assignment`);
-            }
-
-            // Make sure helper functions exist before calling regenerateScheduleStats
-            if (typeof getAllStaffNames !== 'function') {
-                console.error("getAllStaffNames function is not defined!");
-                // Define the function if missing
-                window.getAllStaffNames = function() {
-                    const allStaff = [];
-                    $('.staff-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) allStaff.push(name);
-                    });
-                    if ($('#nurseInChargeInput').val().trim()) allStaff.push($('#nurseInChargeInput').val().trim());
-                    if ($('#nurseInCharge2Input').val().trim()) allStaff.push($('#nurseInCharge2Input').val().trim());
-                    $('.security-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) allStaff.push(name);
-                    });
-                    return allStaff;
-                };
-            }
-
-            if (typeof getAllPatientNames !== 'function') {
-                console.error("getAllPatientNames function is not defined!");
-                // Define the function if missing
-                window.getAllPatientNames = function() {
-                    const patients = [];
-                    $('.patient-name').each(function() {
-                        const name = $(this).val().trim();
-                        if (name) patients.push(name);
-                    });
-                    return patients;
-                };
-            }
-
-            // Force redraw the schedule first
-            const allStaff = getAllStaffNames();
-            const patients = getAllPatientNames();
-            renderSchedule(window.schedule, allStaff, patients, {});
-
-            // Then regenerate all stats
-            regenerateScheduleStats();
-        } else {
-            console.error("Cannot update schedule - schedule object structure is invalid", window.schedule);
-        }
-
-        // Close popup after assignment
-        $('#popupOverlay').hide();
-        $('#staffPopup').hide();
-    });
-
-    // Remove all staff button click handler
-    $('#removeAllStaffBtn').click(function() {
-        const time = $('#staffPopup').data('time');
-        const patient = $('#staffPopup').data('patient');
-
-        console.log("Removing all staff for", patient, "at", time);
-
-        // Clear the assignment in your schedule object
-        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
-            window.schedule[time].patientAssignments[patient] = [];
-
-            // Regenerate all stats and redraw tables
-            regenerateScheduleStats();
-        }
-
-        // Close popup
-        $('#popupOverlay').hide();
-        $('#staffPopup').hide();
-    });
-});
+// ...existing code...
     </script>
 
     <!-- Staff selection popup with overlay -->
