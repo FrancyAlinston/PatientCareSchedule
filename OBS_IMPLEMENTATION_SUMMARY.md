@@ -43,6 +43,13 @@ Successfully implemented OBS (Ward Observation) functionality from the master ba
 - **Real-time Update**: Immediate reflection of assignment changes in the popup
 - **Interactive Assignment**: Click-to-assign/unassign with visual feedback
 
+### 7. Nurse in Charge Display Enhancement (NEW)
+- **Privacy Protection**: Displays "NIC" instead of nurse in charge names in all tables
+- **Consistent Display**: Applied across staff statistics, continuity reports, and cleaning duties
+- **Popup Integration**: Shows "NIC" in cleaning duty assignment popups for nurse in charge
+- **Break Management**: Nurses in charge excluded from break allocation but show "N/A" break time
+- **Patient Care Limit**: Nurses in charge can be assigned to patient care max 3 times per schedule
+
 ## Code Changes Made
 
 ### 1. Schedule Initialization

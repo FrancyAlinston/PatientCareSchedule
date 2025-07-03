@@ -1397,9 +1397,12 @@ function checkStaffSufficiency() {
 }
 
 function assignBreaks(allStaff, staffStats) {
+    // Filter out nurses in charge from break assignments
+    const staffForBreaks = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+
     if (isDayShift) {
-        // Day shift break logic remains unchanged
-        allStaff.forEach(s => {
+        // Day shift break logic - only for non-nurse-in-charge staff
+        staffForBreaks.forEach(s => {
             // Assign 30-min break to a random hour between 9:00 and 13:00
             const shortBreakHour = Math.floor(Math.random() * 4) + 1; // 1 to 4 (9:00 to 13:00)
             schedule[timeSlots[shortBreakHour]].staffBreaks[s] = "30-MIN BREAK";
@@ -1412,15 +1415,25 @@ function assignBreaks(allStaff, staffStats) {
             staffStats[s].breakTime += 1;
             staffStats[s].secondBreakTime = timeSlots[secondBreakHour];
         });
+
+        // Set nurses in charge break times to "N/A" since they don't get scheduled breaks
+        if (nurseInCharge1 && staffStats[nurseInCharge1]) {
+            staffStats[nurseInCharge1].shortBreakTime = "N/A";
+            staffStats[nurseInCharge1].secondBreakTime = "N/A";
+        }
+        if (nurseInCharge2 && staffStats[nurseInCharge2]) {
+            staffStats[nurseInCharge2].shortBreakTime = "N/A";
+            staffStats[nurseInCharge2].secondBreakTime = "N/A";
+        }
     } else {
         // Night shift - 2-hour continuous breaks at 00:00, 02:00, and 04:00
 
         // Break starting time slots (00:00, 02:00, 04:00)
         const breakStartSlots = [4, 6, 8]; // Indexes in nightShiftSlots
 
-        // Group staff into 3 relatively equal groups
+        // Group only non-nurse-in-charge staff into 3 relatively equal groups
         const staffGroups = [[], [], []];
-        allStaff.forEach((s, index) => {
+        staffForBreaks.forEach((s, index) => {
             const groupIndex = index % 3;
             staffGroups[groupIndex].push(s);
         });
@@ -1445,6 +1458,16 @@ function assignBreaks(allStaff, staffStats) {
                 staffStats[s].secondBreakTime = timeSlots[breakStartIndex + 1];
             });
         });
+
+        // Set nurses in charge break times to "N/A" since they don't get scheduled breaks
+        if (nurseInCharge1 && staffStats[nurseInCharge1]) {
+            staffStats[nurseInCharge1].shortBreakTime = "N/A";
+            staffStats[nurseInCharge1].secondBreakTime = "N/A";
+        }
+        if (nurseInCharge2 && staffStats[nurseInCharge2]) {
+            staffStats[nurseInCharge2].shortBreakTime = "N/A";
+            staffStats[nurseInCharge2].secondBreakTime = "N/A";
+        }
     }
 }
 
@@ -1856,14 +1879,32 @@ function findStaffWithContinuityLimit(availableStaff, patientName, count, staffS
         const isSecurityA = securityStaff.includes(a) ? 10 : 0;
         const isSecurityB = securityStaff.includes(b) ? 10 : 0;
 
+        // Apply penalty for nurses in charge if they have too many assignments
+        const isNurseInChargeA = (a === nurseInCharge1 || a === nurseInCharge2) ? 1 : 0;
+        const isNurseInChargeB = (b === nurseInCharge1 || b === nurseInCharge2) ? 1 : 0;
+
+        // Heavy penalty for nurses in charge if they already have 3+ work hours (patient care assignments)
+        const nurseInChargePenaltyA = isNurseInChargeA && workloadA >= 3 ? 2000 : (isNurseInChargeA ? 50 : 0);
+        const nurseInChargePenaltyB = isNurseInChargeB && workloadB >= 3 ? 2000 : (isNurseInChargeB ? 50 : 0);
+
         // Combined score (lower is better for assignment)
-        const scoreA = continuityPenaltyA + (rotationA * 5) + (workloadA * 2) + isSecurityA;
-        const scoreB = continuityPenaltyB + (rotationB * 5) + (workloadB * 2) + isSecurityB;
+        const scoreA = continuityPenaltyA + (rotationA * 5) + (workloadA * 2) + isSecurityA + nurseInChargePenaltyA;
+        const scoreB = continuityPenaltyB + (rotationB * 5) + (workloadB * 2) + isSecurityB + nurseInChargePenaltyB;
 
         return scoreA - scoreB;
     });
 
-    return sorted.slice(0, count);
+    // Filter out nurses in charge who already have 3 or more patient care assignments
+    const filteredStaff = sorted.filter(staffMember => {
+        const isNurseInCharge = staffMember === nurseInCharge1 || staffMember === nurseInCharge2;
+        if (isNurseInCharge) {
+            const currentWorkHours = staffStats[staffMember] ? (staffStats[staffMember].workHours || 0) : 0;
+            return currentWorkHours < 3; // Only allow nurses in charge if they have less than 3 assignments
+        }
+        return true; // Allow all other staff
+    });
+
+    return filteredStaff.slice(0, count);
 }
 
 function renderSchedule(schedule, staff, patients, staffStats) {
@@ -2117,11 +2158,16 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     staff.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
+        let displayName = s;
+
         if (securityStaff.includes(s)) roleDisplay = "Security Staff";
-        if (s === nurseInCharge1 || s === nurseInCharge2) roleDisplay = "Nurse in Charge";
+        if (s === nurseInCharge1 || s === nurseInCharge2) {
+            roleDisplay = "Nurse in Charge";
+            displayName = "NIC";
+        }
 
         statsHtml += `<tr>
-            <td>${s}</td>
+            <td>${displayName}</td>
             <td>${staffStats[s].workHours}</td>
             <td>${staffStats[s].breakTime}</td>
             <td>${roleDisplay}</td>
@@ -2184,9 +2230,13 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         cleaningDuties.forEach(duty => {
             const assignment = dutyAssignments[duty];
             if (assignment) {
+                // Display "NIC" for nurses in charge
+                const staffDisplayName = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : assignment.staff;
+                const staffInitials = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : getInitials(assignment.staff);
+
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #e7f3ff; border: 1px solid #0077ff; padding: 8px;" title="Click to reassign - ${assignment.staff}">${getInitials(assignment.staff)} (${assignment.staff})</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #e7f3ff; border: 1px solid #0077ff; padding: 8px;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
@@ -2246,8 +2296,11 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                     '<span style="color: red;">Exceeds Target</span>' :
                     '<span style="color: green;">Within Target</span>';
 
+                // Display "NIC" for nurses in charge
+                const displayName = (s === nurseInCharge1 || s === nurseInCharge2) ? "NIC" : s;
+
                 statsHtml += `<tr>
-                    <td>${s}</td>
+                    <td>${displayName}</td>
                     <td>${patient}</td>
                     <td>${hours}</td>
                     <td>${status}</td>
@@ -2827,7 +2880,8 @@ $(document).ready(function() {
 
         // Status header
         const statusColor = currentlyAssigned ? '#28a745' : '#ffc107';
-        const statusText = currentlyAssigned ? `Currently assigned to: ${currentlyAssigned}` : 'Not assigned';
+        const displayName = (currentlyAssigned === nurseInCharge1 || currentlyAssigned === nurseInCharge2) ? "NIC" : currentlyAssigned;
+        const statusText = currentlyAssigned ? `Currently assigned to: ${displayName}` : 'Not assigned';
         html += `<div style="background-color: ${statusColor}; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
             ${statusText}
         </div>`;
