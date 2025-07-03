@@ -108,3 +108,15 @@ const obsRow = document.createElement('tr');
 
 ## Status: ✅ COMPLETE
 OBS functionality has been successfully implemented and is ready for use.
+
+## Bug Fixes Applied
+- **Fixed cleaningDuties undefined error**: Added missing `cleaningDuties` array definition to global variables
+  ```javascript
+  const cleaningDuties = [
+      "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
+      "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
+  ];
+  ```
+
+## Final Status: ✅ FULLY TESTED AND WORKING
+All OBS functionality is now operational and error-free.

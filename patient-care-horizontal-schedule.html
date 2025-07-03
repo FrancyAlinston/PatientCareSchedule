@@ -568,6 +568,12 @@
         let nurseInCharge1 = '';
         let nurseInCharge2 = '';
         let staffPatientHistory = {};
+        
+        // Cleaning duties for night shift
+        const cleaningDuties = [
+            "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
+            "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
+        ];
 
         // Time slot definitions
         const dayShiftSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
