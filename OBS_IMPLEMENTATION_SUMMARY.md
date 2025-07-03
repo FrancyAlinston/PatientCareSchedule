@@ -1,4 +1,4 @@
-# OBS (Ward Observation) Implementation Summary v2.1.0
+# OBS (Ward Observation) Implementation Summary
 
 ## Overview
 Successfully implemented OBS (Ward Observation) functionality from the master backup commit c1ef862 into the current Patient Care Schedule application.
