@@ -2224,7 +2224,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
         // Store these values on the popup element
         $('#staffPopup').data('time', time).data('patient', patient);
-        
+
         // Show overlay and popup
         $('#popupOverlay').show();
         $('#staffPopup').show();
@@ -2256,10 +2256,10 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         let html = '';
         staff.forEach(function(name) {
             const isAssigned = currentlyAssigned.includes(name);
-            const buttonStyle = isAssigned 
+            const buttonStyle = isAssigned
                 ? 'background-color: #28a745; color: white;' // Green for assigned
                 : 'background-color: var(--button-bg-color); color: white;'; // Blue for available
-            
+
             html += `<button class="select-staff-btn" data-name="${name}"
                      style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
                      ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${name} ${isAssigned ? '(Currently Assigned)' : ''}</button>`;
@@ -2272,16 +2272,16 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         $('#popupOverlay').hide();
         $('#staffPopup').hide();
     }
-    
+
     // Close popup on overlay click
     $('#popupOverlay').click(closePopup);
-    
+
     // Close popup on Cancel button click
     $('#closePopupBtn').click(closePopup);
 
     // Select staff button click handler - Toggle assignment
     $(document).on('click', '.select-staff-btn', function() {
-        const staffName = $(this).attr('data-name'); 
+        const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').data('time');
         const patient = $('#staffPopup').data('patient');
 
@@ -2296,7 +2296,7 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
             const currentAssignments = window.schedule[time].patientAssignments[patient];
             const staffIndex = currentAssignments.indexOf(staffName);
-            
+
             if (staffIndex > -1) {
                 // Staff is currently assigned, remove them
                 currentAssignments.splice(staffIndex, 1);
@@ -2379,9 +2379,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     </script>
 
     <!-- Staff selection popup with overlay -->
-    <div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    <div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
          background-color: rgba(0,0,0,0.5); z-index:1500;"></div>
-    
+
     <div id="staffPopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-30%);
          background-color: var(--container-bg-color); color: var(--text-color); border:2px solid var(--button-bg-color);
          border-radius:8px; z-index:2000; padding:20px; min-width:300px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
