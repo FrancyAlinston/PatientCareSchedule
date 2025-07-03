@@ -555,30 +555,18 @@
         // Global variables
         let schedule = {};
         let isDayShift = true;
-        let securityStaff = []; // Add this new global variable
-        let staffPatientHistory = {};
-        const cleaningDuties = [
-            "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
-            "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
-        ];
+        let timeSlots = [];
+        let securityStaff = [];
         let nurseInCharge1 = '';
         let nurseInCharge2 = '';
-
-        // Time slots for day and night shifts
-        const dayShiftSlots = [
-            "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
-            "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00",
-            "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"
-        ];
-
-        const nightShiftSlots = [
-            "20:00-21:00", "21:00-22:00", "22:00-23:00", "23:00-00:00",
-            "00:00-01:00", "01:00-02:00", "02:00-03:00", "03:00-04:00",
-            "04:00-05:00", "05:00-06:00", "06:00-07:00", "07:00-08:00"
-        ];
-
-        // Current time slots (default to day shift)
-        let timeSlots = [...dayShiftSlots];
+        let staffPatientHistory = {};
+        
+        // Time slot definitions
+        const dayShiftSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
+        const nightShiftSlots = ["20:00-21:00", "21:00-22:00", "22:00-23:00", "23:00-00:00", "00:00-01:00", "01:00-02:00", "02:00-03:00", "03:00-04:00", "04:00-05:00", "05:00-06:00", "06:00-07:00", "07:00-08:00"];
+        
+        // Initialize time slots
+        timeSlots = [...dayShiftSlots];
 
         // Helper functions
         function getInputValues(selector) {
@@ -2130,22 +2118,343 @@ function validateScheduleCompleteness(schedule, patients) {
     return true;
 }
 
-// ...existing code...
+// Add this function to recalculate all statistics when manual staff changes are made
+function regenerateScheduleStats() {
+    // Get current values for staff and patients
+    const allStaff = getAllStaffNames();
+    const patients = getAllPatientNames();
+
+    // Initialize staffStats object to track staff workload
+    const staffStats = {};
+    allStaff.forEach(s => {
+        staffStats[s] = {
+            workHours: 0,
+            breakTime: 0,
+            shortBreakTime: "",
+            secondBreakTime: ""
+        };
+    });
+
+    // Initialize continuous assignment tracker
+    const continuousAssignmentTracker = {};
+    allStaff.forEach(s => {
+        continuousAssignmentTracker[s] = {};
+        patients.forEach(patient => {
+            continuousAssignmentTracker[s][patient] = 0;
+        });
+    });
+
+    // Process each time slot to recalculate work hours
+    timeSlots.forEach((time, timeIndex) => {
+        patients.forEach(patient => {
+            const assignedStaff = schedule[time].patientAssignments[patient] || [];
+            assignedStaff.forEach(staffMember => {
+                if (staffStats[staffMember]) {
+                    staffStats[staffMember].workHours++;
+                }
+            });
+        });
+    });
+
+    // Render the updated schedule and stats
+    renderSchedule(schedule, allStaff, patients, staffStats);
+    renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
+    renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
+
+    // Save changes to localStorage
+    saveToLocalStorage();
+}
+
+// Helper functions for getting staff and patient names
+function getAllStaffNames() {
+    const staff = Array.from(document.querySelectorAll('.staff-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+    
+    const securityStaffValues = Array.from(document.querySelectorAll('.security-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+    
+    const nurseInCharge1 = document.getElementById('nurseInChargeInput').value.trim();
+    const nurseInCharge2 = document.getElementById('nurseInCharge2Input').value.trim();
+    
+    const allStaff = [...staff, ...securityStaffValues];
+    if (nurseInCharge1) allStaff.push(nurseInCharge1);
+    if (nurseInCharge2) allStaff.push(nurseInCharge2);
+    
+    return allStaff;
+}
+
+function getAllPatientNames() {
+    return Array.from(document.querySelectorAll('.patient-name'))
+        .map(input => input.value.trim())
+        .filter(name => name);
+}
+
+// Initialize the application when page loads
+window.onload = function() {
+    // Set moon emoji for dark mode button
+    document.getElementById('toggleModeBtn').innerHTML = '🌙';
+
+    // Load data from localStorage
+    loadFromLocalStorage();
+
+    // Add event listeners for all buttons
+    document.getElementById('toggleModeBtn').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        saveToLocalStorage();
+    });
+
+    document.getElementById('toggleShiftBtn').addEventListener('click', function() {
+        isDayShift = !isDayShift;
+        timeSlots = isDayShift ? [...dayShiftSlots] : [...nightShiftSlots];
+        document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
+        this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
+        updateLegend();
+        saveToLocalStorage();
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', generateSchedule);
+
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        clearAllData();
+        localStorage.removeItem('patientCareData');
+        addStaffInput();
+        addPatientInput();
+    });
+
+    document.getElementById('addStaffBtn').addEventListener('click', addStaffInput);
+    document.getElementById('removeStaffBtn').addEventListener('click', function() {
+        const staffInputs = document.getElementById('staffInputs');
+        if (staffInputs.children.length > 1) {
+            staffInputs.removeChild(staffInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+
+    document.getElementById('addPatientBtn').addEventListener('click', addPatientInput);
+    document.getElementById('removePatientBtn').addEventListener('click', function() {
+        const patientInputs = document.getElementById('patientInputs');
+        if (patientInputs.children.length > 1) {
+            patientInputs.removeChild(patientInputs.lastChild);
+            saveToLocalStorage();
+        }
+    });
+
+    document.getElementById('resetRotationBtn').addEventListener('click', function() {
+        staffPatientHistory = {};
+        showError("Rotation history has been reset!");
+        saveToLocalStorage();
+    });
+
+    // Debug button functionality
+    document.getElementById('debugFillBtn').addEventListener('click', async function() {
+        try {
+            // Debug fill code here
+            saveToLocalStorage();
+        } catch (error) {
+            console.error("Debug fill error:", error);
+        }
+    });
+
+    // Debug panel toggle button
+    document.getElementById('toggleDebugBtn').addEventListener('click', function() {
+        const debugPanel = document.getElementById('debugPanel');
+        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Debug panel clear button
+    document.getElementById('clearDebugBtn').addEventListener('click', function() {
+        document.getElementById('debugOutput').innerHTML = '';
+    });
+
+    // Initialize with one staff and patient input
+    if (document.getElementById('staffInputs').children.length === 0) {
+        addStaffInput();
+    }
+    if (document.getElementById('patientInputs').children.length === 0) {
+        addPatientInput();
+    }
+
+    // Set up legend based on shift type
+    updateLegend();
+};
+
+// jQuery document ready for popup functionality
+$(document).ready(function() {
+    // Open popup on cell click
+    $(document).on('click', '.assignable-staff-cell', function() {
+        // Get the time and patient from the clicked cell's data attributes
+        const time = $(this).attr('data-time');
+        const patient = $(this).attr('data-patient');
+
+        console.log("Opening popup for:", time, patient);
+
+        // Store these values on the popup element
+        $('#staffPopup').data('time', time).data('patient', patient);
+
+        // Show overlay and popup
+        $('#popupOverlay').show();
+        $('#staffPopup').show();
+
+        // List all available staff
+        let staff = [];
+        $('.staff-name').each(function() {
+            const name = $(this).val().trim();
+            if (name) staff.push(name);
+        });
+
+        // Add nurses in charge
+        if ($('#nurseInChargeInput').val().trim()) staff.push($('#nurseInChargeInput').val().trim());
+        if ($('#nurseInCharge2Input').val().trim()) staff.push($('#nurseInCharge2Input').val().trim());
+
+        // Add security staff
+        $('.security-name').each(function() {
+            const name = $(this).val().trim();
+            if (name) staff.push(name);
+        });
+
+        // Get currently assigned staff for this patient/time
+        let currentlyAssigned = [];
+        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments && window.schedule[time].patientAssignments[patient]) {
+            currentlyAssigned = window.schedule[time].patientAssignments[patient] || [];
+        }
+
+        // Build staff list with current assignments highlighted
+        let html = '';
+        staff.forEach(function(name) {
+            const isAssigned = currentlyAssigned.includes(name);
+            const buttonStyle = isAssigned
+                ? 'background-color: #28a745; color: white;'
+                : 'background-color: var(--button-bg-color); color: white;';
+            html += `<button class="select-staff-btn" data-name="${name}"
+                     style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
+                     ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;">${name} ${isAssigned ? '(Currently Assigned)' : ''}</button>`;
+        });
+        $('#staffList').html(html);
+    });
+
+    // Close popup functions
+    function closePopup() {
+        $('#popupOverlay').hide();
+        $('#staffPopup').hide();
+    }
+
+    // Close popup on overlay click
+    $('#popupOverlay').click(closePopup);
+
+    // Close popup on Cancel button click
+    $('#closePopupBtn').click(closePopup);
+
+    // Select staff button click handler - Toggle assignment
+    $(document).on('click', '.select-staff-btn', function() {
+        const staffName = $(this).attr('data-name');
+        const time = $('#staffPopup').data('time');
+        const patient = $('#staffPopup').data('patient');
+
+        console.log("Toggling staff:", staffName, "for patient:", patient, "at time:", time);
+
+        // Update the assignment in schedule object
+        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
+            // Make sure patient entry exists
+            if (!window.schedule[time].patientAssignments[patient]) {
+                window.schedule[time].patientAssignments[patient] = [];
+            }
+
+            const currentAssignments = window.schedule[time].patientAssignments[patient];
+            const staffIndex = currentAssignments.indexOf(staffName);
+
+            if (staffIndex > -1) {
+                // Staff is currently assigned, remove them
+                currentAssignments.splice(staffIndex, 1);
+                console.log(`Removed ${staffName} from assignment`);
+            } else {
+                // Staff is not assigned, add them
+                currentAssignments.push(staffName);
+                console.log(`Added ${staffName} to assignment`);
+            }
+
+            // Regenerate all stats and redraw tables
+            regenerateScheduleStats();
+        } else {
+            console.error("Cannot update schedule - schedule object structure is invalid", window.schedule);
+        }
+
+        // Close popup after assignment
+        $('#popupOverlay').hide();
+        $('#staffPopup').hide();
+    });
+
+    // Remove all staff button click handler
+    $('#removeAllStaffBtn').click(function() {
+        const time = $('#staffPopup').data('time');
+        const patient = $('#staffPopup').data('patient');
+
+        console.log("Removing all staff for", patient, "at", time);
+
+        // Clear the assignment in your schedule object
+        if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments[patient]) {
+            window.schedule[time].patientAssignments[patient] = [];
+
+            // Regenerate all stats and redraw tables
+            regenerateScheduleStats();
+        }
+
+        // Close popup
+        $('#popupOverlay').hide();
+        $('#staffPopup').hide();
+    });
+});
+
+// Add renderStaffRotationStats function if it's missing
+function renderStaffRotationStats(patients, staff) {
+    // Generate a table showing how many times each staff member has worked with each patient
+    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+    rotationHtml += '<table class="rotation-table">';
+
+    // Header row with patient initials
+    rotationHtml += '<tr><th>Staff</th>';
+    patients.forEach(patient => {
+        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
+    });
+    rotationHtml += '</tr>';
+
+    // Rows for each staff member with initials
+    staff.forEach(s => {
+        rotationHtml += `<tr><td title="${s}">${getInitials(s)} (${s})</td>`;
+        patients.forEach(patient => {
+            const count = (staffPatientHistory[s] && staffPatientHistory[s][patient]) || 0;
+            const colorIntensity = Math.min(count * 20, 100);
+            rotationHtml += `<td style="background-color: rgba(0, 123, 255, ${colorIntensity / 100}); color: ${colorIntensity > 50 ? 'white' : 'black'};" title="${s} worked with ${patient} ${count} times">${count}</td>`;
+        });
+        rotationHtml += '</tr>';
+    });
+
+    rotationHtml += '</table>';
+    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+
+    const rotationStatsDiv = document.getElementById('rotationStats');
+    if (rotationStatsDiv) {
+        rotationStatsDiv.innerHTML = rotationHtml;
+    }
+}
     </script>
 
-    <!-- Staff selection popup with overlay -->
-    <div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-         background-color: rgba(0,0,0,0.5); z-index:1500;"></div>
+<!-- Staff selection popup with overlay -->
+<div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background-color: rgba(0,0,0,0.5); z-index:1500;"></div>
 
-    <div id="staffPopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-30%);
-         background-color: var(--container-bg-color); color: var(--text-color); border:2px solid var(--button-bg-color);
-         border-radius:8px; z-index:2000; padding:20px; min-width:300px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-        <h3>Select Staff for Assignment</h3>
-        <div id="staffList" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
-        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-            <button id="removeAllStaffBtn" style="background-color: #f44336; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Remove All Staff</button>
-            <button id="closePopupBtn" style="background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-        </div>
+<div id="staffPopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-30%);
+     background-color: var(--container-bg-color); color: var(--text-color); border:2px solid var(--button-bg-color);
+     border-radius:8px; z-index:2000; padding:20px; min-width:300px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <h3>Select Staff for Assignment</h3>
+    <div id="staffList" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+        <button id="removeAllStaffBtn" style="background-color: #f44336; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Remove All Staff</button>
+        <button id="closePopupBtn" style="background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
     </div>
+</div>
 </body>
 </html>
