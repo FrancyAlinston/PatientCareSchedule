@@ -1,5 +1,205 @@
 {
-  "schedules": {},
+  "schedules": {
+    "schedule_2025-07-03": {
+      "schedule": {
+        "08:00-09:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        },
+        "09:00-10:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        },
+        "10:00-11:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Alice Johnson": "30-MIN BREAK"
+          }
+        },
+        "11:00-12:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Bob Smith": "30-MIN BREAK"
+          }
+        },
+        "12:00-13:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Carol Davis": "30-MIN BREAK"
+          }
+        },
+        "13:00-14:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Alice Johnson": "2ND BREAK",
+            "David Wilson": "2ND BREAK"
+          }
+        },
+        "14:00-15:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Bob Smith": "2ND BREAK"
+          }
+        },
+        "15:00-16:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {
+            "Carol Davis": "2ND BREAK"
+          }
+        },
+        "16:00-17:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        },
+        "17:00-18:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        },
+        "18:00-19:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        },
+        "19:00-20:00": {
+          "patientAssignments": {
+            "Patient A": [
+              "Alice Johnson"
+            ],
+            "Patient B": [
+              "Alice Johnson",
+              "Bob Smith"
+            ],
+            "Patient C": [
+              "Alice Johnson"
+            ]
+          },
+          "staffBreaks": {}
+        }
+      },
+      "createdAt": "2025-07-03T12:34:21.972Z",
+      "updatedAt": "2025-07-03T12:34:21.972Z"
+    }
+  },
   "settings": {
     "staff": [],
     "patients": [],
