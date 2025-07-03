@@ -318,15 +318,22 @@
             background-color: var(--container-bg-color);
             color: var(--text-color);
             border: 2px solid var(--button-bg-color);
-            border-radius: 8px;
+            border-radius: 12px;
             z-index: 2000;
-            padding: 20px;
-            min-width: 300px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            padding: 25px;
+            min-width: 350px;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         #staffPopup h3 {
             margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--button-bg-color);
+            border-bottom: 2px solid var(--button-bg-color);
+            padding-bottom: 10px;
         }
 
         #staffList {
@@ -335,7 +342,47 @@
             margin: 15px 0;
         }
 
-        /* Add any additional styles for the popup here */
+        /* Hover effects for staff buttons */
+        .select-staff-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Style for popup buttons */
+        #staffPopup button {
+            transition: all 0.2s ease;
+        }
+
+        #staffPopup #removeAllStaffBtn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #staffPopup #removeAllStaffBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        #staffPopup #closePopupBtn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        #staffPopup #closePopupBtn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Popup overlay for better focus */
+        #staffPopup::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
@@ -469,13 +516,17 @@
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
     <!-- Add this popup HTML at the end of your body, just before the closing </body> tag -->
+<div id="popupOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background-color: rgba(0,0,0,0.5); z-index:1999;"></div>
+
 <div id="staffPopup" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-30%);
      background-color: var(--container-bg-color); color: var(--text-color); border:2px solid var(--button-bg-color);
-     border-radius:8px; z-index:2000; padding:20px; min-width:300px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-    <h3>Select Staff</h3>
+     border-radius:12px; z-index:2000; padding:25px; min-width:350px; max-width:500px; max-height:70vh;
+     overflow-y:auto; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
+    <h3>Select Staff for <span id="popupPatientName"></span> at <span id="popupTimeSlot"></span></h3>
     <div id="staffList" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
     <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-        <button id="removeStaffBtn" style="background-color: #f44336;">Remove Staff</button>
+        <button id="removeAllStaffBtn" style="background-color: #f44336;">Remove All Staff</button>
         <button id="closePopupBtn">Cancel</button>
     </div>
 </div>
@@ -2072,31 +2123,71 @@ $(document).ready(function() {
         // Store these values as HTML attributes for more reliable access
         $('#staffPopup').attr('data-time', time).attr('data-patient', patient).show();
 
-        // List all available staff
-        let staff = [];
+        // Get all staff members
+        let allStaff = [];
         $('.staff-name').each(function() {
             const name = $(this).val().trim();
-            if (name) staff.push(name);
+            if (name) allStaff.push(name);
         });
 
         // Add nurses in charge
-        if ($('#nurseInChargeInput').val().trim()) staff.push($('#nurseInChargeInput').val().trim());
-        if ($('#nurseInCharge2Input').val().trim()) staff.push($('#nurseInCharge2Input').val().trim());
+        if ($('#nurseInChargeInput').val().trim()) allStaff.push($('#nurseInChargeInput').val().trim());
+        if ($('#nurseInCharge2Input').val().trim()) allStaff.push($('#nurseInCharge2Input').val().trim());
 
         // Add security staff
         $('.security-name').each(function() {
             const name = $(this).val().trim();
-            if (name) staff.push(name);
+            if (name) allStaff.push(name);
         });
 
-        // Build staff list
+        // Filter available staff (those not on break or already assigned to maximum patients)
+        const availableStaff = getAvailableStaffForTime(time, allStaff);
+        const currentlyAssigned = window.schedule?.[time]?.patientAssignments?.[patient] || [];
+
+        // Build staff list with status indicators
         let html = '';
-        staff.forEach(function(name) {
-            html += `<button class="select-staff-btn" data-name="${name}"
-                     style="width: 100%; margin-bottom: 8px; padding: 10px; text-align: left;
-                     background-color: var(--button-bg-color); color: white; border: none;
-                     border-radius: 4px; cursor: pointer;">${name}</button>`;
-        });
+
+        // Show currently assigned staff first (if any)
+        if (currentlyAssigned.length > 0) {
+            html += '<div style="margin-bottom: 15px; padding: 10px; background-color: #e3f2fd; border-radius: 4px;">';
+            html += '<strong>Currently Assigned:</strong><br>';
+            currentlyAssigned.forEach(function(staffName) {
+                html += `<span style="display: inline-block; background-color: #2196f3; color: white;
+                         padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 12px;">${staffName}</span>`;
+            });
+            html += '</div>';
+        }
+
+        // Show available staff
+        if (availableStaff.length > 0) {
+            html += '<div style="margin-bottom: 10px;"><strong>Available Staff:</strong></div>';
+            availableStaff.forEach(function(name) {
+                const isCurrentlyAssigned = currentlyAssigned.includes(name);
+                const buttonStyle = isCurrentlyAssigned
+                    ? 'background-color: #ff5722; color: white;' // Red for currently assigned
+                    : 'background-color: var(--button-bg-color); color: white;';
+
+                html += `<button class="select-staff-btn" data-name="${name}"
+                         style="width: 100%; margin-bottom: 6px; padding: 8px; text-align: left;
+                         ${buttonStyle} border: none; border-radius: 4px; cursor: pointer;
+                         transition: background-color 0.2s;">${name}</button>`;
+            });
+        }
+
+        // Show unavailable staff (on break or overloaded) in a separate section
+        const unavailableStaff = allStaff.filter(staff => !availableStaff.includes(staff));
+        if (unavailableStaff.length > 0) {
+            html += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">';
+            html += '<div style="margin-bottom: 10px; color: #666;"><strong>Unavailable Staff:</strong></div>';
+            unavailableStaff.forEach(function(name) {
+                const reason = getStaffUnavailabilityReason(name, time);
+                html += `<div style="width: 100%; margin-bottom: 4px; padding: 6px; text-align: left;
+                         background-color: #f5f5f5; color: #666; border-radius: 4px; font-size: 13px;">
+                         ${name} - ${reason}</div>`;
+            });
+            html += '</div>';
+        }
+
         $('#staffList').html(html);
     });
 
@@ -2113,36 +2204,68 @@ $(document).ready(function() {
 
         console.log("Selected staff:", staffName, "for", patient, "at", time);
 
-        // Update schedule structure
-        if (!window.schedule) window.schedule = {};
-        if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
-        if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
-        if (!window.schedule[time].patientAssignments[patient]) window.schedule[time].patientAssignments[patient] = [];
+        // Toggle staff assignment
+        const action = toggleStaffAssignment(staffName, patient, time);
 
-        // Update assignment
-        window.schedule[time].patientAssignments[patient] = [staffName];
+        // Show feedback message
+        const message = action === 'added'
+            ? `✅ ${staffName} assigned to ${patient}`
+            : `❌ ${staffName} removed from ${patient}`;
 
-        // Update staff-patient history for rotation tracking
-        updateStaffPatientHistory(staffName, patient);
+        // Create temporary feedback message
+        const feedback = $('<div>')
+            .css({
+                position: 'fixed',
+                top: '10px',
+                right: '10px',
+                background: action === 'added' ? '#4CAF50' : '#f44336',
+                color: 'white',
+                padding: '10px 15px',
+                borderRadius: '4px',
+                zIndex: 3000,
+                fontSize: '14px'
+            })
+            .text(message);
+
+        $('body').append(feedback);
+        setTimeout(() => feedback.fadeOut(() => feedback.remove()), 2000);
 
         // Regenerate all schedule displays with the updated data
         regenerateScheduleStats();
 
-        // Close popup
-        $('#staffPopup').hide();
+        // Update the popup to reflect current assignments (refresh the popup)
+        $(this).closest('.assignable-staff-cell').trigger('click');
     });
 
-    // Remove staff button click handler
-    $('#removeStaffBtn').click(function() {
+    // Remove staff button click handler - clears ALL staff from the patient
+    $('#removeAllStaffBtn').click(function() {
         const time = $('#staffPopup').attr('data-time');
         const patient = $('#staffPopup').attr('data-patient');
 
-        console.log("Removing staff for", patient, "at", time);
+        console.log("Removing all staff for", patient, "at", time);
 
-        // Clear the assignment
+        // Clear all assignments for this patient at this time
         if (window.schedule && window.schedule[time] && window.schedule[time].patientAssignments) {
             window.schedule[time].patientAssignments[patient] = [];
         }
+
+        // Show feedback message
+        const feedback = $('<div>')
+            .css({
+                position: 'fixed',
+                top: '10px',
+                right: '10px',
+                background: '#f44336',
+                color: 'white',
+                padding: '10px 15px',
+                borderRadius: '4px',
+                zIndex: 3000,
+                fontSize: '14px'
+            })
+            .text(`🗑️ All staff removed from ${patient}`);
+
+        $('body').append(feedback);
+        setTimeout(() => feedback.fadeOut(() => feedback.remove()), 2000);
 
         // Regenerate all schedule displays with the updated data
         regenerateScheduleStats();
@@ -2483,157 +2606,121 @@ function generateStaffColors(staff) {
     return staffColors;
 }
 
-// Add missing render functions
-function renderBreakHoursTable(staffStats, staff) {
-    const breakHoursTableBody = document.querySelector('#breakHoursTable tbody');
-    breakHoursTableBody.innerHTML = '';
+// Helper function to get available staff for a specific time slot
+function getAvailableStaffForTime(time, allStaff) {
+    const availableStaff = [];
 
-    staff.forEach(s => {
-        const row = document.createElement('tr');
-
-        // Staff name
-        const staffCell = document.createElement('td');
-        staffCell.textContent = s;
-        row.appendChild(staffCell);
-
-        // First break time (30-min break for day shift, first hour of night break for night shift)
-        const shortBreakCell = document.createElement('td');
-        shortBreakCell.textContent = staffStats[s].shortBreakTime || 'N/A';
-        row.appendChild(shortBreakCell);
-
-        // Second break time (2nd break for day shift, second hour of night break for night shift)
-        const secondBreakCell = document.createElement('td');
-        secondBreakCell.textContent = staffStats[s].secondBreakTime || 'N/A';
-        row.appendChild(secondBreakCell);
-
-        breakHoursTableBody.appendChild(row);
-    });
-}
-
-function renderStats(staffStats, allStaff, patients) {
-    const statsDiv = document.getElementById('stats');
-    statsDiv.innerHTML = '<h2>Staff Statistics</h2>';
-
-    allStaff.forEach(s => {
-        const statDiv = document.createElement('div');
-        statDiv.innerHTML = `
-            <strong>${s}:</strong>
-            Work Hours: ${staffStats[s].workHours},
-            Break Hours: ${staffStats[s].breakTime}
-        `;
-        statsDiv.appendChild(statDiv);
-    });
-}
-
-// Complete the renderSchedule function
-function renderSchedule(schedule, staff, patients) {
-    // Generate colors for staff
-    const staffColors = generateStaffColors(staff);
-
-    // Setup patient schedule header
-    const scheduleHeader = document.getElementById('scheduleHeader');
-    let headerHTML = '<tr><th>Patient</th>';
-    timeSlots.forEach(time => {
-        headerHTML += `<th>${time}</th>`;
-    });
-    headerHTML += '</tr>';
-    scheduleHeader.innerHTML = headerHTML;
-
-    // Setup patient schedule body
-    const scheduleBody = document.getElementById('scheduleBody');
-    scheduleBody.innerHTML = '';
-
-    // Add OBS (Ward Observation) row first
-    const obsRow = document.createElement('tr');
-
-    // Add OBS label cell
-    const obsCell = document.createElement('td');
-    obsCell.textContent = "OBS";
-    obsCell.className = 'row-header';
-    obsCell.style.fontWeight = "bold";
-    obsRow.appendChild(obsCell);
-
-    // Add cells for each time slot
-    timeSlots.forEach(time => {
-        const cell = document.createElement('td');
-        cell.className = 'assignable-staff-cell';
-        cell.setAttribute('data-time', time);
-        cell.setAttribute('data-patient', "OBS");
-
-        const assignedStaff = schedule[time]?.patientAssignments?.["OBS"] || [];
-
-        if (assignedStaff.length === 0) {
-            cell.textContent = "";
-            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
-            cell.style.color = "#666666";
-        } else {
-            // Display assigned staff for OBS
-            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-            cell.textContent = staffInitials;
-            cell.title = assignedStaff.join(", "); // Full names on hover
-
-            // Add special styling for OBS - green background
-            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
-            cell.style.color = "#ffffff"; // White text
-            cell.style.fontWeight = "bold";
+    allStaff.forEach(staffName => {
+        // Check if staff is on break
+        if (window.schedule?.[time]?.staffBreaks?.[staffName]) {
+            return; // Staff is on break, not available
         }
 
-        obsRow.appendChild(cell);
-    });
-
-    scheduleBody.appendChild(obsRow);
-
-    // Add patient rows after OBS
-    patients.forEach(patient => {
-        const row = document.createElement('tr');
-
-        // Add patient name cell
-        const patientCell = document.createElement('td');
-        patientCell.textContent = patient;
-        patientCell.className = 'row-header';
-        row.appendChild(patientCell);
-
-        // Add cells for each time slot
-        timeSlots.forEach(time => {
-            const cell = document.createElement('td');
-            cell.className = 'assignable-staff-cell'; // Add this class to all cells
-            cell.setAttribute('data-time', time);     // Add time attribute
-            cell.setAttribute('data-patient', patient); // Add patient attribute
-
-            const assignedStaff = schedule[time]?.patientAssignments?.[patient] || [];
-
-            if (assignedStaff.length === 0) {
-                cell.textContent = "UNASSIGNED";
-                cell.style.backgroundColor = "#ffeaa7"; // Yellow for unassigned
-                cell.style.color = "#000000"; // Black text for contrast
-                cell.classList.add('staff-unassigned');
-            } else {
-                // Display all assigned staff for this patient
-                const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-                cell.textContent = staffInitials;
-
-                cell.title = assignedStaff.join(", "); // Full names on hover
-
-                // Add styling based on staff color (use first staff member's color)
-                if (assignedStaff.length > 0 && staffColors[assignedStaff[0]]) {
-                    const { bgColor, textColor } = staffColors[assignedStaff[0]];
-                    cell.style.backgroundColor = bgColor;
-                    cell.style.color = textColor;
-                } else {
-                    cell.style.backgroundColor = "#ffffff";
-                    cell.style.color = "#333333";
+        // Check if staff is already assigned to too many patients
+        let currentAssignments = 0;
+        if (window.schedule?.[time]?.patientAssignments) {
+            Object.values(window.schedule[time].patientAssignments).forEach(assignedStaff => {
+                if (assignedStaff.includes(staffName)) {
+                    currentAssignments++;
                 }
-            }
+            });
+        }
 
-            row.appendChild(cell);
-        });
+        // Allow staff to be assigned to multiple patients, but limit excessive assignments
+        const maxAssignments = securityStaff.includes(staffName) ? 1 : 3; // Security staff max 1, others max 3
 
-        scheduleBody.appendChild(row);
+        if (currentAssignments < maxAssignments) {
+            availableStaff.push(staffName);
+        }
     });
+
+    return availableStaff;
 }
 
-// Initialize the application when the page loads
-document.addEventListener('DOMContentLoaded', initializeApp);
+// Helper function to get reason why staff is unavailable
+function getStaffUnavailabilityReason(staffName, time) {
+    // Check if on break
+    if (window.schedule?.[time]?.staffBreaks?.[staffName]) {
+        const breakType = window.schedule[time].staffBreaks[staffName];
+        switch(breakType) {
+            case "30-MIN BREAK": return "On 30-min break";
+            case "2ND BREAK": return "On 2nd break";
+            case "NIGHT BREAK": return "On night break";
+            case "SECURITY DUTY": return "On security duty";
+            default: return "On break";
+        }
+    }
+
+    // Check if overloaded with assignments
+    let currentAssignments = 0;
+    if (window.schedule?.[time]?.patientAssignments) {
+        Object.values(window.schedule[time].patientAssignments).forEach(assignedStaff => {
+            if (assignedStaff.includes(staffName)) {
+                currentAssignments++;
+            }
+        });
+    }
+
+    const maxAssignments = securityStaff.includes(staffName) ? 1 : 3;
+    if (currentAssignments >= maxAssignments) {
+        return `Already assigned to ${currentAssignments} patient(s)`;
+    }
+
+    return "Unavailable";
+}
+
+// Function to add staff to a patient assignment
+function addStaffToPatient(staffName, patientName, time) {
+    // Initialize schedule structure if needed
+    if (!window.schedule) window.schedule = {};
+    if (!window.schedule[time]) window.schedule[time] = {patientAssignments: {}, staffBreaks: {}};
+    if (!window.schedule[time].patientAssignments) window.schedule[time].patientAssignments = {};
+    if (!window.schedule[time].patientAssignments[patientName]) window.schedule[time].patientAssignments[patientName] = [];
+
+    // Add staff if not already assigned to this patient
+    if (!window.schedule[time].patientAssignments[patientName].includes(staffName)) {
+        window.schedule[time].patientAssignments[patientName].push(staffName);
+
+        // Update staff-patient history for rotation tracking
+        updateStaffPatientHistory(staffName, patientName);
+
+        return true;
+    }
+
+    return false;
+}
+
+// Function to remove staff from a patient assignment
+function removeStaffFromPatient(staffName, patientName, time) {
+    if (window.schedule?.[time]?.patientAssignments?.[patientName]) {
+        const staffIndex = window.schedule[time].patientAssignments[patientName].indexOf(staffName);
+        if (staffIndex > -1) {
+            window.schedule[time].patientAssignments[patientName].splice(staffIndex, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to toggle staff assignment (add if not assigned, remove if already assigned)
+function toggleStaffAssignment(staffName, patientName, time) {
+    if (!window.schedule?.[time]?.patientAssignments?.[patientName]) {
+        // Initialize if needed
+        addStaffToPatient(staffName, patientName, time);
+        return 'added';
+    }
+
+    const currentAssignments = window.schedule[time].patientAssignments[patientName];
+    if (currentAssignments.includes(staffName)) {
+        // Remove staff
+        removeStaffFromPatient(staffName, patientName, time);
+        return 'removed';
+    } else {
+        // Add staff
+        addStaffToPatient(staffName, patientName, time);
+        return 'added';
+    }
+}
     </script>
 </body>
 </html>
