@@ -1,252 +1,26 @@
 {
-  "schedules": {
-    "schedule_2025-07-01": {
-      "schedule": {
-        "08:00-09:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Brayden Elliott"
-            ],
-            "Patient B - Boyd": [
-              "Clyde Owens",
-              "Leslie Stephens"
-            ],
-            "OBS": [
-              "Clyde Owens"
-            ]
-          },
-          "staffBreaks": {
-            "Bob Griffin": "SECURITY DUTY"
-          }
-        },
-        "09:00-10:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Penny Silva"
-            ],
-            "Patient B - Boyd": [
-              "Suzanna Gilbert",
-              "Gabriel Daniels"
-            ],
-            "OBS": [
-              "Brayden Elliott"
-            ]
-          },
-          "staffBreaks": {
-            "Leslie Stephens": "30-MIN BREAK",
-            "Travis Davis": "30-MIN BREAK",
-            "Bob Griffin": "SECURITY DUTY"
-          }
-        },
-        "10:00-11:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Leslie Stephens"
-            ],
-            "Patient B - Boyd": [
-              "Travis Davis",
-              "Brayden Elliott"
-            ],
-            "OBS": [
-              "Leslie Stephens"
-            ]
-          },
-          "staffBreaks": {
-            "Clyde Owens": "30-MIN BREAK",
-            "Gabriel Daniels": "30-MIN BREAK"
-          }
-        },
-        "11:00-12:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Suzanna Gilbert"
-            ],
-            "Patient B - Boyd": [
-              "Penny Silva",
-              "Clyde Owens"
-            ],
-            "OBS": [
-              "Suzanna Gilbert"
-            ]
-          },
-          "staffBreaks": {
-            "Brayden Elliott": "30-MIN BREAK"
-          }
-        },
-        "12:00-13:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Clyde Owens"
-            ],
-            "Patient B - Boyd": [
-              "Travis Davis",
-              "Gabriel Daniels"
-            ],
-            "OBS": [
-              "Travis Davis"
-            ]
-          },
-          "staffBreaks": {
-            "Suzanna Gilbert": "30-MIN BREAK",
-            "Penny Silva": "30-MIN BREAK"
-          }
-        },
-        "13:00-14:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Travis Davis"
-            ],
-            "Patient B - Boyd": [
-              "Leslie Stephens",
-              "Brayden Elliott"
-            ],
-            "OBS": [
-              "Clyde Owens"
-            ]
-          },
-          "staffBreaks": {}
-        },
-        "14:00-15:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Gabriel Daniels"
-            ],
-            "Patient B - Boyd": [
-              "Suzanna Gilbert",
-              "Penny Silva"
-            ],
-            "OBS": [
-              "Leslie Stephens"
-            ]
-          },
-          "staffBreaks": {
-            "Brayden Elliott": "2ND BREAK",
-            "Travis Davis": "2ND BREAK"
-          }
-        },
-        "15:00-16:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Brayden Elliott"
-            ],
-            "Patient B - Boyd": [
-              "Bob Griffin",
-              "Leslie Stephens"
-            ],
-            "OBS": [
-              "Brayden Elliott"
-            ]
-          },
-          "staffBreaks": {
-            "Clyde Owens": "2ND BREAK"
-          }
-        },
-        "16:00-17:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Gabriel Daniels"
-            ],
-            "Patient B - Boyd": [
-              "Clyde Owens",
-              "Travis Davis"
-            ],
-            "OBS": [
-              "Travis Davis"
-            ]
-          },
-          "staffBreaks": {
-            "Suzanna Gilbert": "2ND BREAK",
-            "Bob Griffin": "2ND BREAK"
-          }
-        },
-        "17:00-18:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Clyde Owens"
-            ],
-            "Patient B - Boyd": [
-              "Suzanna Gilbert",
-              "Bob Griffin"
-            ],
-            "OBS": [
-              "Suzanna Gilbert"
-            ]
-          },
-          "staffBreaks": {
-            "Leslie Stephens": "2ND BREAK",
-            "Gabriel Daniels": "2ND BREAK",
-            "Penny Silva": "2ND BREAK"
-          }
-        },
-        "18:00-19:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Leslie Stephens"
-            ],
-            "Patient B - Boyd": [
-              "Penny Silva",
-              "Brayden Elliott"
-            ],
-            "OBS": [
-              "Clyde Owens"
-            ]
-          },
-          "staffBreaks": {
-            "Bob Griffin": "SECURITY DUTY"
-          }
-        },
-        "19:00-20:00": {
-          "patientAssignments": {
-            "Patient A - Hughes": [
-              "Travis Davis"
-            ],
-            "Patient B - Boyd": [
-              "Gabriel Daniels",
-              "Suzanna Gilbert"
-            ],
-            "OBS": [
-              "Leslie Stephens"
-            ]
-          },
-          "staffBreaks": {
-            "Bob Griffin": "SECURITY DUTY"
-          }
-        }
-      },
-      "createdAt": "2025-07-01T22:53:21.419Z",
-      "updatedAt": "2025-07-01T22:53:21.419Z"
-    }
-  },
+  "schedules": {},
   "settings": {
     "staff": [
-      "Russell Reyes",
-      "Caroline Herrera",
-      "Derrick Willis",
-      "Jay Lawson",
-      "Randy Ramirez",
-      "Rose Soto",
-      "Kristin Herrera"
+      "Test Worker 1",
+      "Test Worker 2"
     ],
     "patients": [
       {
-        "name": "Patient A - Reed",
+        "name": "Test Patient A",
         "staffCount": 1
       },
       {
-        "name": "Patient B - Walters",
+        "name": "Test Patient B",
         "staffCount": 2
-      },
-      {
-        "name": "Patient C - Flores",
-        "staffCount": 3
       }
     ],
     "securityStaff": [
-      "Caleb Pena"
+      "Test Security"
     ],
-    "nurseInCharge1": "Priscilla Miles",
-    "nurseInCharge2": "Marion Alexander",
+    "nurseInCharge1": "Test Nurse 1",
+    "nurseInCharge2": "Test Nurse 2",
     "isDayShift": true,
-    "isDarkMode": true
+    "isDarkMode": false
   }
 }

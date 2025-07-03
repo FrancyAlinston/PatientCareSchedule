@@ -1,18 +1,3 @@
-# Patient Care Schedule Generator
-
-**Version 1.5.0** | Last Updated: June 23, 2025
-
-## Overview
-
-The Patient Care Schedule Generator is a web-based application designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
-
-## Key Features
-
-- **Shift Management**: Switch between day shift (8AM-8PM) and night shift (8PM-8AM) scheduling
-- **Staff Assignment**: Schedule healthcare workers, security staff, and nurses in charge
-- **Patient Coverage**: Ensure patients are never left unattended, with configurable staff-to-patient ratios (1:1, 2:1, 3:1)
-- **Break Scheduling**: Automatically assign and manage staff breaks with smart interruption handling if staffing becomes critical
-=======
 # Patient Care Schedule Management System
 
 **Version 2.0.0** | Last Updated: July 1, 2025
@@ -34,7 +19,6 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 - **Staff Assignment**: Schedule healthcare workers, security staff, and nurses in charge
 - **Patient Coverage**: Ensure patients are never left unattended, with configurable staff-to-patient ratios (1:1, 2:1, 3:1)
 - **Break Scheduling**: Automatically assign and manage staff breaks with smart interruption handling
->>>>>>> Beta
 - **Night Shift Duties**: Automatically distribute cleaning duties during night shifts
 - **Staff Rotation Tracking**: Monitor how frequently staff members work with specific patients to ensure fair rotation
 - **Light/Dark Mode**: Toggle between light and dark display modes for different environments
@@ -46,19 +30,6 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 - **IMPORTANT**: Night shift cleaning duties can only be allocated 2 hours after start and 2 hours before end of shift
 - **IMPORTANT**: All staff should be assigned at least one cleaning duty during night shift
 - **IMPORTANT**: Kitchen and kitchen-related duties can be assigned to one person
-<<<<<<< HEAD
-- **IMPORTANT**: Security staff handles specific security duties during restricted hours
-
-## Features
-
-### Day Shift Scheduling
-- Automatic 30-minute break assignment between 9:00-13:00
-- Automatic 1-hour second break assignment between 14:00-17:00
-- Fair distribution of patient assignments
-
-### Night Shift Scheduling
-- Automatic 2-hour continuous break assignments
-=======
 - **IMPORTANT**: Security staff handles specific security duties during restricted hours (first and last 2 hours)
 
 ## Features
@@ -76,40 +47,18 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 
 ### Night Shift Scheduling
 - Automatic 2-hour continuous break assignments at staggered times
->>>>>>> Beta
 - Cleaning duty distribution among available staff
 - Security duty assignments during critical hours (first and last 2 hours)
 
 ### Statistics and Reporting
-<<<<<<< HEAD
-- Staff workload analysis
-- Break scheduling summary
-- Patient care coverage tracking
-- Staff rotation history visualization
-=======
 - Staff workload analysis with visual indicators
 - Break scheduling summary with timing details
 - Patient care continuity tracking with alerts for excessive consecutive hours
 - Staff rotation history visualization to ensure fairness
->>>>>>> Beta
 
 ## How to Use
 
 1. Enter healthcare worker names, patient names, and security staff information
-<<<<<<< HEAD
-2. Select staff-to-patient ratios for each patient
-3. Choose between day shift or night shift
-4. Click "Generate Schedule" to create the assignment schedule
-5. View patient care assignments, staff schedule, and break times
-6. Check statistics and staff rotation history
-
-## Technical Details
-
-- Built with pure HTML, CSS, and JavaScript
-- No external libraries or frameworks required
-- Works in any modern web browser
-- Stores data in browser localStorage
-=======
 2. Select staff-to-patient ratios for each patient (1:1, 2:1, or 3:1)
 3. Choose between day shift or night shift using the toggle button
 4. Click "Generate Schedule" to create the initial assignment schedule
@@ -135,15 +84,12 @@ Security personnel have specialized schedules that incorporate both security dut
 - AJAX-like interface for real-time updates without page reloads
 - Works in any modern web browser
 - Stores data in browser localStorage for persistence
->>>>>>> Beta
 - Responsive design for different screen sizes
 
 ## Installation
 
 No installation required. Simply open the HTML file in a web browser to use the application.
 
-<<<<<<< HEAD
-=======
 ## Browser Compatibility
 
 - Chrome: Full support
@@ -153,7 +99,6 @@ No installation required. Simply open the HTML file in a web browser to use the 
 - Opera: Full support
 - Internet Explorer: Not supported
 
->>>>>>> Beta
 ## License
 
 MIT License - Copyright (c) 2025 FrancyAlinston
@@ -166,9 +111,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## Acknowledgments
 
-<<<<<<< HEAD
-This project was created to help healthcare facilities optimize their staffing schedules while maintaining high standards of patient care.
-=======
 This project was created to help healthcare facilities optimize their staffing schedules while maintaining high standards of patient care.
 
 ## Change Log
@@ -257,7 +199,6 @@ Data is stored in `data/schedules.json` file on the server. The structure includ
 
 The application includes comprehensive error handling for:
 - Network connectivity issues
-- Server errors
+- Server errors  
 - Data validation errors
 - Automatic retry mechanisms
->>>>>>> Beta
