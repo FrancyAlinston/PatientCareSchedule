@@ -480,20 +480,20 @@
         // Minimal jQuery-like functionality for standalone operation
         (function(global) {
             'use strict';
-            
+
             function $(selector) {
                 return new $.fn.init(selector);
             }
-            
+
             $.fn = $.prototype = {
                 constructor: $,
                 length: 0,
-                
+
                 init: function(selector) {
                     if (!selector) {
                         return this;
                     }
-                    
+
                     if (typeof selector === 'string') {
                         if (selector === 'document') {
                             this[0] = document;
@@ -517,17 +517,17 @@
                         }
                         return this;
                     }
-                    
+
                     return this;
                 },
-                
+
                 each: function(callback) {
                     for (var i = 0; i < this.length; i++) {
                         callback.call(this[i], i, this[i]);
                     }
                     return this;
                 },
-                
+
                 ready: function(callback) {
                     if (document.readyState === 'loading') {
                         document.addEventListener('DOMContentLoaded', callback);
@@ -536,13 +536,13 @@
                     }
                     return this;
                 },
-                
+
                 on: function(event, selector, handler) {
                     if (typeof selector === 'function') {
                         handler = selector;
                         selector = null;
                     }
-                    
+
                     return this.each(function() {
                         if (selector) {
                             this.addEventListener(event, function(e) {
@@ -555,11 +555,11 @@
                         }
                     });
                 },
-                
+
                 click: function(handler) {
                     return this.on('click', handler);
                 },
-                
+
                 attr: function(name, value) {
                     if (value !== undefined) {
                         return this.each(function() {
@@ -568,7 +568,7 @@
                     }
                     return this[0] ? this[0].getAttribute(name) : null;
                 },
-                
+
                 val: function(value) {
                     if (value !== undefined) {
                         return this.each(function() {
@@ -577,7 +577,7 @@
                     }
                     return this[0] ? this[0].value : '';
                 },
-                
+
                 text: function(text) {
                     if (text !== undefined) {
                         return this.each(function() {
@@ -586,7 +586,7 @@
                     }
                     return this[0] ? this[0].textContent : '';
                 },
-                
+
                 html: function(html) {
                     if (html !== undefined) {
                         return this.each(function() {
@@ -595,19 +595,19 @@
                     }
                     return this[0] ? this[0].innerHTML : '';
                 },
-                
+
                 show: function() {
                     return this.each(function() {
                         this.style.display = '';
                     });
                 },
-                
+
                 hide: function() {
                     return this.each(function() {
                         this.style.display = 'none';
                     });
                 },
-                
+
                 data: function(key, value) {
                     if (value !== undefined) {
                         return this.each(function() {
@@ -616,7 +616,7 @@
                     }
                     return this[0] ? this[0].dataset[key] : null;
                 },
-                
+
                 find: function(selector) {
                     var result = $();
                     this.each(function() {
@@ -627,23 +627,23 @@
                     });
                     return result;
                 },
-                
+
                 addClass: function(className) {
                     return this.each(function() {
                         this.classList.add(className);
                     });
                 },
-                
+
                 removeClass: function(className) {
                     return this.each(function() {
                         this.classList.remove(className);
                     });
                 },
-                
+
                 hasClass: function(className) {
                     return this[0] ? this[0].classList.contains(className) : false;
                 },
-                
+
                 css: function(prop, value) {
                     if (value !== undefined) {
                         return this.each(function() {
@@ -652,7 +652,7 @@
                     }
                     return this[0] ? getComputedStyle(this[0])[prop] : null;
                 },
-                
+
                 append: function(content) {
                     return this.each(function() {
                         if (typeof content === 'string') {
@@ -662,7 +662,7 @@
                         }
                     });
                 },
-                
+
                 remove: function() {
                     return this.each(function() {
                         if (this.parentNode) {
@@ -670,16 +670,16 @@
                         }
                     });
                 },
-                
+
                 empty: function() {
                     return this.each(function() {
                         this.innerHTML = '';
                     });
                 }
             };
-            
+
             $.fn.init.prototype = $.fn;
-            
+
             // Static methods
             $.each = function(obj, callback) {
                 if (Array.isArray(obj)) {
@@ -695,10 +695,10 @@
                 }
                 return obj;
             };
-            
+
             // Expose $ and jQuery globally
             global.$ = global.jQuery = $;
-            
+
         })(window);
     </script>
     <script>
