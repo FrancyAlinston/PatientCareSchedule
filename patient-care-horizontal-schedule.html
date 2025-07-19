@@ -2957,11 +2957,6 @@ window.onload = function() {
 $(document).ready(function() {
     // Open popup on cell click
     $(document).on('click', '.assignable-staff-cell', function() {
-        // Prevent double execution with native handlers
-        if (window.popupHandlerExecuting) return;
-        window.popupHandlerExecuting = true;
-        setTimeout(() => { window.popupHandlerExecuting = false; }, 100);
-
         // Get the time and patient from the clicked cell's data attributes
         const time = $(this).attr('data-time');
         const patient = $(this).attr('data-patient');
@@ -3105,15 +3100,8 @@ $(document).ready(function() {
     $('#popupOverlay').click(closePopup);
 
     // Close popup on Cancel button click
-    $('#closePopupBtn').click(closePopup);
-
-    // Select staff button click handler - Toggle assignment
+    $('#closePopupBtn').click(closePopup);    // Select staff button click handler - Toggle assignment
     $(document).on('click', '.select-staff-btn', function() {
-        // Prevent double execution with native handlers
-        if (window.popupHandlerExecuting) return;
-        window.popupHandlerExecuting = true;
-        setTimeout(() => { window.popupHandlerExecuting = false; }, 100);
-
         const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').data('time');
         const patient = $('#staffPopup').data('patient');
@@ -3395,6 +3383,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add click listeners to handle popup functionality
     document.addEventListener('click', function(e) {
+        console.log("Native: Click detected on", e.target.tagName, e.target.className);
+
         // Prevent double execution
         if (window.popupHandlerExecuting) return;
 
@@ -3652,11 +3642,6 @@ document.addEventListener('DOMContentLoaded', function() {
         closePopupNative();
     }
 
-    function closePopupNative() {
-        document.getElementById('popupOverlay').style.display = 'none';
-        document.getElementById('staffPopup').style.display = 'none';
-        document.getElementById('cleaningDutyPopup').style.display = 'none';
-    }
 });
 
 // =========================
