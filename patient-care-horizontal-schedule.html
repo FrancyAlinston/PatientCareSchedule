@@ -6,11 +6,19 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
+<<<<<<< HEAD
+    Version: 2.2.1
+    Date: July 4, 2025
+    Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
+             Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
+             Break Management, Interactive Cleaning Duty Assignment, NIC Display
+=======
     Version: 2.2.1-beta
     Date: July 4, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
              Break Management, Interactive Cleaning Duty Assignment
+>>>>>>> Beta
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -476,6 +484,9 @@
 
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
+<<<<<<< HEAD
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+=======
     <script>
         // Minimal jQuery-like functionality for standalone operation
         (function(global) {
@@ -701,6 +712,7 @@
 
         })(window);
     </script>
+>>>>>>> Beta
     <script>
         // Add this function near the top of your script section with other utility functions
         function getInitials(fullName) {
@@ -2460,13 +2472,21 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
                 statsHtml += `<tr>
                     <td>${duty}</td>
+<<<<<<< HEAD
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #e7f3ff; border: 1px solid #0077ff; padding: 8px;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
+=======
                     <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
+>>>>>>> Beta
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
                 statsHtml += `<tr>
                     <td>${duty}</td>
+<<<<<<< HEAD
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: #fff3cd; border: 1px solid #ffc107; padding: 8px;" title="Click to assign staff">Not Assigned</td>
+=======
                     <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to assign staff">Not Assigned</td>
+>>>>>>> Beta
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
             }
