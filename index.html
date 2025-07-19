@@ -359,7 +359,6 @@
     <div style="background: linear-gradient(90deg, #ff6b6b, #4ecdc4); color: white; text-align: center; padding: 8px; font-weight: bold; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
         🌐 LIVE DEMO - Data clears when you close browser | <a href="https://github.com/FrancyAlinston/PatientCareSchedule/releases" style="color: white; text-decoration: underline;">Download for permanent storage</a>
     </div>
-
     <div class="container">
         <!-- Title dynamically updates based on the current shift -->
         <h1 id="siteTitle">Day Shift Allocation</h1>
@@ -922,8 +921,8 @@ function createMessageDiv() {
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Simplified saveToSessionStorage function for DEMO VERSION - data clears on browser close
-        function saveToLocalStorage() {
+        // Simplified saveToSessionStorage function that only stores essential data
+        function saveToSessionStorage() {
             try {
                 // Get all current input values
                 const staffInputs = Array.from(document.querySelectorAll('.staff-name')).map(input => input.value.trim());
@@ -950,21 +949,20 @@ function createMessageDiv() {
                 };
 
                 sessionStorage.setItem('patientCareData', JSON.stringify(data));
-                console.log("DEMO: Data saved to sessionStorage (clears when browser closes)");
                 return true;
             } catch (error) {
                 console.error("Error saving to sessionStorage:", error);
-                showError("Failed to save your changes. This is a demo - data is temporary.");
+                showError("Failed to save your changes. This is a demo - data is temporary. Session storage might be restricted. This is a demo - data is temporary..");
                 return false;
             }
         }
 
-        // Simplified loadFromSessionStorage function for DEMO VERSION
-        function loadFromLocalStorage() {
+        // Simplified loadFromSessionStorage function to match
+        function loadFromSessionStorage() {
             try {
                 const savedData = sessionStorage.getItem('patientCareData');
                 if (!savedData) {
-                    console.warn("DEMO: No data found in sessionStorage (data clears on new session).");
+                    console.warn("No data found in sessionStorage.");
                     // Add default data
                     addStaffInput();
                     addPatientInput();
@@ -1009,11 +1007,11 @@ function createMessageDiv() {
                 // Set up legend based on shift type
                 updateLegend();
 
-                console.log("DEMO: Data loaded successfully from sessionStorage (temporary)");
+                console.log("Data loaded successfully from sessionStorage");
                 return true;
             } catch (error) {
                 console.error("Error loading from sessionStorage:", error);
-                showError("Failed to load your saved data. This is a demo with temporary storage.");
+                showError("Failed to load your saved data. This is a demo with temporary storage. Using default settings instead.");
                 return false;
             }
         }
@@ -1031,7 +1029,7 @@ function createMessageDiv() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'staff-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debounce(saveToSessionStorage, 300));
 
                 staffContainer.appendChild(newInput);
                 staffInputs.appendChild(staffContainer);
@@ -1060,11 +1058,11 @@ function createMessageDiv() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'patient-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debounce(saveToSessionStorage, 300));
 
                 const staffCountSelect = document.createElement('select');
                 staffCountSelect.className = 'staff-count';
-                staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+                staffCountSelect.addEventListener('change', debounce(saveToSessionStorage, 300));
 
                 const option1 = document.createElement('option');
                 option1.value = 1;
@@ -1112,7 +1110,7 @@ function createMessageDiv() {
                 newInput.type = 'text';
                 newInput.value = name;
                 newInput.className = 'security-name';
-                newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+                newInput.addEventListener('input', debounce(saveToSessionStorage, 300));
 
                 securityContainer.appendChild(newInput);
                 securityStaffInputs.appendChild(securityContainer);
@@ -1163,9 +1161,9 @@ function addStaffInput() {
     staffInputs.appendChild(staffContainer);
 
     // Add event listener to the new input
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
+    newInput.addEventListener('input', debounce(saveToSessionStorage, 300));
 
-    saveToLocalStorage();
+    saveToSessionStorage();
 }
 
 // Function to add patient input
@@ -1209,10 +1207,10 @@ function addPatientInput() {
     patientInputs.appendChild(patientContainer);
 
     // Add event listeners to the new elements
-    newInput.addEventListener('input', debounce(saveToLocalStorage, 300));
-    staffCountSelect.addEventListener('change', debounce(saveToLocalStorage, 300));
+    newInput.addEventListener('input', debounce(saveToSessionStorage, 300));
+    staffCountSelect.addEventListener('change', debounce(saveToSessionStorage, 300));
 
-    saveToLocalStorage();
+    saveToSessionStorage();
 }
 
 // Function to check if time is restricted for security
@@ -1304,8 +1302,8 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         document.body.appendChild(confirmationDiv);
         setTimeout(() => confirmationDiv.remove(), 3000);
 
-        // Save to localStorage
-        saveToLocalStorage();
+        // Save to sessionStorage
+        saveToSessionStorage();
     } catch (error) {
         console.error("Error fetching random names:", error);
 
@@ -1347,7 +1345,7 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
             }
         });
 
-        saveToLocalStorage();
+        saveToSessionStorage();
     }
 });
 
@@ -1511,8 +1509,8 @@ function generateSchedule() {
             staff.filter(s => !securityStaffValues.includes(s))
         );
 
-        // Save to localStorage
-        saveToLocalStorage();
+        // Save to sessionStorage
+        saveToSessionStorage();
 
         return true;
     } catch (error) {
@@ -2698,8 +2696,8 @@ function regenerateScheduleStats() {
     renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
     renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
 
-    // Save changes to localStorage
-    saveToLocalStorage();
+    // Save changes to sessionStorage
+    saveToSessionStorage();
 }
 
 // Helper functions for getting staff and patient names
@@ -2730,17 +2728,20 @@ function getAllPatientNames() {
 
 // Initialize the application when page loads
 window.onload = function() {
+    // Clear any previous session data for fresh demo experience
+    sessionStorage.clear();
+    console.log("DEMO: Session storage cleared for fresh start");
     // Set moon emoji for dark mode button
     document.getElementById('toggleModeBtn').innerHTML = '🌙';
 
-    // Load data from localStorage
-    loadFromLocalStorage();
+    // Load data from sessionStorage
+    loadFromSessionStorage();
 
     // Add event listeners for all buttons
     document.getElementById('toggleModeBtn').addEventListener('click', function() {
         document.body.classList.toggle('dark-mode');
         this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
-        saveToLocalStorage();
+        saveToSessionStorage();
     });
 
     document.getElementById('toggleShiftBtn').addEventListener('click', function() {
@@ -2749,14 +2750,14 @@ window.onload = function() {
         document.getElementById('siteTitle').textContent = isDayShift ? "Day Shift Allocation" : "Night Shift Allocation";
         this.textContent = isDayShift ? "Switch to Night Shift" : "Switch to Day Shift";
         updateLegend();
-        saveToLocalStorage();
+        saveToSessionStorage();
     });
 
     document.getElementById('generateBtn').addEventListener('click', generateSchedule);
 
     document.getElementById('resetBtn').addEventListener('click', function() {
         clearAllData();
-        localStorage.removeItem('patientCareData');
+        sessionStorage.removeItem('patientCareData');
         addStaffInput();
         addPatientInput();
     });
@@ -2766,7 +2767,7 @@ window.onload = function() {
         const staffInputs = document.getElementById('staffInputs');
         if (staffInputs.children.length > 1) {
             staffInputs.removeChild(staffInputs.lastChild);
-            saveToLocalStorage();
+            saveToSessionStorage();
         }
     });
 
@@ -2775,21 +2776,21 @@ window.onload = function() {
         const patientInputs = document.getElementById('patientInputs');
         if (patientInputs.children.length > 1) {
             patientInputs.removeChild(patientInputs.lastChild);
-            saveToLocalStorage();
+            saveToSessionStorage();
         }
     });
 
     document.getElementById('resetRotationBtn').addEventListener('click', function() {
         staffPatientHistory = {};
         showError("Rotation history has been reset!");
-        saveToLocalStorage();
+        saveToSessionStorage();
     });
 
     // Debug button functionality
     document.getElementById('debugFillBtn').addEventListener('click', async function() {
         try {
             // Debug fill code here
-            saveToLocalStorage();
+            saveToSessionStorage();
         } catch (error) {
             console.error("Debug fill error:", error);
         }
