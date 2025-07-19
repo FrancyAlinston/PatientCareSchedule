@@ -674,8 +674,14 @@
                     return this.each(function() {
                         if (selector) {
                             this.addEventListener(event, function(e) {
-                                if (e.target.matches && e.target.matches(selector)) {
-                                    handler.call(e.target, e);
+                                // Handle event delegation with bubbling
+                                var target = e.target;
+                                while (target && target !== this) {
+                                    if (target.matches && target.matches(selector)) {
+                                        handler.call(target, e);
+                                        return;
+                                    }
+                                    target = target.parentNode;
                                 }
                             });
                         } else {
