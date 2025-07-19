@@ -4,7 +4,15 @@
 
 ## 🌐 Live Demo
 
-**Try it now:** [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.io/PatientCareSchedule/)
+**Try it now:** [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.i### 🌐 **Live Demo Version (GitHub Pages)**
+Data is stored in **sessionStorage** and automatically clears when you close the browser:
+- **Privacy**: No data persists between browser sessions
+- **Security**: Safe for public computers and demonstrations  
+- **Fresh Start**: Data also clears on page refresh for clean demos
+- **Use Case**: Testing, training, demonstrations
+
+### 📱 **Downloaded Version**  
+Data is stored in **localStorage** and persists between browser sessions:tCareSchedule/)
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-green?style=for-the-badge)](https://francyalinston.github.io/PatientCareSchedule/)
 
@@ -225,6 +233,30 @@ Data is stored in **localStorage** and persists between browser sessions:
 - Staff rotation history
 
 **Note**: Data persists between browser sessions but is specific to each browser/device.
+
+## 🔄 Developer Workflow
+
+### Updating the Live Site
+When merging changes from Beta to Stable, use the automated script to update the live GitHub Pages site:
+
+```bash
+# After merging Beta to Stable
+git checkout Stable
+git merge Beta
+
+# Update live site with session storage
+./update-live-site.sh
+
+# Deploy to GitHub Pages
+git push origin Stable
+```
+
+The script automatically:
+- ✅ Copies `patient-care-horizontal-schedule.html` to `index.html`
+- ✅ Converts localStorage to sessionStorage for privacy
+- ✅ Adds demo banner with download link
+- ✅ Implements data reset on page refresh
+- ✅ Updates all messaging for demo context
 
 ## Troubleshooting
 
