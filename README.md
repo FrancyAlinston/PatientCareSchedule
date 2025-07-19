@@ -107,7 +107,7 @@ Security personnel have specialized schedules that incorporate both security dut
 
 ## Installation
 
-**No installation required!** 
+**No installation required!**
 
 1. Download the `patient-care-horizontal-schedule.html` file
 2. Open it in any modern web browser
