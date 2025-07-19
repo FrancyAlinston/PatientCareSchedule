@@ -355,6 +355,11 @@
     </style>
 </head>
 <body>
+    <!-- DEMO BANNER -->
+    <div style="background: linear-gradient(90deg, #ff6b6b, #4ecdc4); color: white; text-align: center; padding: 8px; font-weight: bold; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+        🌐 LIVE DEMO - Data clears when you close browser | <a href="https://github.com/FrancyAlinston/PatientCareSchedule/releases" style="color: white; text-decoration: underline;">Download for permanent storage</a>
+    </div>
+
     <div class="container">
         <!-- Title dynamically updates based on the current shift -->
         <h1 id="siteTitle">Day Shift Allocation</h1>
@@ -917,7 +922,7 @@ function createMessageDiv() {
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Simplified saveToLocalStorage function that only stores essential data
+        // Simplified saveToSessionStorage function for DEMO VERSION - data clears on browser close
         function saveToLocalStorage() {
             try {
                 // Get all current input values
@@ -944,21 +949,22 @@ function createMessageDiv() {
                     isDarkMode: document.body.classList.contains('dark-mode') // Dark/light mode toggle
                 };
 
-                localStorage.setItem('patientCareData', JSON.stringify(data));
+                sessionStorage.setItem('patientCareData', JSON.stringify(data));
+                console.log("DEMO: Data saved to sessionStorage (clears when browser closes)");
                 return true;
             } catch (error) {
-                console.error("Error saving to localStorage:", error);
-                showError("Failed to save your changes. Your browser storage might be full or restricted.");
+                console.error("Error saving to sessionStorage:", error);
+                showError("Failed to save your changes. This is a demo - data is temporary.");
                 return false;
             }
         }
 
-        // Simplified loadFromLocalStorage function to match
+        // Simplified loadFromSessionStorage function for DEMO VERSION
         function loadFromLocalStorage() {
             try {
-                const savedData = localStorage.getItem('patientCareData');
+                const savedData = sessionStorage.getItem('patientCareData');
                 if (!savedData) {
-                    console.warn("No data found in localStorage.");
+                    console.warn("DEMO: No data found in sessionStorage (data clears on new session).");
                     // Add default data
                     addStaffInput();
                     addPatientInput();
@@ -1003,16 +1009,16 @@ function createMessageDiv() {
                 // Set up legend based on shift type
                 updateLegend();
 
-                console.log("Data loaded successfully from localStorage");
+                console.log("DEMO: Data loaded successfully from sessionStorage (temporary)");
                 return true;
             } catch (error) {
-                console.error("Error loading from localStorage:", error);
-                showError("Failed to load your saved data. Using default settings instead.");
+                console.error("Error loading from sessionStorage:", error);
+                showError("Failed to load your saved data. This is a demo with temporary storage.");
                 return false;
             }
         }
 
-        // Helper functions for loadFromLocalStorage
+        // Helper functions for loadFromSessionStorage
         function loadStaffFromData(staffData) {
             const staffInputs = document.getElementById('staffInputs');
             staffInputs.innerHTML = '';

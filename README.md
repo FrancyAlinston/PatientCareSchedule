@@ -17,7 +17,8 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 ## Key Features
 
 - **Fully Standalone**: No server, internet connection, or external dependencies required
-- **Local Storage**: All data is saved in your browser's local storage for persistence
+- **Session Storage (Live Demo)**: Live site data clears when browser closes for privacy
+- **Local Storage (Download)**: Downloaded version saves data permanently in browser
 - **Offline Ready**: Works completely offline once loaded in your browser
 
 - **Interactive Staff Management**: Real-time staff reassignment with visual feedback and clickable cells
@@ -33,15 +34,17 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 
 ## 🚀 Access Options
 
-### 🌐 **Live Web Application (Recommended)**
+### 🌐 **Live Web Application (Demo)**
 - **URL**: [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.io/PatientCareSchedule/)
 - **Benefits**: No download required, always latest version, works on any device
-- **Use Case**: Healthcare facilities with internet access
+- **Data Storage**: Session only - clears when browser closes (for privacy/security)
+- **Use Case**: Try the app, demonstrations, training
 
-### 📱 **Download for Offline Use**
+### 📱 **Download for Offline Use (Full Version)**
 - **File**: Download `patient-care-horizontal-schedule.html` from [Releases](https://github.com/FrancyAlinston/PatientCareSchedule/releases)
-- **Benefits**: Works offline, portable, air-gapped systems
-- **Use Case**: Offline scenarios, secure environments
+- **Benefits**: Works offline, portable, persistent data storage
+- **Data Storage**: Local browser storage - data persists between sessions
+- **Use Case**: Production use, offline scenarios, secure environments
 
 ## ⚠️ Important Rules
 
@@ -207,7 +210,14 @@ PatientCareSchedule/
 
 ## Data Persistence
 
-All application data is stored in your browser's localStorage, including:
+### 🌐 **Live Demo Version (GitHub Pages)**
+Data is stored in **sessionStorage** and automatically clears when you close the browser:
+- **Privacy**: No data persists between browser sessions
+- **Security**: Safe for public computers and demonstrations
+- **Use Case**: Testing, training, demonstrations
+
+### 📱 **Downloaded Version**
+Data is stored in **localStorage** and persists between browser sessions:
 - Staff names and roles
 - Patient names and care ratios
 - Generated schedules
