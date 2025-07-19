@@ -2,6 +2,12 @@
 
 **Version 3.0.0** | Last Updated: July 19, 2025
 
+## 🌐 Live Demo
+
+**Try it now:** [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.io/PatientCareSchedule/)
+
+[![Live Demo](https://img.shields.io/badge/Demo-Live-green?style=for-the-badge)](https://francyalinston.github.io/PatientCareSchedule/)
+
 ## Overview
 
 The Patient Care Schedule Management System is a **fully standalone** web-based application designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
@@ -24,6 +30,18 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 - **Staff Rotation Tracking**: Monitor how frequently staff members work with specific patients to ensure fair rotation
 - **Light/Dark Mode**: Toggle between light and dark display modes with adaptive color schemes
 - **Manual Override**: Click any cell to manually reassign staff with intuitive popup interface
+
+## 🚀 Access Options
+
+### 🌐 **Live Web Application (Recommended)**
+- **URL**: [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.io/PatientCareSchedule/)
+- **Benefits**: No download required, always latest version, works on any device
+- **Use Case**: Healthcare facilities with internet access
+
+### 📱 **Download for Offline Use**
+- **File**: Download `patient-care-horizontal-schedule.html` from [Releases](https://github.com/FrancyAlinston/PatientCareSchedule/releases)
+- **Benefits**: Works offline, portable, air-gapped systems
+- **Use Case**: Offline scenarios, secure environments
 
 ## ⚠️ Important Rules
 
