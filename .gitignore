@@ -1,0 +1,174 @@
+# Patient Care Schedule - GitIgnore File
+# Generated on July 19, 2025
+
+# ===========================================
+# Operating System Files
+# ===========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===========================================
+# Development Environment Files
+# ===========================================
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# ===========================================
+# Version Control
+# ===========================================
+
+# Git
+.git/
+.gitattributes
+
+# ===========================================
+# Backup and Archive Files
+# ===========================================
+
+# Backup files (these are documentation, keep them for now)
+# BACKUP_SYSTEM.md
+# MASTER_BACKUP_COMPLETE.md
+# MASTER_BACKUP_DOCUMENTATION.md
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+
+# ===========================================
+# Legacy/Obsolete Files (if any remain)
+# ===========================================
+
+# Old server-related files (should be deleted but ignore if found)
+server.js
+api.js
+package.json
+package-lock.json
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+start.sh
+data/
+
+# Old development files
+*.log
+logs/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===========================================
+# Browser and Application Files
+# ===========================================
+
+# Browser cache and temp files
+.cache/
+*.crdownload
+*.part
+
+# Application specific temp files
+schedule-backup-*.html
+schedule-temp-*.html
+temp-schedule-*.html
+
+# ===========================================
+# Documentation Working Files
+# ===========================================
+
+# Markdown working files
+*.md.bak
+*.md.tmp
+draft-*.md
+temp-*.md
+
+# ===========================================
+# Test and Development Files
+# ===========================================
+
+# Test files
+test-*.html
+debug-*.html
+experimental-*.html
+
+# Development scripts
+build.sh
+deploy.sh
+test.sh
+
+# ===========================================
+# Security and Sensitive Files
+# ===========================================
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API keys and secrets
+secrets.txt
+config.json
+credentials.json
+
+# ===========================================
+# Keep These Files (Documentation)
+# ===========================================
+# The following files are kept for project documentation:
+# - README.md (main documentation)
+# - patient-care-horizontal-schedule.html (main application)
+# - ASSIGNMENT_ENHANCEMENTS.md (development notes)
+# - OBS_IMPLEMENTATION_SUMMARY.md (feature documentation)
+# - UNASSIGNED_FIX_SUMMARY.md (bug fix documentation)
+# - BACKUP_SYSTEM.md (backup documentation)
+# - MASTER_BACKUP_COMPLETE.md (backup documentation)
+# - MASTER_BACKUP_DOCUMENTATION.md (backup documentation)
