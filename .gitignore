@@ -307,3 +307,55 @@ benchmark-*.html
 # User testing
 user-test-*.html
 feedback-*.txt
+
+# ===========================================
+# Additional Common Files
+# ===========================================
+
+# Code editor workspace files
+*.code-workspace
+.history/
+
+# Linting and formatting
+.eslintcache
+.stylelintcache
+.prettierignore
+.editorconfig
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Dependencies lock files (for future use)
+yarn.lock
+pnpm-lock.yaml
+composer.lock
+
+# Documentation generation
+docs/build/
+docs/dist/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log.*
+access.log
+error.log
+
+# Backup files with timestamps
+*-backup-*
+*_backup_*
+backup-*
+*.backup.*
+
+# Local configuration files
+local.config.js
+local.config.json
+.env.example
+
+# GitHub Codespaces
+.devcontainer/
