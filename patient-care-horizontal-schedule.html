@@ -2413,8 +2413,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
     staffHeader.appendChild(staffHeaderRow);
 
-    // Create rows for each staff member
-    staff.forEach(s => {
+    // Create rows for each staff member (excluding nursing staff)
+    const nonNursingStaff = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
 
         // Add staff name cell with initials
@@ -2488,8 +2489,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
         staffBody.appendChild(row);
     });
 
-    // Render break hours table
-    staff.forEach(s => {
+    // Render break hours table (excluding nursing staff)
+    const nonNursingStaffForBreaks = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForBreaks.forEach(s => {
         const row = document.createElement('tr');
 
         // Staff name cell with initials
@@ -2519,7 +2521,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsHtml += '<table>';
     statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>Role</th></tr>';
 
-    staff.forEach(s => {
+    // Filter out nursing staff from statistics
+    const nonNursingStaffForStats = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForStats.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
         let displayName = s;
@@ -3426,7 +3430,12 @@ function populateEditableBreakTable() {
     const allStaff = Object.keys(window.originalStaffStats);
     const timeOptions = getAvailableTimeSlots();
 
-    allStaff.forEach(staffName => {
+    // Filter out nursing staff from break adjustment table
+    const nonNursingStaff = allStaff.filter(staffName =>
+        staffName !== nurseInCharge1 && staffName !== nurseInCharge2
+    );
+
+    nonNursingStaff.forEach(staffName => {
         const staff = window.originalStaffStats[staffName];
         const shortBreak = staff.shortBreakTime || 'N/A';
         const secondBreak = staff.secondBreakTime || 'N/A';
@@ -3663,7 +3672,10 @@ function renderBreakHoursTable() {
 
     const allStaff = Object.keys(window.originalStaffStats);
 
-    allStaff.forEach(s => {
+    // Filter out nursing staff from break hours table
+    const nonNursingStaff = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+
+    nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
         const staffStats = window.originalStaffStats[s];
 
