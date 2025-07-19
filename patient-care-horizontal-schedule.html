@@ -2460,13 +2460,13 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
 
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: var(--button-bg-color); color: var(--table-cell-text-color); font-weight: bold; border: 1px solid var(--button-hover-bg-color); padding: 8px;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
                 statsHtml += `<tr>
                     <td>${duty}</td>
-                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; background-color: var(--unassigned-bg-color); color: var(--text-color); font-weight: bold; border: 1px solid var(--button-hover-bg-color); padding: 8px;" title="Click to assign staff">Not Assigned</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to assign staff">Not Assigned</td>
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
             }
