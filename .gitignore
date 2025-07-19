@@ -166,6 +166,16 @@ temp-schedule-*.html
 draft-*.md
 temp-*.md
 
+# Development documentation (internal use only)
+ASSIGNMENT_ENHANCEMENTS.md
+OBS_IMPLEMENTATION_SUMMARY.md
+MASTER_BACKUP_*.md
+*_BACKUP_*.md
+
+# Empty documentation files
+BACKUP_SYSTEM.md
+UNASSIGNED_FIX_SUMMARY.md
+
 # ===========================================
 # Test and Development Files
 # ===========================================
