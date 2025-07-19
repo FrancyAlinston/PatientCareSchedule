@@ -1,28 +1,29 @@
 # Patient Care Schedule Management System
 
-**Version 2.0.0** | Last Updated: July 1, 2025
+**Version 3.0.0** | Last Updated: July 19, 2025
 
 ## Overview
 
-The Patient Care Schedule Management System is a web-based application with AJAX backend support designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
+The Patient Care Schedule Management System is a **fully standalone** web-based application designed to automate staff scheduling for healthcare facilities. This tool creates balanced shift allocations for healthcare workers while ensuring patients always have proper coverage, breaks are distributed fairly, and special duties are assigned appropriately.
 
-**🆕 NEW: Now with server-side data storage and real-time synchronization!**
+**🆕 NEW: Completely standalone - no server or external dependencies required!**
 
 ## Key Features
 
-- **AJAX Backend**: Data is now stored on a server instead of localStorage
-- **Real-time Sync**: All changes are automatically saved to the server
-- **Connection Status**: Real-time server connection indicator
+- **Fully Standalone**: No server, internet connection, or external dependencies required
+- **Local Storage**: All data is saved in your browser's local storage for persistence
+- **Offline Ready**: Works completely offline once loaded in your browser
 
-- **Interactive Staff Management**: Real-time staff reassignment with visual feedback
+- **Interactive Staff Management**: Real-time staff reassignment with visual feedback and clickable cells
 - **Shift Management**: Switch between day shift (8AM-8PM) and night shift (8PM-8AM) scheduling
 - **Staff Assignment**: Schedule healthcare workers, security staff, and nurses in charge
 - **Patient Coverage**: Ensure patients are never left unattended, with configurable staff-to-patient ratios (1:1, 2:1, 3:1)
+- **OBS (Ward Observation)**: Special assignment for observation duties with one-staff-at-a-time rule
 - **Break Scheduling**: Automatically assign and manage staff breaks with smart interruption handling
-- **Night Shift Duties**: Automatically distribute cleaning duties during night shifts
+- **Night Shift Duties**: Automatically distribute cleaning duties during night shifts with interactive reassignment
 - **Staff Rotation Tracking**: Monitor how frequently staff members work with specific patients to ensure fair rotation
-- **Light/Dark Mode**: Toggle between light and dark display modes for different environments
-- **Local Storage**: Save schedules and preferences in browser storage for easy access
+- **Light/Dark Mode**: Toggle between light and dark display modes with adaptive color schemes
+- **Manual Override**: Click any cell to manually reassign staff with intuitive popup interface
 
 ## ⚠️ Important Rules
 
@@ -35,10 +36,18 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 ## Features
 
 ### Interactive Staff Assignment
-- Click on any patient time slot to reassign staff
+- Click on any patient time slot to reassign staff with an intuitive popup interface
+- Click on cleaning duty assignments during night shift to reassign duties
 - Real-time updates to schedule without page reloads
-- Visual feedback when making staff changes
+- Visual feedback with color-coded cells showing assignment status
+- Staff workload indicators in assignment popups
 - Optimized for touchscreen and desktop interfaces
+
+### OBS (Ward Observation) Management
+- Special patient category for observation duties
+- One staff member assigned at a time (unlike regular patients)
+- Easy reassignment through clicking the OBS time slots
+- Clear visual distinction from regular patient assignments
 
 ### Day Shift Scheduling
 - Automatic 30-minute break assignment between 9:00-13:00
@@ -46,9 +55,11 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 - Fair distribution of patient assignments based on workload and rotation history
 
 ### Night Shift Scheduling
-- Automatic 2-hour continuous break assignments at staggered times
-- Cleaning duty distribution among available staff
+- Automatic 2-hour continuous break assignments at staggered times (00:00, 02:00, 04:00)
+- Interactive cleaning duty distribution among available staff
+- Click on cleaning duties in the summary table to reassign duties
 - Security duty assignments during critical hours (first and last 2 hours)
+- Adaptive color scheme for cleaning duties table that matches light/dark mode
 
 ### Statistics and Reporting
 - Staff workload analysis with visual indicators
@@ -58,13 +69,20 @@ The Patient Care Schedule Management System is a web-based application with AJAX
 
 ## How to Use
 
-1. Enter healthcare worker names, patient names, and security staff information
-2. Select staff-to-patient ratios for each patient (1:1, 2:1, or 3:1)
-3. Choose between day shift or night shift using the toggle button
-4. Click "Generate Schedule" to create the initial assignment schedule
-5. Review the patient care assignments, staff schedule, and break times
-6. Click on any patient cell to manually reassign staff as needed
-7. Check statistics and staff rotation history at the bottom of the page
+1. **Open the Application**: Simply open `patient-care-horizontal-schedule.html` in any web browser
+2. **Enter Staff Information**: Add healthcare worker names, patient names, and security staff
+3. **Configure Patient Care**: Select staff-to-patient ratios for each patient (1:1, 2:1, or 3:1)
+4. **Choose Shift Type**: Toggle between day shift or night shift using the toggle button
+5. **Generate Initial Schedule**: Click "Generate Schedule" to create the automated assignment
+6. **Review and Adjust**: Check patient care assignments, staff schedules, and break times
+7. **Manual Adjustments**: Click on any patient cell to manually reassign staff
+8. **Night Shift Duties**: For night shifts, click on cleaning duty assignments to redistribute
+9. **Monitor Statistics**: Review staff rotation history and workload balance at the bottom
+
+### Manual Staff Assignment
+- **Patient Assignments**: Click any cell in the patient schedule table
+- **Cleaning Duties**: Click on "Assigned To" cells in the Night Shift Cleaning Duties Summary
+- **OBS Assignment**: Click on OBS time slots to assign/reassign observation staff
 
 ## Advanced Features
 
@@ -79,16 +97,23 @@ Security personnel have specialized schedules that incorporate both security dut
 
 ## Technical Details
 
-- Built with HTML, CSS, and JavaScript
-- Uses jQuery for enhanced user interaction
-- AJAX-like interface for real-time updates without page reloads
-- Works in any modern web browser
-- Stores data in browser localStorage for persistence
-- Responsive design for different screen sizes
+- **Single File Application**: Everything is contained in one HTML file
+- **No Dependencies**: No external libraries, CDNs, or server required
+- **Inline jQuery**: Minimal jQuery implementation built into the file
+- **Local Storage**: All data persists in browser localStorage
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Cross-Platform**: Compatible with all modern operating systems
+- **Offline First**: Works completely offline once loaded
 
 ## Installation
 
-No installation required. Simply open the HTML file in a web browser to use the application.
+**No installation required!** 
+
+1. Download the `patient-care-horizontal-schedule.html` file
+2. Open it in any modern web browser
+3. Start using the application immediately
+
+The application is completely self-contained and portable.
 
 ## Browser Compatibility
 
@@ -115,6 +140,23 @@ This project was created to help healthcare facilities optimize their staffing s
 
 ## Change Log
 
+### Version 3.0.0 (July 19, 2025)
+- **🎉 MAJOR UPDATE**: Converted to fully standalone single HTML file
+- **Removed all external dependencies**: No server, CDN, or internet required
+- **Merged Alpha and Beta branches**: Combined all features into one stable version
+- **Improved cleaning duties**: Interactive reassignment with adaptive color scheme
+- **Enhanced OBS management**: Better observation duty assignment interface
+- **jQuery inline**: Replaced external jQuery CDN with minimal inline implementation
+- **Adaptive theming**: All tables now follow consistent light/dark mode color schemes
+- **Removed obsolete files**: Cleaned up server.js, api.js, package.json, node_modules
+- **Performance optimizations**: Faster loading and better responsiveness
+
+### Version 2.0.0 (July 1, 2025)
+- Added server-side data storage
+- Implemented AJAX backend support
+- Real-time synchronization features
+- Connection status indicators
+
 ### Version 1.5.0 (June 23, 2025)
 - Added interactive staff reassignment functionality
 - Implemented real-time updates to schedule
@@ -129,76 +171,46 @@ This project was created to help healthcare facilities optimize their staffing s
 - Staff break management
 - Patient assignment algorithm
 
-## Setup Instructions
+## File Structure
 
-### 1. Install Dependencies
-
-```bash
-npm install
+```
+PatientCareSchedule/
+├── .gitignore                                # Git ignore file for clean repository
+├── patient-care-horizontal-schedule.html    # Main application file (standalone)
+├── README.md                                 # This documentation
+└── Documentation/                            # Additional documentation files
+    ├── ASSIGNMENT_ENHANCEMENTS.md
+    ├── BACKUP_SYSTEM.md
+    ├── MASTER_BACKUP_COMPLETE.md
+    ├── MASTER_BACKUP_DOCUMENTATION.md
+    ├── OBS_IMPLEMENTATION_SUMMARY.md
+    └── UNASSIGNED_FIX_SUMMARY.md
 ```
 
-### 2. Start the Server
+## Data Persistence
 
-```bash
-npm start
-```
+All application data is stored in your browser's localStorage, including:
+- Staff names and roles
+- Patient names and care ratios
+- Generated schedules
+- User preferences (dark mode, shift type)
+- Staff rotation history
 
-Or for development with auto-restart:
-```bash
-npm run dev
-```
+**Note**: Data persists between browser sessions but is specific to each browser/device.
 
-The server will start on `http://localhost:3000`
+## Troubleshooting
 
-### 3. Open the Application
+### Application Won't Load
+- Ensure you're using a modern web browser (Chrome, Firefox, Safari, Edge)
+- Check that JavaScript is enabled in your browser
+- Try opening the file in a different browser
 
-Open `patient-care-horizontal-schedule.html` in your web browser. The application will automatically connect to the server.
+### Data Not Saving
+- Check that localStorage is enabled in your browser
+- Ensure you're not in private/incognito mode
+- Clear browser cache and try again
 
-## API Endpoints
-
-- `GET /api/data` - Load all data (settings + schedules)
-- `POST /api/settings` - Save settings (staff, patients, preferences)
-- `POST /api/schedule` - Save a specific schedule
-- `GET /api/schedule/:id` - Load a specific schedule
-- `DELETE /api/schedule/:id` - Delete a schedule
-- `GET /api/schedules` - List all schedules
-- `POST /api/reset` - Reset all data
-- `GET /api/health` - Health check
-
-## Data Storage
-
-Data is stored in `data/schedules.json` file on the server. The structure includes:
-
-```json
-{
-  "schedules": {
-    "schedule_id": {
-      "schedule": {...},
-      "createdAt": "timestamp",
-      "updatedAt": "timestamp"
-    }
-  },
-  "settings": {
-    "staff": [],
-    "patients": [],
-    "securityStaff": [],
-    "nurseInCharge1": "",
-    "nurseInCharge2": "",
-    "isDayShift": true,
-    "isDarkMode": false
-  }
-}
-```
-
-## Connection Status
-
-- 🟢 **Connected**: Successfully connected to server
-- 🔴 **Disconnected**: Cannot reach server
-
-## Error Handling
-
-The application includes comprehensive error handling for:
-- Network connectivity issues
-- Server errors  
-- Data validation errors
-- Automatic retry mechanisms
+### Schedule Generation Issues
+- Verify all required fields are filled (staff, patients, security staff)
+- Ensure staff count meets or exceeds patient care requirements
+- Check for duplicate names in staff or patient lists
