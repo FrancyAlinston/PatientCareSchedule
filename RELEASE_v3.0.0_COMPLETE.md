@@ -60,23 +60,6 @@ PatientCareSchedule/
 - **Remote**: Synced with GitHub
 - **Backup**: Master backup preserved at `master-backup-c1ef862`
 
-## 🌐 Hosting Options
-
-### **Option 1: GitHub Pages (Live Web Application)**
-- **URL**: `https://francyalinston.github.io/PatientCareSchedule/`
-- **Setup**: Enable GitHub Pages in repository settings → Pages → Deploy from Stable branch
-- **Benefits**: Always up-to-date, accessible from anywhere, no download required
-- **Use Case**: Online access, demonstrations, team collaboration
-
-### **Option 2: Download for Offline Use**
-- **File**: `patient-care-horizontal-schedule.html` (135KB)
-- **Benefits**: Works completely offline, portable, air-gapped systems
-- **Use Case**: Secure environments, offline scenarios, personal backup
-
-### **Option 3: Both (Recommended)**
-- Use GitHub Pages for general access
-- Keep downloaded copy for offline backup
-
 ## 🔧 How to Use the Release
 1. Download `patient-care-horizontal-schedule.html`
 2. Open in any modern web browser

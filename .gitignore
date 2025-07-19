@@ -1,5 +1,41 @@
 # Patient Care Schedule - GitIgnore File
 # Generated on July 19, 2025
+# Updated for GitHub Pages deployment
+
+# ===========================================
+# GitHub Pages and Jekyll
+# ===========================================
+
+# Jekyll build files
+_site/
+.jekyll-cache/
+.jekyll-metadata
+
+# GitHub Pages gems
+Gemfile.lock
+.bundle/
+vendor/
+
+# GitHub Pages local development
+.sass-cache/
+_layouts/
+_includes/
+_config.yml
+404.html
+
+# ===========================================
+# Deployment and Build Files
+# ===========================================
+
+# GitHub Actions artifacts
+.github/workflows/deploy.yml
+dist/
+build/
+
+# Deployment scripts
+deploy/
+scripts/deploy.sh
+scripts/build.sh
 
 # ===========================================
 # Operating System Files
@@ -143,6 +179,73 @@ experimental-*.html
 build.sh
 deploy.sh
 test.sh
+publish.sh
+release.sh
+
+# GitHub Pages specific
+CNAME.backup
+custom-domain-test.html
+
+# ===========================================
+# Web Development Files
+# ===========================================
+
+# Source maps
+*.map
+*.map.js
+
+# CSS preprocessors
+*.css.map
+*.scss.map
+*.less.map
+
+# JavaScript build artifacts
+*.min.js
+*.min.css
+bundle.js
+bundle.css
+
+# ===========================================
+# Documentation Working Files
+# ===========================================
+
+# Draft files
+draft-*.md
+*.draft.md
+temp-notes.md
+todo.md
+changelog-draft.md
+
+# Screenshots and media
+screenshots/
+demo-images/
+*.gif
+*.mp4
+*.webm
+
+# ===========================================
+# GitHub Pages Deployment
+# ===========================================
+
+# Custom deployment configs
+_config.local.yml
+_config.dev.yml
+.forestry/
+.netlify/
+
+# Domain verification files
+google*.html
+bing*.html
+yandex*.html
+
+# ===========================================
+# Analytics and Tracking
+# ===========================================
+
+# Analytics files
+google-analytics.html
+google-tag-manager.html
+analytics-config.js
 
 # ===========================================
 # Security and Sensitive Files
@@ -161,14 +264,46 @@ config.json
 credentials.json
 
 # ===========================================
-# Keep These Files (Documentation)
+# Keep These Files (Documentation & Deployment)
 # ===========================================
-# The following files are kept for project documentation:
+# The following files are kept for project documentation and deployment:
 # - README.md (main documentation)
-# - patient-care-horizontal-schedule.html (main application)
+# - index.html (GitHub Pages entry point)
+# - patient-care-horizontal-schedule.html (main application/download version)
 # - ASSIGNMENT_ENHANCEMENTS.md (development notes)
 # - OBS_IMPLEMENTATION_SUMMARY.md (feature documentation)
 # - UNASSIGNED_FIX_SUMMARY.md (bug fix documentation)
 # - BACKUP_SYSTEM.md (backup documentation)
 # - MASTER_BACKUP_COMPLETE.md (backup documentation)
 # - MASTER_BACKUP_DOCUMENTATION.md (backup documentation)
+# - GITHUB_PAGES_SETUP.md (deployment guide)
+# - RELEASE_NOTES_v3.0.0.md (release documentation)
+# - RELEASE_v3.0.0_COMPLETE.md (release summary)
+# - GITHUB_RELEASE_INSTRUCTIONS.md (release guide)
+
+# ===========================================
+# GitHub Pages Files to KEEP
+# ===========================================
+# These files are essential for GitHub Pages:
+# !index.html
+# !README.md
+# !_config.yml (if created)
+# !CNAME (if using custom domain)
+
+# ===========================================
+# Staging and Testing
+# ===========================================
+
+# Testing versions
+test-*.html
+staging-*.html
+preview-*.html
+demo-*.html
+
+# Performance testing
+*.perf.html
+benchmark-*.html
+
+# User testing
+user-test-*.html
+feedback-*.txt
