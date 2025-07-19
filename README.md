@@ -4,7 +4,7 @@
 
 ## 🌐 Live Demo
 
-**Try it now:** [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.i### 🌐 **Live Demo Version (GitHub Pages)**
+**Try it now:** [https://francyalinston.github.io/PatientCareSchedule/](https://francyalinston.github.io/PatientCareSchedule/)### 🌐 **Live Demo Version (GitHub Pages)**
 Data is stored in **sessionStorage** and automatically clears when you close the browser:
 - **Privacy**: No data persists between browser sessions
 - **Security**: Safe for public computers and demonstrations  
@@ -12,7 +12,7 @@ Data is stored in **sessionStorage** and automatically clears when you close the
 - **Use Case**: Testing, training, demonstrations
 
 ### 📱 **Downloaded Version**  
-Data is stored in **localStorage** and persists between browser sessions:tCareSchedule/)
+Data is stored in **localStorage** and persists between browser sessions:
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-green?style=for-the-badge)](https://francyalinston.github.io/PatientCareSchedule/)
 
