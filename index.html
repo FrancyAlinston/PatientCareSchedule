@@ -1367,7 +1367,7 @@ function generateSchedule() {
         });
 
         // First, assign break times
-        assignBreaks(allStaff, staffStats);
+        assignBreaks(allStaff, staffStats, patients);
 
         // Then, assign security duties for security staff (if any)
         assignSecurityDuties(securityStaff, staffStats);
@@ -1540,7 +1540,7 @@ function checkStaffSufficiency() {
     return true;
 }
 
-function assignBreaks(allStaff, staffStats) {
+function assignBreaks(allStaff, staffStats, patients) {
     // Filter out nurses in charge from break assignments
     const staffForBreaks = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
 
