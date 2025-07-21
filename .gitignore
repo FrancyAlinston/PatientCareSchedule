@@ -48,6 +48,10 @@ _config.yml
 # GitHub Actions artifacts
 .github/workflows/deploy.yml
 dist/
+
+# Management scripts (local development only)
+run
+RUN_SCRIPT_DOCS.md
 build/
 
 # Deployment scripts
