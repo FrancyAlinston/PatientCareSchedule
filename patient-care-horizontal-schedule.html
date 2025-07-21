@@ -2737,15 +2737,7 @@ window.onload = function() {
     document.getElementById('resetAllBreaks').addEventListener('click', resetAllBreakTimes);
     document.getElementById('saveBreakChanges').addEventListener('click', applyBreakTimeChanges);
 
-    // Debug button functionality
-    document.getElementById('debugFillBtn').addEventListener('click', async function() {
-        try {
-            // Debug fill code here
-            saveToLocalStorage();
-        } catch (error) {
-            console.error("Debug fill error:", error);
-        }
-    });
+
 
     // Debug panel toggle button
     document.getElementById('toggleDebugBtn').addEventListener('click', function() {
