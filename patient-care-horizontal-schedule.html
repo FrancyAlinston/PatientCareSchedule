@@ -6,12 +6,11 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 3.1.0
+    Version: 3.1.1
     Date: July 21, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
-             Break Management, Interactive Cleaning Duty Assignment, Conflict Resolution,
-             Staff Double-Assignment Prevention, Manual Break Time Adjustment
+             Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -1663,10 +1662,14 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
 
     // Process each time slot for OBS assignment
     timeSlots.forEach((time, timeIndex) => {
-        // Get available staff for this time slot (those not on break)
-        const availableStaff = regularStaff.filter(s => !schedule[time].staffBreaks[s]);
+        // Get available staff for this time slot (those not on break AND not assigned to patients)
+        const availableStaff = regularStaff.filter(s =>
+            !schedule[time].staffBreaks[s] &&
+            !isStaffAlreadyAssigned(s, time, schedule)
+        );
 
-        let allAvailableStaff = availableStaff.length > 0 ? availableStaff : regularStaff;
+        let allAvailableStaff = availableStaff.length > 0 ? availableStaff :
+            regularStaff.filter(s => !isStaffAlreadyAssigned(s, time, schedule));
 
         // For first 2 and last 2 hours, prefer continuity but still allow rotation
         const isFixedPeriod = timeIndex < 2 || timeIndex >= totalHours - 2;
@@ -1857,28 +1860,41 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
             passCount++;
             console.log(`Assignment Pass ${passCount} for ${time}`);
 
-            // Get available staff based on pass number (expand pool each pass)
+            // Get available staff based on pass number (expand pool each pass) - with CONFLICT CHECKING
             let availableStaff;
             if (passCount === 1) {
-                // Pass 1: Only fully available staff
-                const availableRegularStaff = staff.filter(s => !schedule[time].staffBreaks[s]);
+                // Pass 1: Only fully available staff (not on break, not on security duty, not assigned to OBS or other patients)
+                const availableRegularStaff = staff.filter(s =>
+                    !schedule[time].staffBreaks[s] &&
+                    !isStaffAlreadyAssignedIncludingOBS(s, time, schedule)
+                );
                 const availableSecurityStaff = securityStaff.filter(s =>
-                    !schedule[time].staffBreaks[s] || schedule[time].staffBreaks[s] !== "SECURITY DUTY"
+                    (!schedule[time].staffBreaks[s] || schedule[time].staffBreaks[s] !== "SECURITY DUTY") &&
+                    !isStaffAlreadyAssignedIncludingOBS(s, time, schedule)
                 );
                 availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
             } else if (passCount === 2) {
-                // Pass 2: Include staff on regular breaks if needed
+                // Pass 2: Include staff on regular breaks if needed, but still check for other assignments
                 const availableRegularStaff = staff.filter(s =>
-                    !schedule[time].staffBreaks[s] ||
-                    (schedule[time].staffBreaks[s] !== "SECURITY DUTY")
+                    (!schedule[time].staffBreaks[s] ||
+                    (schedule[time].staffBreaks[s] !== "SECURITY DUTY")) &&
+                    !isStaffAlreadyAssignedIncludingOBS(s, time, schedule)
                 );
                 const availableSecurityStaff = securityStaff.filter(s =>
-                    schedule[time].staffBreaks[s] !== "SECURITY DUTY"
+                    schedule[time].staffBreaks[s] !== "SECURITY DUTY" &&
+                    !isStaffAlreadyAssignedIncludingOBS(s, time, schedule)
                 );
                 availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
             } else {
-                // Pass 3: Emergency - use ALL staff if absolutely necessary
-                availableStaff = [...staff, ...securityStaff];
+                // Pass 3: Emergency - use ALL staff if absolutely necessary, but warn about conflicts
+                const allStaff = [...staff, ...securityStaff];
+                availableStaff = allStaff.filter(s => !isStaffAlreadyAssignedIncludingOBS(s, time, schedule));
+
+                // If still no staff available, allow conflicts but log warnings
+                if (availableStaff.length === 0) {
+                    console.warn(`EMERGENCY: No unassigned staff available at ${time}. Allowing conflicts.`);
+                    availableStaff = allStaff;
+                }
             }
 
             console.log(`Available staff in pass ${passCount}:`, availableStaff.length);
@@ -1996,6 +2012,42 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
 
         console.log(`=== Completed time slot: ${time} ===\n`);
     });
+}
+
+// Helper function to check if a staff member is already assigned to any duty at a given time
+function isStaffAlreadyAssigned(staffName, time, schedule) {
+    // Check if assigned to any patient (not including OBS, since OBS is assigned first)
+    for (const patientName in schedule[time].patientAssignments) {
+        if (patientName !== "OBS") {
+            const patientAssignments = schedule[time].patientAssignments[patientName] || [];
+            if (patientAssignments.includes(staffName)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// Helper function specifically for OBS assignment to check all conflicts including other OBS
+function isStaffAlreadyAssignedIncludingOBS(staffName, time, schedule) {
+    // Check if assigned to OBS
+    const obsAssignments = schedule[time].patientAssignments["OBS"] || [];
+    if (obsAssignments.includes(staffName)) {
+        return true;
+    }
+
+    // Check if assigned to any patient
+    for (const patientName in schedule[time].patientAssignments) {
+        if (patientName !== "OBS") {
+            const patientAssignments = schedule[time].patientAssignments[patientName] || [];
+            if (patientAssignments.includes(staffName)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 // Add this new function to find staff with continuity limits
@@ -2889,6 +2941,26 @@ $(document).ready(function() {
                     currentAssignments.splice(staffIndex, 1);
                     console.log(`Removed ${staffName} from OBS`);
                 } else {
+                    // CRITICAL: Check if staff is already assigned to other patients at this time
+                    if (isStaffAlreadyAssigned(staffName, time, schedule)) {
+                        // Find out what patients they're assigned to
+                        let conflictDetails = [];
+
+                        // Check patient assignments
+                        for (const otherPatient in schedule[time].patientAssignments) {
+                            if (otherPatient !== "OBS") {
+                                const otherAssignments = schedule[time].patientAssignments[otherPatient] || [];
+                                if (otherAssignments.includes(staffName)) {
+                                    conflictDetails.push(otherPatient);
+                                }
+                            }
+                        }
+
+                        alert(`❌ SCHEDULING CONFLICT!\n\n${staffName} is already assigned to: ${conflictDetails.join(", ")}\n\nStaff cannot be assigned to multiple jobs at the same time.\n\nPlease remove them from their current assignment first.`);
+                        console.warn(`Cannot assign ${staffName} to OBS: already assigned to ${conflictDetails.join(", ")}`);
+                        return; // Don't add the staff
+                    }
+
                     // For OBS, replace any existing assignment with the new one
                     schedule[time].patientAssignments[patient] = [staffName];
                     console.log(`Assigned ${staffName} to OBS (replaced any existing assignment)`);
@@ -2930,6 +3002,31 @@ $(document).ready(function() {
                         // Show warning message
                         alert(`⚠️ Patient ${patient} requires ${requiredStaffCount}:1 care ratio.\n\nCurrent assignments: ${currentAssignments.length}/${requiredStaffCount}\n\nCannot add more staff. Remove existing staff first if you want to reassign.`);
                         console.warn(`Cannot assign ${staffName} to ${patient}: would exceed ${requiredStaffCount}:1 ratio`);
+                        return; // Don't add the staff
+                    }
+
+                    // CRITICAL: Check if staff is already assigned to other patients or OBS at this time
+                    if (isStaffAlreadyAssignedIncludingOBS(staffName, time, schedule)) {
+                        // Find out what they're assigned to
+                        let conflictDetails = [];
+
+                        // Check OBS assignment
+                        if (schedule[time].patientAssignments["OBS"] && schedule[time].patientAssignments["OBS"].includes(staffName)) {
+                            conflictDetails.push("OBS (Ward Observation)");
+                        }
+
+                        // Check other patient assignments
+                        for (const otherPatient in schedule[time].patientAssignments) {
+                            if (otherPatient !== patient && otherPatient !== "OBS") {
+                                const otherAssignments = schedule[time].patientAssignments[otherPatient] || [];
+                                if (otherAssignments.includes(staffName)) {
+                                    conflictDetails.push(otherPatient);
+                                }
+                            }
+                        }
+
+                        alert(`❌ SCHEDULING CONFLICT!\n\n${staffName} is already assigned to: ${conflictDetails.join(", ")}\n\nStaff cannot be assigned to multiple jobs at the same time.\n\nPlease remove them from their current assignment first.`);
+                        console.warn(`Cannot assign ${staffName} to ${patient}: already assigned to ${conflictDetails.join(", ")}`);
                         return; // Don't add the staff
                     }
 
