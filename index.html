@@ -6,11 +6,12 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 2.2.1-beta
-    Date: July 4, 2025
+    Version: 3.1.0
+    Date: July 21, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
-             Break Management, Interactive Cleaning Duty Assignment
+             Break Management, Interactive Cleaning Duty Assignment,
+             FIXED: Staff Conflict Resolution - No double assignments
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -130,21 +131,6 @@
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
-        }
-        .action-button {
-            background-color: var(--button-bg-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-right: 10px;
-        }
-        .action-button:hover {
-            background-color: var(--button-hover-bg-color);
         }
         table {
             width: 100%;
@@ -370,6 +356,23 @@
             padding: 8px 16px;
             font-size: 14px;
             margin: 0;
+        }
+
+        .action-button {
+            background-color: var(--button-bg-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .action-button:hover {
+            background-color: var(--button-hover-bg-color);
         }
 
         #editableBreakTable {
@@ -606,8 +609,7 @@
 
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
-    <script>
-        // Minimal jQuery-like functionality for standalone operation
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         (function(global) {
             'use strict';
 
@@ -674,10 +676,22 @@
                     }
 
                     return this.each(function() {
+                        var self = this;
                         if (selector) {
                             this.addEventListener(event, function(e) {
-                                if (e.target.matches && e.target.matches(selector)) {
-                                    handler.call(e.target, e);
+                                // Handle event delegation with proper bubbling
+                                var target = e.target;
+                                while (target && target !== self && target !== document) {
+                                    if (target.matches && target.matches(selector)) {
+                                        handler.call(target, e);
+                                        return;
+                                    }
+                                    // Also check if target has the class directly
+                                    if (target.classList && selector.startsWith('.') && target.classList.contains(selector.substring(1))) {
+                                        handler.call(target, e);
+                                        return;
+                                    }
+                                    target = target.parentNode;
                                 }
                             });
                         } else {
@@ -2415,8 +2429,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
     staffHeader.appendChild(staffHeaderRow);
 
-    // Create rows for each staff member
-    staff.forEach(s => {
+    // Create rows for each staff member (excluding nursing staff)
+    const nonNursingStaff = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
 
         // Add staff name cell with initials
@@ -2490,8 +2505,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
         staffBody.appendChild(row);
     });
 
-    // Render break hours table
-    staff.forEach(s => {
+    // Render break hours table (excluding nursing staff)
+    const nonNursingStaffForBreaks = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForBreaks.forEach(s => {
         const row = document.createElement('tr');
 
         // Staff name cell with initials
@@ -2521,7 +2537,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsHtml += '<table>';
     statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>Role</th></tr>';
 
-    staff.forEach(s => {
+    // Filter out nursing staff from statistics
+    const nonNursingStaffForStats = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForStats.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
         let displayName = s;
@@ -3089,9 +3107,7 @@ $(document).ready(function() {
     $('#popupOverlay').click(closePopup);
 
     // Close popup on Cancel button click
-    $('#closePopupBtn').click(closePopup);
-
-    // Select staff button click handler - Toggle assignment
+    $('#closePopupBtn').click(closePopup);    // Select staff button click handler - Toggle assignment
     $(document).on('click', '.select-staff-btn', function() {
         const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').data('time');
@@ -3361,40 +3377,8 @@ $(document).ready(function() {
     });
 });
 
-// Add renderStaffRotationStats function if it's missing
-function renderStaffRotationStats(patients, staff) {
-    // Generate a table showing how many times each staff member has worked with each patient
-    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
-    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
-    rotationHtml += '<table class="rotation-table">';
-
-    // Header row with patient initials
-    rotationHtml += '<tr><th>Staff</th>';
-    patients.forEach(patient => {
-        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
-    });
-    rotationHtml += '</tr>';
-
-    // Rows for each staff member with initials
-    staff.forEach(s => {
-        rotationHtml += `<tr><td title="${s}">${getInitials(s)} (${s})</td>`;
-        patients.forEach(patient => {
-            const count = (staffPatientHistory[s] && staffPatientHistory[s][patient]) || 0;
-            const colorIntensity = Math.min(count * 20, 100);
-            rotationHtml += `<td style="background-color: rgba(0, 123, 255, ${colorIntensity / 100}); color: ${colorIntensity > 50 ? 'white' : 'black'};" title="${s} worked with ${patient} ${count} times">${count}</td>`;
-        });
-        rotationHtml += '</tr>';
-    });
-
-    rotationHtml += '</table>';
-    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
-
-    const rotationStatsDiv = document.getElementById('rotationStats');
-    if (rotationStatsDiv) {
-        rotationStatsDiv.innerHTML = rotationHtml;
-    }
-}
-
+// =========================
+// BREAK TIME ADJUSTMENT FUNCTIONALITY
 // =========================
 // BREAK TIME ADJUSTMENT FUNCTIONALITY
 // =========================
@@ -3403,18 +3387,18 @@ let breakEditingEnabled = false;
 let originalBreakTimes = {};
 
 function toggleBreakTimeEditing() {
-    const button = $('#toggleBreakAdjustment');
-    const tableContainer = $('#breakAdjustmentTable');
-    const resetBtn = $('#resetAllBreaks');
-    const saveBtn = $('#saveBreakChanges');
+    const button = document.getElementById('toggleBreakAdjustment');
+    const tableContainer = document.getElementById('breakAdjustmentTable');
+    const resetBtn = document.getElementById('resetAllBreaks');
+    const saveBtn = document.getElementById('saveBreakChanges');
 
     if (!breakEditingEnabled) {
         // Enable editing mode
         breakEditingEnabled = true;
-        button.text('Disable Break Time Editing');
-        tableContainer.show();
-        resetBtn.show();
-        saveBtn.show();
+        button.textContent = 'Disable Break Time Editing';
+        tableContainer.style.display = 'block';
+        resetBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'inline-block';
 
         // Store original break times for reset functionality
         storeOriginalBreakTimes();
@@ -3424,10 +3408,10 @@ function toggleBreakTimeEditing() {
     } else {
         // Disable editing mode
         breakEditingEnabled = false;
-        button.text('Enable Break Time Editing');
-        tableContainer.hide();
-        resetBtn.hide();
-        saveBtn.hide();
+        button.textContent = 'Enable Break Time Editing';
+        tableContainer.style.display = 'none';
+        resetBtn.style.display = 'none';
+        saveBtn.style.display = 'none';
     }
 }
 
@@ -3445,58 +3429,64 @@ function storeOriginalBreakTimes() {
 }
 
 function populateEditableBreakTable() {
-    const tbody = $('#editableBreakTable tbody');
-    tbody.empty();
+    const tbody = document.getElementById('editableBreakTable').querySelector('tbody');
+    tbody.innerHTML = '';
 
     // Update headers based on shift type
     if (isDayShift) {
-        $('#firstBreakHeader').text('30-min Break');
-        $('#secondBreakHeader').text('1-hour 2nd Break');
+        document.getElementById('firstBreakHeader').textContent = '30-min Break';
+        document.getElementById('secondBreakHeader').textContent = '1-hour 2nd Break';
     } else {
-        $('#firstBreakHeader').text('1st Break Hour');
-        $('#secondBreakHeader').text('2nd Break Hour');
+        document.getElementById('firstBreakHeader').textContent = '1st Break Hour';
+        document.getElementById('secondBreakHeader').textContent = '2nd Break Hour';
     }
 
     if (!window.originalStaffStats) {
-        tbody.append('<tr><td colspan="4">No schedule generated yet. Please generate a schedule first.</td></tr>');
+        tbody.innerHTML = '<tr><td colspan="4">No schedule generated yet. Please generate a schedule first.</td></tr>';
         return;
     }
 
     const allStaff = Object.keys(window.originalStaffStats);
     const timeOptions = getAvailableTimeSlots();
 
-    allStaff.forEach(staffName => {
+    // Filter out nursing staff from break adjustment table
+    const nonNursingStaff = allStaff.filter(staffName =>
+        staffName !== nurseInCharge1 && staffName !== nurseInCharge2
+    );
+
+    nonNursingStaff.forEach(staffName => {
         const staff = window.originalStaffStats[staffName];
         const shortBreak = staff.shortBreakTime || 'N/A';
         const secondBreak = staff.secondBreakTime || 'N/A';
 
-        const row = $(`
-            <tr data-staff="${staffName}">
-                <td><strong>${staffName}</strong></td>
-                <td>
-                    ${shortBreak === 'N/A' ?
-                        '<span>N/A (Nurse in Charge)</span>' :
-                        `<select class="break-time-select" data-break-type="short">${generateTimeOptions(timeOptions, shortBreak)}</select>`
-                    }
-                </td>
-                <td>
-                    ${secondBreak === 'N/A' ?
-                        '<span>N/A (Nurse in Charge)</span>' :
-                        `<select class="break-time-select" data-break-type="second">${generateTimeOptions(timeOptions, secondBreak)}</select>`
-                    }
-                </td>
-                <td>
-                    <div class="staff-break-actions">
-                        ${(shortBreak !== 'N/A' && secondBreak !== 'N/A') ?
-                            `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
-                            '<span>-</span>'
-                        }
-                    </div>
-                </td>
-            </tr>
-        `);
+        const row = document.createElement('tr');
+        row.setAttribute('data-staff', staffName);
 
-        tbody.append(row);
+        row.innerHTML = `
+            <td><strong>${staffName}</strong></td>
+            <td>
+                ${shortBreak === 'N/A' ?
+                    '<span>N/A (Nurse in Charge)</span>' :
+                    `<select class="break-time-select" data-break-type="short">${generateTimeOptions(timeOptions, shortBreak)}</select>`
+                }
+            </td>
+            <td>
+                ${secondBreak === 'N/A' ?
+                    '<span>N/A (Nurse in Charge)</span>' :
+                    `<select class="break-time-select" data-break-type="second">${generateTimeOptions(timeOptions, secondBreak)}</select>`
+                }
+            </td>
+            <td>
+                <div class="staff-break-actions">
+                    ${(shortBreak !== 'N/A' && secondBreak !== 'N/A') ?
+                        `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
+                        '<span>-</span>'
+                    }
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
     });
 }
 
@@ -3516,11 +3506,14 @@ function generateTimeOptions(timeSlots, selectedTime) {
 function resetStaffBreaks(staffName) {
     if (originalBreakTimes[staffName]) {
         const original = originalBreakTimes[staffName];
-        const row = $(`tr[data-staff="${staffName}"]`);
+        const row = document.querySelector(`tr[data-staff="${staffName}"]`);
 
         // Reset the select values
-        row.find('select[data-break-type="short"]').val(original.shortBreakTime);
-        row.find('select[data-break-type="second"]').val(original.secondBreakTime);
+        const shortSelect = row.querySelector('select[data-break-type="short"]');
+        const secondSelect = row.querySelector('select[data-break-type="second"]');
+
+        if (shortSelect) shortSelect.value = original.shortBreakTime;
+        if (secondSelect) secondSelect.value = original.secondBreakTime;
     }
 }
 
@@ -3542,15 +3535,15 @@ function applyBreakTimeChanges() {
     let hasChanges = false;
 
     // Collect all changes from the editable table
-    $('#editableBreakTable tbody tr').each(function() {
-        const row = $(this);
-        const staffName = row.data('staff');
-        const shortBreakSelect = row.find('select[data-break-type="short"]');
-        const secondBreakSelect = row.find('select[data-break-type="second"]');
+    const rows = document.querySelectorAll('#editableBreakTable tbody tr');
+    rows.forEach(row => {
+        const staffName = row.getAttribute('data-staff');
+        const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
+        const secondBreakSelect = row.querySelector('select[data-break-type="second"]');
 
-        if (shortBreakSelect.length && secondBreakSelect.length) {
-            const newShortBreak = shortBreakSelect.val();
-            const newSecondBreak = secondBreakSelect.val();
+        if (shortBreakSelect && secondBreakSelect) {
+            const newShortBreak = shortBreakSelect.value;
+            const newSecondBreak = secondBreakSelect.value;
             const original = originalBreakTimes[staffName];
 
             if (original && (newShortBreak !== original.shortBreakTime || newSecondBreak !== original.secondBreakTime)) {
@@ -3580,6 +3573,7 @@ function applyBreakTimeChanges() {
 
     // Update UI
     regenerateScheduleStats();
+    renderBreakHoursTable();
     alert('Break time changes applied successfully!');
 }
 
@@ -3682,12 +3676,9 @@ function applyBreakChangesToSchedule(changes) {
     // Re-render the main schedule table
     if (window.schedule && window.originalStaffStats) {
         const allStaff = Object.keys(window.originalStaffStats);
-        const patients = Object.keys(window.schedule[Object.keys(window.schedule)[0]].patientAssignments || {});
+        const patients = Object.keys(window.schedule[Object.keys(window.schedule)[0]].patientAssignments || {}).filter(p => p !== 'OBS');
         renderSchedule(window.schedule, allStaff, patients, window.originalStaffStats);
     }
-
-    // Update the break times table
-    renderBreakHoursTable();
 }
 
 function renderBreakHoursTable() {
@@ -3700,7 +3691,10 @@ function renderBreakHoursTable() {
 
     const allStaff = Object.keys(window.originalStaffStats);
 
-    allStaff.forEach(s => {
+    // Filter out nursing staff from break hours table
+    const nonNursingStaff = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+
+    nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
         const staffStats = window.originalStaffStats[s];
 
@@ -3721,6 +3715,40 @@ function renderBreakHoursTable() {
 
         breakHoursTable.appendChild(row);
     });
+}
+
+// Add renderStaffRotationStats function if it's missing
+function renderStaffRotationStats(patients, staff) {
+    // Generate a table showing how many times each staff member has worked with each patient
+    let rotationHtml = '<h2>Staff-Patient Rotation History</h2>';
+    rotationHtml += '<p>This table shows how many times each staff member has worked with each patient across all schedules.</p>';
+    rotationHtml += '<table class="rotation-table">';
+
+    // Header row with patient initials
+    rotationHtml += '<tr><th>Staff</th>';
+    patients.forEach(patient => {
+        rotationHtml += `<th title="${patient}">${getInitials(patient)}</th>`;
+    });
+    rotationHtml += '</tr>';
+
+    // Rows for each staff member with initials
+    staff.forEach(s => {
+        rotationHtml += `<tr><td title="${s}">${getInitials(s)} (${s})</td>`;
+        patients.forEach(patient => {
+            const count = (staffPatientHistory[s] && staffPatientHistory[s][patient]) || 0;
+            const colorIntensity = Math.min(count * 20, 100);
+            rotationHtml += `<td style="background-color: rgba(0, 123, 255, ${colorIntensity / 100}); color: ${colorIntensity > 50 ? 'white' : 'black'};" title="${s} worked with ${patient} ${count} times">${count}</td>`;
+        });
+        rotationHtml += '</tr>';
+    });
+
+    rotationHtml += '</table>';
+    rotationHtml += '<p><em>Note: Lower numbers (lighter cells) indicate staff members who have worked less frequently with those patients.</em></p>';
+
+    const rotationStatsDiv = document.getElementById('rotationStats');
+    if (rotationStatsDiv) {
+        rotationStatsDiv.innerHTML = rotationHtml;
+    }
 }
     </script>
 
