@@ -174,7 +174,7 @@ Add a favicon.ico file to the root for a professional touch.
 Your Patient Care Schedule app is **perfectly suited** for GitHub Pages because:
 
 1. ✅ **Single file application** - exactly what GitHub Pages excels at
-2. ✅ **No server dependencies** - static hosting is sufficient  
+2. ✅ **No server dependencies** - static hosting is sufficient
 3. ✅ **Professional presentation** - great for showcasing your work
 4. ✅ **Easy sharing** - URL instead of file downloads
 5. ✅ **Automatic updates** - push code and site updates instantly

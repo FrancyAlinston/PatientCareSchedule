@@ -343,6 +343,110 @@
             margin: 15px 0;
         }
 
+        /* Break adjustment controls */
+        .break-adjustment-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .break-adjustment-controls .action-button {
+            padding: 8px 16px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .action-button {
+            background-color: var(--button-bg-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .action-button:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        #editableBreakTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #editableBreakTable th,
+        #editableBreakTable td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #editableBreakTable th {
+            background-color: var(--table-header-bg-color);
+            color: var(--table-header-text-color);
+            font-weight: 600;
+        }
+
+        #editableBreakTable td {
+            background-color: var(--table-cell-bg-color);
+            color: var(--table-cell-text-color);
+        }
+
+        .break-time-select {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
+            font-size: 13px;
+            width: 100%;
+            max-width: 120px;
+        }
+
+        .staff-break-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .staff-break-actions button {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .reset-staff-btn {
+            background-color: #f59e0b;
+        }
+
+        .reset-staff-btn:hover {
+            background-color: #d97706;
+        }
+
+        /* Dark mode adjustments for break controls */
+        body.dark-mode .break-time-select {
+            background-color: var(--table-cell-bg-color);
+            border-color: #6b7280;
+        }
+
+        body.dark-mode #editableBreakTable th {
+            border-color: #6b7280;
+        }
+
+        body.dark-mode #editableBreakTable td {
+            border-color: #6b7280;
+        }
+
         /* Add any additional styles for the popup here */
     </style>
 </head>
@@ -459,6 +563,30 @@
             </table>
         </div>
 
+        <!-- Manual Break Time Adjustment Section -->
+        <div class="schedule-container" id="manualBreakAdjustment" style="display: none;">
+            <h2>Manual Break Time Adjustment</h2>
+            <p>Adjust break times for staff members. Changes will update all tables and statistics automatically.</p>
+            <div class="break-adjustment-controls">
+                <button id="toggleBreakAdjustment" class="action-button">Enable Break Time Editing</button>
+                <button id="resetAllBreaks" class="action-button" style="display: none;">Reset All Breaks</button>
+                <button id="saveBreakChanges" class="action-button" style="display: none;">Apply Changes</button>
+            </div>
+            <div id="breakAdjustmentTable" style="display: none;">
+                <table id="editableBreakTable">
+                    <thead>
+                        <tr>
+                            <th>Staff</th>
+                            <th id="firstBreakHeader">30-min Break</th>
+                            <th id="secondBreakHeader">1-hour 2nd Break</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Statistics section -->
         <div class="stats" id="stats"></div>
 
@@ -476,8 +604,7 @@
 
 <button id="toggleDebugBtn" style="position: fixed; bottom: 10px; right: 10px; background-color: #333; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 999;">🐞</button>
 
-    <script>
-        // Minimal jQuery-like functionality for standalone operation
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         (function(global) {
             'use strict';
 
@@ -544,10 +671,22 @@
                     }
 
                     return this.each(function() {
+                        var self = this;
                         if (selector) {
                             this.addEventListener(event, function(e) {
-                                if (e.target.matches && e.target.matches(selector)) {
-                                    handler.call(e.target, e);
+                                // Handle event delegation with proper bubbling
+                                var target = e.target;
+                                while (target && target !== self && target !== document) {
+                                    if (target.matches && target.matches(selector)) {
+                                        handler.call(target, e);
+                                        return;
+                                    }
+                                    // Also check if target has the class directly
+                                    if (target.classList && selector.startsWith('.') && target.classList.contains(selector.substring(1))) {
+                                        handler.call(target, e);
+                                        return;
+                                    }
+                                    target = target.parentNode;
                                 }
                             });
                         } else {
@@ -1123,6 +1262,12 @@ function createMessageDiv() {
             document.getElementById('breakHoursTable').querySelector('tbody').innerHTML = '';
             document.getElementById('stats').innerHTML = '';
 
+            // Hide break adjustment section on reset
+            const breakAdjustmentSection = document.getElementById('manualBreakAdjustment');
+            if (breakAdjustmentSection) {
+                breakAdjustmentSection.style.display = 'none';
+            }
+
             // Reset variables
             schedule = {};
             isDayShift = true;
@@ -1492,6 +1637,12 @@ function generateSchedule() {
             patients.map(p => p.name),
             staff.filter(s => !securityStaffValues.includes(s))
         );
+
+        // Show the manual break adjustment section after schedule generation
+        const breakAdjustmentSection = document.getElementById('manualBreakAdjustment');
+        if (breakAdjustmentSection) {
+            breakAdjustmentSection.style.display = 'block';
+        }
 
         // Save to localStorage
         saveToLocalStorage();
@@ -2273,8 +2424,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
     staffHeader.appendChild(staffHeaderRow);
 
-    // Create rows for each staff member
-    staff.forEach(s => {
+    // Create rows for each staff member (excluding nursing staff)
+    const nonNursingStaff = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
 
         // Add staff name cell with initials
@@ -2348,8 +2500,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
         staffBody.appendChild(row);
     });
 
-    // Render break hours table
-    staff.forEach(s => {
+    // Render break hours table (excluding nursing staff)
+    const nonNursingStaffForBreaks = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForBreaks.forEach(s => {
         const row = document.createElement('tr');
 
         // Staff name cell with initials
@@ -2379,7 +2532,9 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     statsHtml += '<table>';
     statsHtml += '<tr><th>Staff</th><th>Work Hours</th><th>Break Time</th><th>Role</th></tr>';
 
-    staff.forEach(s => {
+    // Filter out nursing staff from statistics
+    const nonNursingStaffForStats = staff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+    nonNursingStaffForStats.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
         let displayName = s;
@@ -2759,6 +2914,11 @@ window.onload = function() {
         saveToLocalStorage();
     });
 
+    // Break adjustment event listeners
+    document.getElementById('toggleBreakAdjustment').addEventListener('click', toggleBreakTimeEditing);
+    document.getElementById('resetAllBreaks').addEventListener('click', resetAllBreakTimes);
+    document.getElementById('saveBreakChanges').addEventListener('click', applyBreakTimeChanges);
+
     // Debug button functionality
     document.getElementById('debugFillBtn').addEventListener('click', async function() {
         try {
@@ -2939,9 +3099,7 @@ $(document).ready(function() {
     $('#popupOverlay').click(closePopup);
 
     // Close popup on Cancel button click
-    $('#closePopupBtn').click(closePopup);
-
-    // Select staff button click handler - Toggle assignment
+    $('#closePopupBtn').click(closePopup);    // Select staff button click handler - Toggle assignment
     $(document).on('click', '.select-staff-btn', function() {
         const staffName = $(this).attr('data-name');
         const time = $('#staffPopup').data('time');
@@ -3210,6 +3368,346 @@ $(document).ready(function() {
         closeCleaningPopup();
     });
 });
+
+// =========================
+// BREAK TIME ADJUSTMENT FUNCTIONALITY
+// =========================
+// BREAK TIME ADJUSTMENT FUNCTIONALITY
+// =========================
+
+let breakEditingEnabled = false;
+let originalBreakTimes = {};
+
+function toggleBreakTimeEditing() {
+    const button = document.getElementById('toggleBreakAdjustment');
+    const tableContainer = document.getElementById('breakAdjustmentTable');
+    const resetBtn = document.getElementById('resetAllBreaks');
+    const saveBtn = document.getElementById('saveBreakChanges');
+
+    if (!breakEditingEnabled) {
+        // Enable editing mode
+        breakEditingEnabled = true;
+        button.textContent = 'Disable Break Time Editing';
+        tableContainer.style.display = 'block';
+        resetBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'inline-block';
+
+        // Store original break times for reset functionality
+        storeOriginalBreakTimes();
+
+        // Populate the editable break table
+        populateEditableBreakTable();
+    } else {
+        // Disable editing mode
+        breakEditingEnabled = false;
+        button.textContent = 'Enable Break Time Editing';
+        tableContainer.style.display = 'none';
+        resetBtn.style.display = 'none';
+        saveBtn.style.display = 'none';
+    }
+}
+
+function storeOriginalBreakTimes() {
+    originalBreakTimes = {};
+    if (window.originalStaffStats) {
+        for (const staffName in window.originalStaffStats) {
+            const staff = window.originalStaffStats[staffName];
+            originalBreakTimes[staffName] = {
+                shortBreakTime: staff.shortBreakTime || 'N/A',
+                secondBreakTime: staff.secondBreakTime || 'N/A'
+            };
+        }
+    }
+}
+
+function populateEditableBreakTable() {
+    const tbody = document.getElementById('editableBreakTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    // Update headers based on shift type
+    if (isDayShift) {
+        document.getElementById('firstBreakHeader').textContent = '30-min Break';
+        document.getElementById('secondBreakHeader').textContent = '1-hour 2nd Break';
+    } else {
+        document.getElementById('firstBreakHeader').textContent = '1st Break Hour';
+        document.getElementById('secondBreakHeader').textContent = '2nd Break Hour';
+    }
+
+    if (!window.originalStaffStats) {
+        tbody.innerHTML = '<tr><td colspan="4">No schedule generated yet. Please generate a schedule first.</td></tr>';
+        return;
+    }
+
+    const allStaff = Object.keys(window.originalStaffStats);
+    const timeOptions = getAvailableTimeSlots();
+
+    // Filter out nursing staff from break adjustment table
+    const nonNursingStaff = allStaff.filter(staffName =>
+        staffName !== nurseInCharge1 && staffName !== nurseInCharge2
+    );
+
+    nonNursingStaff.forEach(staffName => {
+        const staff = window.originalStaffStats[staffName];
+        const shortBreak = staff.shortBreakTime || 'N/A';
+        const secondBreak = staff.secondBreakTime || 'N/A';
+
+        const row = document.createElement('tr');
+        row.setAttribute('data-staff', staffName);
+
+        row.innerHTML = `
+            <td><strong>${staffName}</strong></td>
+            <td>
+                ${shortBreak === 'N/A' ?
+                    '<span>N/A (Nurse in Charge)</span>' :
+                    `<select class="break-time-select" data-break-type="short">${generateTimeOptions(timeOptions, shortBreak)}</select>`
+                }
+            </td>
+            <td>
+                ${secondBreak === 'N/A' ?
+                    '<span>N/A (Nurse in Charge)</span>' :
+                    `<select class="break-time-select" data-break-type="second">${generateTimeOptions(timeOptions, secondBreak)}</select>`
+                }
+            </td>
+            <td>
+                <div class="staff-break-actions">
+                    ${(shortBreak !== 'N/A' && secondBreak !== 'N/A') ?
+                        `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
+                        '<span>-</span>'
+                    }
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+function getAvailableTimeSlots() {
+    return [...timeSlots]; // Use the global timeSlots array directly
+}
+
+function generateTimeOptions(timeSlots, selectedTime) {
+    let options = '';
+    timeSlots.forEach(timeSlot => {
+        const selected = timeSlot === selectedTime ? 'selected' : '';
+        options += `<option value="${timeSlot}" ${selected}>${timeSlot}</option>`;
+    });
+    return options;
+}
+
+function resetStaffBreaks(staffName) {
+    if (originalBreakTimes[staffName]) {
+        const original = originalBreakTimes[staffName];
+        const row = document.querySelector(`tr[data-staff="${staffName}"]`);
+
+        // Reset the select values
+        const shortSelect = row.querySelector('select[data-break-type="short"]');
+        const secondSelect = row.querySelector('select[data-break-type="second"]');
+
+        if (shortSelect) shortSelect.value = original.shortBreakTime;
+        if (secondSelect) secondSelect.value = original.secondBreakTime;
+    }
+}
+
+function resetAllBreakTimes() {
+    if (confirm('Are you sure you want to reset all break times to their original values?')) {
+        Object.keys(originalBreakTimes).forEach(staffName => {
+            resetStaffBreaks(staffName);
+        });
+    }
+}
+
+function applyBreakTimeChanges() {
+    if (!window.originalStaffStats || !window.schedule) {
+        alert('No schedule to update. Please generate a schedule first.');
+        return;
+    }
+
+    const changes = {};
+    let hasChanges = false;
+
+    // Collect all changes from the editable table
+    const rows = document.querySelectorAll('#editableBreakTable tbody tr');
+    rows.forEach(row => {
+        const staffName = row.getAttribute('data-staff');
+        const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
+        const secondBreakSelect = row.querySelector('select[data-break-type="second"]');
+
+        if (shortBreakSelect && secondBreakSelect) {
+            const newShortBreak = shortBreakSelect.value;
+            const newSecondBreak = secondBreakSelect.value;
+            const original = originalBreakTimes[staffName];
+
+            if (original && (newShortBreak !== original.shortBreakTime || newSecondBreak !== original.secondBreakTime)) {
+                changes[staffName] = {
+                    oldShort: original.shortBreakTime,
+                    oldSecond: original.secondBreakTime,
+                    newShort: newShortBreak,
+                    newSecond: newSecondBreak
+                };
+                hasChanges = true;
+            }
+        }
+    });
+
+    if (!hasChanges) {
+        alert('No changes detected.');
+        return;
+    }
+
+    // Validate break time conflicts
+    if (!validateBreakTimeChanges(changes)) {
+        return;
+    }
+
+    // Apply the changes
+    applyBreakChangesToSchedule(changes);
+
+    // Update UI
+    regenerateScheduleStats();
+    renderBreakHoursTable();
+    alert('Break time changes applied successfully!');
+}
+
+function validateBreakTimeChanges(changes) {
+    const timeSlotUsage = {};
+
+    // Check for conflicts in the new break times
+    Object.keys(changes).forEach(staffName => {
+        const change = changes[staffName];
+
+        [change.newShort, change.newSecond].forEach(time => {
+            if (time && time !== 'N/A') {
+                if (!timeSlotUsage[time]) {
+                    timeSlotUsage[time] = [];
+                }
+                timeSlotUsage[time].push(staffName);
+            }
+        });
+    });
+
+    // Check for conflicts with unchanged staff
+    if (window.originalStaffStats) {
+        Object.keys(window.originalStaffStats).forEach(staffName => {
+            if (!changes[staffName]) {
+                const staff = window.originalStaffStats[staffName];
+                [staff.shortBreakTime, staff.secondBreakTime].forEach(time => {
+                    if (time && time !== 'N/A') {
+                        if (!timeSlotUsage[time]) {
+                            timeSlotUsage[time] = [];
+                        }
+                        timeSlotUsage[time].push(staffName);
+                    }
+                });
+            }
+        });
+    }
+
+    // Report conflicts
+    const conflicts = [];
+    Object.keys(timeSlotUsage).forEach(time => {
+        if (timeSlotUsage[time].length > 1) {
+            conflicts.push(`${time}: ${timeSlotUsage[time].join(', ')}`);
+        }
+    });
+
+    if (conflicts.length > 0) {
+        alert(`Break time conflicts detected:\n\n${conflicts.join('\n')}\n\nPlease resolve these conflicts before applying changes.`);
+        return false;
+    }
+
+    return true;
+}
+
+function applyBreakChangesToSchedule(changes) {
+    // Update the schedule object
+    Object.keys(changes).forEach(staffName => {
+        const change = changes[staffName];
+
+        // Remove old break assignments
+        Object.keys(window.schedule).forEach(timeSlot => {
+            if (window.schedule[timeSlot].staffBreaks && window.schedule[timeSlot].staffBreaks[staffName]) {
+                delete window.schedule[timeSlot].staffBreaks[staffName];
+            }
+        });
+
+        // Add new break assignments
+        const staff = window.originalStaffStats[staffName];
+        if (staff) {
+            // Update staff stats
+            staff.shortBreakTime = change.newShort;
+            staff.secondBreakTime = change.newSecond;
+
+            // Add to schedule
+            if (change.newShort && change.newShort !== 'N/A' && window.schedule[change.newShort]) {
+                if (!window.schedule[change.newShort].staffBreaks) {
+                    window.schedule[change.newShort].staffBreaks = {};
+                }
+
+                if (isDayShift) {
+                    window.schedule[change.newShort].staffBreaks[staffName] = "30-MIN BREAK";
+                } else {
+                    window.schedule[change.newShort].staffBreaks[staffName] = "NIGHT BREAK";
+                }
+            }
+
+            if (change.newSecond && change.newSecond !== 'N/A' && window.schedule[change.newSecond]) {
+                if (!window.schedule[change.newSecond].staffBreaks) {
+                    window.schedule[change.newSecond].staffBreaks = {};
+                }
+
+                if (isDayShift) {
+                    window.schedule[change.newSecond].staffBreaks[staffName] = "2ND BREAK";
+                } else {
+                    window.schedule[change.newSecond].staffBreaks[staffName] = "NIGHT BREAK";
+                }
+            }
+        }
+    });
+
+    // Re-render the main schedule table
+    if (window.schedule && window.originalStaffStats) {
+        const allStaff = Object.keys(window.originalStaffStats);
+        const patients = Object.keys(window.schedule[Object.keys(window.schedule)[0]].patientAssignments || {}).filter(p => p !== 'OBS');
+        renderSchedule(window.schedule, allStaff, patients, window.originalStaffStats);
+    }
+}
+
+function renderBreakHoursTable() {
+    if (!window.originalStaffStats) {
+        return;
+    }
+
+    const breakHoursTable = document.getElementById('breakHoursTable').querySelector('tbody');
+    breakHoursTable.innerHTML = '';
+
+    const allStaff = Object.keys(window.originalStaffStats);
+
+    // Filter out nursing staff from break hours table
+    const nonNursingStaff = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
+
+    nonNursingStaff.forEach(s => {
+        const row = document.createElement('tr');
+        const staffStats = window.originalStaffStats[s];
+
+        // Staff name cell with initials
+        const staffCell = document.createElement('td');
+        staffCell.textContent = getInitials(s);
+        staffCell.title = s; // Add full name as tooltip
+        row.appendChild(staffCell);
+
+        // Break time cells
+        const shortBreakCell = document.createElement('td');
+        shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
+        row.appendChild(shortBreakCell);
+
+        const secondBreakCell = document.createElement('td');
+        secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
+        row.appendChild(secondBreakCell);
+
+        breakHoursTable.appendChild(row);
+    });
+}
 
 // Add renderStaffRotationStats function if it's missing
 function renderStaffRotationStats(patients, staff) {

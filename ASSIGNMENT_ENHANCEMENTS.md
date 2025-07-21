@@ -9,7 +9,7 @@
 
 ### 2. Multi-Pass Assignment Algorithm
 - **Pass 1**: Optimal assignment with fully available staff
-- **Pass 2**: Include staff on regular breaks if needed  
+- **Pass 2**: Include staff on regular breaks if needed
 - **Pass 3**: Emergency assignment using ALL staff if necessary
 - **Ultimate Failsafe**: Double-assignment capability as last resort
 

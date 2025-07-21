@@ -168,9 +168,9 @@ Special thanks to all beta testers and contributors who helped make this release
 
 ---
 
-**Download**: `patient-care-horizontal-schedule.html` (135KB)  
-**Compatibility**: Chrome, Firefox, Safari, Edge  
-**License**: MIT License  
+**Download**: `patient-care-horizontal-schedule.html` (135KB)
+**Compatibility**: Chrome, Firefox, Safari, Edge
+**License**: MIT License
 **Release Date**: July 19, 2025
 
 ---

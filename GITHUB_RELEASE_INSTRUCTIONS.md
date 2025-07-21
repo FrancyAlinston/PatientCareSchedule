@@ -35,7 +35,7 @@ Copy and paste this description:
 
 ### 🔧 **Technical Improvements**
 - **jQuery Inline**: No external CDN dependencies
-- **Performance Optimized**: Faster loading and responsiveness  
+- **Performance Optimized**: Faster loading and responsiveness
 - **Consistent Styling**: Fixed table borders and unified color schemes
 - **Clean Repository**: Added comprehensive .gitignore
 - **Enhanced UX**: Improved user interface and interactions
