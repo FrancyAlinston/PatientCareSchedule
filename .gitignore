@@ -6,8 +6,21 @@
 # Private Instructions & Documentation
 # ===========================================
 
-# Copilot instructions folder (private development notes)
+# Copilot instructions and workflow files (private development notes)
 .copilot-instructions/
+copilot-instructions.md
+
+# Development workflow documentation (internal use only)
+ASSIGNMENT_ENHANCEMENTS.md
+OBS_IMPLEMENTATION_SUMMARY.md
+MASTER_BACKUP_*.md
+*_BACKUP_*.md
+GITHUB_PAGES_SETUP.md
+GITHUB_RELEASE_INSTRUCTIONS.md
+RELEASE_v3.0.0_COMPLETE.md
+
+# Deployment scripts (workflow automation)
+update-live-site.sh
 
 # ===========================================
 # GitHub Pages and Jekyll

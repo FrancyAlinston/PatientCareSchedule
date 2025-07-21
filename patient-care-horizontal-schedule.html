@@ -3309,7 +3309,8 @@ function populateEditableBreakTable() {
     }
 
     const allStaff = Object.keys(window.originalStaffStats);
-    const timeOptions = isDayShift ? getAvailableTimeSlots() : getSimplifiedNightTimeSlots();
+    // For night shift, only use 00:00, 02:00, 04:00 as break options
+    const timeOptions = isDayShift ? getAvailableTimeSlots() : ["00:00", "02:00", "04:00"];
 
     // Filter out nursing staff from break adjustment table
     const nonNursingStaff = allStaff.filter(staffName =>
@@ -3351,13 +3352,13 @@ function populateEditableBreakTable() {
             `;
         } else {
             // Night shift: Show only one break column (use shortBreak as the main break)
-            const nightBreak = shortBreak !== 'N/A' ? shortBreak : secondBreak; // Use whichever break is assigned
+            const nightBreak = shortBreak !== 'N/A' ? shortBreak : secondBreak;
             row.innerHTML = `
                 <td><strong>${staffName}</strong></td>
                 <td>
                     ${nightBreak === 'N/A' ?
                         '<span>N/A (Nurse in Charge)</span>' :
-                        `<select class="break-time-select" data-break-type="night">${generateSimplifiedTimeOptions(timeOptions, nightBreak)}</select>`
+                        `<select class="break-time-select" data-break-type="night">${["00:00", "02:00", "04:00"].map(time => `<option value="${time}" ${nightBreak === time ? 'selected' : ''}>${time}</option>`).join('')}</select>`
                     }
                 </td>
                 <td>
@@ -3669,14 +3670,34 @@ function renderBreakHoursTable() {
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
 
-        // Break time cells
-        const shortBreakCell = document.createElement('td');
-        shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
-        row.appendChild(shortBreakCell);
+        if (isDayShift) {
+            // Day shift: show both break columns as before
+            const shortBreakCell = document.createElement('td');
+            shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
+            row.appendChild(shortBreakCell);
 
-        const secondBreakCell = document.createElement('td');
-        secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
-        row.appendChild(secondBreakCell);
+            const secondBreakCell = document.createElement('td');
+            secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
+            row.appendChild(secondBreakCell);
+        } else {
+            // Night shift: only show 00:00, 02:00, 04:00 as valid break hours
+            // If the staff's break is not one of these, show N/A
+            const allowedNightBreaks = ["00:00", "02:00", "04:00"];
+            let nightBreak = staffStats.shortBreakTime !== 'N/A' ? staffStats.shortBreakTime : staffStats.secondBreakTime;
+            // Convert e.g. "00:00-01:00" to "00:00" for comparison
+            if (nightBreak && nightBreak.includes('-')) {
+                nightBreak = nightBreak.split('-')[0];
+            }
+            const showBreak = allowedNightBreaks.includes(nightBreak) ? nightBreak : "N/A";
+            const nightBreakCell = document.createElement('td');
+            nightBreakCell.textContent = showBreak;
+            row.appendChild(nightBreakCell);
+
+            // Second column: always N/A for night shift (to keep table structure)
+            const naCell = document.createElement('td');
+            naCell.textContent = "N/A";
+            row.appendChild(naCell);
+        }
 
         breakHoursTable.appendChild(row);
     });
