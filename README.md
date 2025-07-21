@@ -1,6 +1,6 @@
 # Patient Care Schedule Management System
 
-**Version 3.1.0** | Last Updated: July 21, 2025
+**Version 3.1.1** | Last Updated: July 21, 2025
 
 ## 🌐 Live Demo
 
@@ -171,6 +171,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 This project was created to help healthcare facilities optimize their staffing schedules while maintaining high standards of patient care.
 
 ## Change Log
+
+### Version 3.1.1 (July 21, 2025)
+- **🛠️ CRITICAL HOTFIX**: Fixed jQuery popup functionality 
+- **Resolved popup display issues**: Removed faulty custom jQuery implementation that was overriding real jQuery
+- **Fixed JavaScript execution**: Corrected missing script tags that caused code to display as text
+- **Restored full functionality**: All staff assignment popups now work correctly
+- **Improved user interface**: Clean display with no code visible on page
+- **Better jQuery integration**: Now using official jQuery 3.6.0 CDN properly
 
 ### Version 3.1.0 (July 21, 2025)
 - **🔒 CRITICAL FIX**: Resolved staff double-assignment conflicts
