@@ -3,6 +3,13 @@
 # Updated for GitHub Pages deployment
 
 # ===========================================
+# Private Instructions & Documentation
+# ===========================================
+
+# Copilot instructions folder (private development notes)
+.copilot-instructions/
+
+# ===========================================
 # GitHub Pages and Jekyll
 # ===========================================
 
