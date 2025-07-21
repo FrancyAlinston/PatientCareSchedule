@@ -19,9 +19,7 @@ GITHUB_PAGES_SETUP.md
 GITHUB_RELEASE_INSTRUCTIONS.md
 RELEASE_v3.0.0_COMPLETE.md
 
-# Deployment scripts (workflow automation)
-update-live-site.sh
-
+# Deploy
 # ===========================================
 # GitHub Pages and Jekyll
 # ===========================================
