@@ -1,6 +1,6 @@
 # Patient Care Schedule Management System
 
-**Version 3.0.0** | Last Updated: July 19, 2025
+**Version 3.1.0** | Last Updated: July 21, 2025
 
 ## 🌐 Live Demo
 
@@ -24,21 +24,24 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 
 ## Key Features
 
+- **🔒 Conflict Prevention**: Advanced validation ensures staff are never assigned to multiple jobs simultaneously
 - **Fully Standalone**: No server, internet connection, or external dependencies required
 - **Session Storage (Live Demo)**: Live site data clears when browser closes for privacy
 - **Local Storage (Download)**: Downloaded version saves data permanently in browser
 - **Offline Ready**: Works completely offline once loaded in your browser
 
 - **Interactive Staff Management**: Real-time staff reassignment with visual feedback and clickable cells
+- **Smart Conflict Detection**: Automatic prevention of staff double-booking across patients and duties
+- **Manual Break Adjustment**: Customize and modify staff break times with validation
 - **Shift Management**: Switch between day shift (8AM-8PM) and night shift (8PM-8AM) scheduling
 - **Staff Assignment**: Schedule healthcare workers, security staff, and nurses in charge
 - **Patient Coverage**: Ensure patients are never left unattended, with configurable staff-to-patient ratios (1:1, 2:1, 3:1)
-- **OBS (Ward Observation)**: Special assignment for observation duties with one-staff-at-a-time rule
+- **OBS (Ward Observation)**: Special assignment for observation duties with comprehensive conflict checking
 - **Break Scheduling**: Automatically assign and manage staff breaks with smart interruption handling
 - **Night Shift Duties**: Automatically distribute cleaning duties during night shifts with interactive reassignment
 - **Staff Rotation Tracking**: Monitor how frequently staff members work with specific patients to ensure fair rotation
 - **Light/Dark Mode**: Toggle between light and dark display modes with adaptive color schemes
-- **Manual Override**: Click any cell to manually reassign staff with intuitive popup interface
+- **Enhanced Popup Interface**: Intuitive manual assignment with real-time conflict warnings
 
 ## 🚀 Access Options
 
@@ -168,6 +171,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 This project was created to help healthcare facilities optimize their staffing schedules while maintaining high standards of patient care.
 
 ## Change Log
+
+### Version 3.1.0 (July 21, 2025)
+- **🔒 CRITICAL FIX**: Resolved staff double-assignment conflicts
+- **Enhanced conflict checking**: Staff can no longer be assigned to multiple jobs simultaneously
+- **Improved popup functionality**: Better manual assignment with comprehensive conflict validation
+- **Strengthened OBS assignment**: Proper conflict checking between OBS duties and patient care
+- **Manual break time adjustment**: Added ability to manually modify staff break schedules
+- **Popup reliability improvements**: Fixed event delegation and assignment logic
+- **Better assignment validation**: Multi-pass validation ensures no scheduling conflicts
+- **Enhanced user feedback**: Clear warnings when staff conflicts would occur
 
 ### Version 3.0.0 (July 19, 2025)
 - **🎉 MAJOR UPDATE**: Converted to fully standalone single HTML file
