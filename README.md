@@ -24,21 +24,24 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 
 ## Key Features
 
+- **🔒 Conflict Prevention**: Advanced validation ensures staff are never assigned to multiple jobs simultaneously
 - **Fully Standalone**: No server, internet connection, or external dependencies required
 - **Session Storage (Live Demo)**: Live site data clears when browser closes for privacy
 - **Local Storage (Download)**: Downloaded version saves data permanently in browser
 - **Offline Ready**: Works completely offline once loaded in your browser
 
 - **Interactive Staff Management**: Real-time staff reassignment with visual feedback and clickable cells
+- **Smart Conflict Detection**: Automatic prevention of staff double-booking across patients and duties
+- **Manual Break Adjustment**: Customize and modify staff break times with validation
 - **Shift Management**: Switch between day shift (8AM-8PM) and night shift (8PM-8AM) scheduling
 - **Staff Assignment**: Schedule healthcare workers, security staff, and nurses in charge
 - **Patient Coverage**: Ensure patients are never left unattended, with configurable staff-to-patient ratios (1:1, 2:1, 3:1)
-- **OBS (Ward Observation)**: Special assignment for observation duties with one-staff-at-a-time rule
+- **OBS (Ward Observation)**: Special assignment for observation duties with comprehensive conflict checking
 - **Break Scheduling**: Automatically assign and manage staff breaks with smart interruption handling
 - **Night Shift Duties**: Automatically distribute cleaning duties during night shifts with interactive reassignment
 - **Staff Rotation Tracking**: Monitor how frequently staff members work with specific patients to ensure fair rotation
 - **Light/Dark Mode**: Toggle between light and dark display modes with adaptive color schemes
-- **Manual Override**: Click any cell to manually reassign staff with intuitive popup interface
+- **Enhanced Popup Interface**: Intuitive manual assignment with real-time conflict warnings
 
 ## 🚀 Access Options
 
@@ -56,7 +59,6 @@ The Patient Care Schedule Management System is a **fully standalone** web-based 
 
 ## ⚠️ Important Rules
 
-- **CRITICAL**: Staff cannot be assigned to multiple jobs simultaneously (FIXED in v3.1.0)
 - **IMPORTANT**: Patients cannot be left alone or unassigned at any time
 - **IMPORTANT**: Night shift cleaning duties can only be allocated 2 hours after start and 2 hours before end of shift
 - **IMPORTANT**: All staff should be assigned at least one cleaning duty during night shift
@@ -171,12 +173,14 @@ This project was created to help healthcare facilities optimize their staffing s
 ## Change Log
 
 ### Version 3.1.0 (July 21, 2025)
-- **🐛 CRITICAL FIX**: Resolved staff conflict resolution bug preventing double assignments
+- **🔒 CRITICAL FIX**: Resolved staff double-assignment conflicts
 - **Enhanced conflict checking**: Staff can no longer be assigned to multiple jobs simultaneously
-- **Improved popup assignment logic**: Added comprehensive conflict validation for manual assignments
-- **Better OBS assignment**: Fixed conflict detection between OBS and patient care assignments
-- **Code cleanup**: Removed obsolete documentation files and updated version numbers
-- **Stability improvements**: Enhanced scheduling algorithm reliability
+- **Improved popup functionality**: Better manual assignment with comprehensive conflict validation
+- **Strengthened OBS assignment**: Proper conflict checking between OBS duties and patient care
+- **Manual break time adjustment**: Added ability to manually modify staff break schedules
+- **Popup reliability improvements**: Fixed event delegation and assignment logic
+- **Better assignment validation**: Multi-pass validation ensures no scheduling conflicts
+- **Enhanced user feedback**: Clear warnings when staff conflicts would occur
 
 ### Version 3.0.0 (July 19, 2025)
 - **🎉 MAJOR UPDATE**: Converted to fully standalone single HTML file
@@ -215,13 +219,14 @@ This project was created to help healthcare facilities optimize their staffing s
 PatientCareSchedule/
 ├── .gitignore                                # Git ignore file for clean repository
 ├── patient-care-horizontal-schedule.html    # Main application file (standalone)
-├── index.html                                # Live demo version (GitHub Pages)
 ├── README.md                                 # This documentation
-├── GITHUB_PAGES_SETUP.md                    # GitHub Pages setup instructions
-├── GITHUB_RELEASE_INSTRUCTIONS.md           # Release process documentation
-├── RELEASE_NOTES_v3.0.0.md                  # Detailed release notes
-├── RELEASE_v3.0.0_COMPLETE.md               # Release completion status
-└── update-live-site.sh                      # Automated deployment script
+└── Documentation/                            # Additional documentation files
+    ├── ASSIGNMENT_ENHANCEMENTS.md
+    ├── BACKUP_SYSTEM.md
+    ├── MASTER_BACKUP_COMPLETE.md
+    ├── MASTER_BACKUP_DOCUMENTATION.md
+    ├── OBS_IMPLEMENTATION_SUMMARY.md
+    └── UNASSIGNED_FIX_SUMMARY.md
 ```
 
 ## Data Persistence
