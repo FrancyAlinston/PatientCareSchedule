@@ -3290,7 +3290,7 @@ function populateEditableBreakTable() {
     // Update headers based on shift type
     const secondBreakHeader = document.getElementById('secondBreakHeader');
     const actionHeaders = document.querySelectorAll('#editableBreakTable th:last-child');
-    
+
     if (isDayShift) {
         document.getElementById('firstBreakHeader').textContent = '30-min Break';
         secondBreakHeader.textContent = '1-hour 2nd Break';
@@ -3452,7 +3452,7 @@ function applyBreakTimeChanges() {
     const rows = document.querySelectorAll('#editableBreakTable tbody tr');
     rows.forEach(row => {
         const staffName = row.getAttribute('data-staff');
-        
+
         if (isDayShift) {
             // Day shift: Handle both breaks
             const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
@@ -3476,15 +3476,15 @@ function applyBreakTimeChanges() {
         } else {
             // Night shift: Handle single break
             const nightBreakSelect = row.querySelector('select[data-break-type="night"]');
-            
+
             if (nightBreakSelect) {
                 const newNightBreak = nightBreakSelect.value;
                 const original = originalBreakTimes[staffName];
-                
+
                 if (original) {
                     // For night shift, we store the break in shortBreakTime and clear secondBreakTime
                     const originalBreak = original.shortBreakTime !== 'N/A' ? original.shortBreakTime : original.secondBreakTime;
-                    
+
                     if (newNightBreak !== originalBreak) {
                         changes[staffName] = {
                             oldShort: original.shortBreakTime,
@@ -3551,7 +3551,7 @@ function validateBreakTimeChanges(changes) {
         Object.keys(window.originalStaffStats).forEach(staffName => {
             if (!changes[staffName]) {
                 const staff = window.originalStaffStats[staffName];
-                
+
                 if (isDayShift) {
                     // Day shift: Check both break times
                     [staff.shortBreakTime, staff.secondBreakTime].forEach(time => {
