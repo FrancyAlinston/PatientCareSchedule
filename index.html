@@ -694,8 +694,8 @@
                 breakHoursTableHead.innerHTML = `
                 <tr>
                     <th>Staff</th>
-                    <th>Break Hour 1</th>
-                    <th>Break Hour 2</th>
+                    <th>2-hour Break Block</th>
+                    <th>Duration</th>
                 </tr>`;
             }
         }
@@ -2686,10 +2686,24 @@ function regenerateScheduleStats() {
                         }
                     } else if (breakType === "NIGHT BREAK") {
                         staffStats[staffName].breakTime += 1;
-                        if (!staffStats[staffName].shortBreakTime) {
-                            staffStats[staffName].shortBreakTime = time;
-                        } else if (!staffStats[staffName].secondBreakTime) {
-                            staffStats[staffName].secondBreakTime = time;
+                        
+                        // For night shift, group consecutive NIGHT BREAK hours into 2-hour blocks
+                        if (!staffStats[staffName].nightBreakStart) {
+                            // First hour of night break - store the start time
+                            staffStats[staffName].nightBreakStart = time;
+                            staffStats[staffName].shortBreakTime = time; // Temporary, will be updated when block completes
+                        } else {
+                            // Second hour of night break - create the full block time
+                            const startTime = staffStats[staffName].nightBreakStart;
+                            const endTime = time.split('-')[1]; // Get end time of current slot
+                            const fullBlockTime = `${startTime.split('-')[0]}-${endTime}`;
+                            
+                            // Update to show full 2-hour block
+                            staffStats[staffName].shortBreakTime = fullBlockTime;
+                            staffStats[staffName].secondBreakTime = "CONTINUOUS";
+                            
+                            // Clean up temporary variable
+                            delete staffStats[staffName].nightBreakStart;
                         }
                     }
                 }
