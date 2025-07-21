@@ -538,7 +538,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v2.2.0)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.1)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -1389,6 +1389,12 @@ function generateSchedule() {
             return false;
         }
 
+        // CRITICAL: Validate for any staff conflicts (double assignments)
+        if (!validateScheduleForConflicts(schedule, timeSlots)) {
+            console.error("Schedule generation failed conflict validation");
+            return false;
+        }
+
         // Make schedule globally accessible for popup functionality
         window.schedule = schedule;
 
@@ -1890,14 +1896,15 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                 );
                 availableStaff = [...availableRegularStaff, ...availableSecurityStaff];
             } else {
-                // Pass 3: Emergency - use ALL staff if absolutely necessary, but warn about conflicts
+                // Pass 3: Emergency - use ALL staff if absolutely necessary, but NEVER allow double assignments
                 const allStaff = [...staff, ...securityStaff];
                 availableStaff = allStaff.filter(s => !isStaffAlreadyAssignedIncludingOBS(s, time, schedule));
 
-                // If still no staff available, allow conflicts but log warnings
+                // If still no staff available, DO NOT allow conflicts - this indicates a scheduling problem
                 if (availableStaff.length === 0) {
-                    console.warn(`EMERGENCY: No unassigned staff available at ${time}. Allowing conflicts.`);
-                    availableStaff = allStaff;
+                    console.error(`CRITICAL ERROR: No unassigned staff available at ${time}. Cannot assign without conflicts.`);
+                    console.error(`This indicates insufficient staffing or scheduling conflicts that need resolution.`);
+                    // availableStaff remains empty to prevent double assignments
                 }
             }
 
@@ -1931,8 +1938,15 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                             timeIndex
                         );
 
-                        // Assign the staff
+                        // Assign the staff with double-assignment validation
                         bestStaff.forEach(s => {
+                            // Critical safety check: Verify staff is not already assigned
+                            if (isStaffAlreadyAssignedIncludingOBS(s, time, schedule)) {
+                                console.error(`CRITICAL ERROR: Attempted to double-assign ${s} at ${time}!`);
+                                console.error(`Staff ${s} is already assigned. Skipping to prevent conflict.`);
+                                return; // Skip this assignment
+                            }
+
                             schedule[time].patientAssignments[patient.name].push(s);
 
                             // Update rotation history
@@ -1961,7 +1975,9 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                         });
                     } else {
                         allPatientsAssigned = false;
-                        console.log(`Could not assign enough staff to ${patient.name}`);
+                        console.error(`STAFFING SHORTAGE: Could not assign sufficient staff to ${patient.name} at ${time}`);
+                        console.error(`Patient ${patient.name} needs ${staffNeeded} staff but only ${unassignedStaff.length} available`);
+                        console.error(`Available staff for ${patient.name}:`, unassignedStaff);
                     }
                 }
             }
@@ -2016,6 +2032,56 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
 
         console.log(`=== Completed time slot: ${time} ===\n`);
     });
+}
+
+// CRITICAL: Comprehensive validation function to detect and report any conflicts
+function validateScheduleForConflicts(schedule, timeSlots) {
+    console.log("=== PERFORMING CRITICAL CONFLICT VALIDATION ===");
+    let conflictsFound = 0;
+    let criticalErrors = [];
+
+    timeSlots.forEach(time => {
+        console.log(`Validating time slot: ${time}`);
+
+        // Track all staff assignments at this time
+        const staffAssignments = new Map();
+
+        // Process all patient assignments (including OBS)
+        for (const patient in schedule[time].patientAssignments) {
+            const assignedStaff = schedule[time].patientAssignments[patient] || [];
+
+            assignedStaff.forEach(staffName => {
+                if (!staffAssignments.has(staffName)) {
+                    staffAssignments.set(staffName, []);
+                }
+                staffAssignments.get(staffName).push(patient);
+            });
+        }
+
+        // Check for conflicts (staff assigned to multiple patients)
+        staffAssignments.forEach((assignments, staffName) => {
+            if (assignments.length > 1) {
+                conflictsFound++;
+                const errorMsg = `CRITICAL CONFLICT: ${staffName} assigned to multiple duties at ${time}: ${assignments.join(", ")}`;
+                console.error(errorMsg);
+                criticalErrors.push(errorMsg);
+            }
+        });
+    });
+
+    if (conflictsFound > 0) {
+        console.error(`=== VALIDATION FAILED: ${conflictsFound} conflicts detected ===`);
+        console.error("Critical errors found:");
+        criticalErrors.forEach(error => console.error("  - " + error));
+
+        // Show user-visible alert about conflicts
+        alert(`🚨 CRITICAL SCHEDULING CONFLICTS DETECTED! 🚨\n\n${conflictsFound} staff assignment conflicts found.\n\nPlease check the browser console for details.\n\nThis schedule is UNSAFE for patient care!`);
+
+        return false;
+    } else {
+        console.log("✅ Schedule validation PASSED - no conflicts detected");
+        return true;
+    }
 }
 
 // Helper function to check if a staff member is already assigned to any duty at a given time
@@ -2744,15 +2810,7 @@ window.onload = function() {
     document.getElementById('resetAllBreaks').addEventListener('click', resetAllBreakTimes);
     document.getElementById('saveBreakChanges').addEventListener('click', applyBreakTimeChanges);
 
-    // Debug button functionality
-    document.getElementById('debugFillBtn').addEventListener('click', async function() {
-        try {
-            // Debug fill code here
-            saveToSessionStorage();
-        } catch (error) {
-            console.error("Debug fill error:", error);
-        }
-    });
+
 
     // Debug panel toggle button
     document.getElementById('toggleDebugBtn').addEventListener('click', function() {
@@ -3297,7 +3355,7 @@ function populateEditableBreakTable() {
     // Update headers based on shift type
     const secondBreakHeader = document.getElementById('secondBreakHeader');
     const actionHeaders = document.querySelectorAll('#editableBreakTable th:last-child');
-    
+
     if (isDayShift) {
         document.getElementById('firstBreakHeader').textContent = '30-min Break';
         secondBreakHeader.textContent = '1-hour 2nd Break';
@@ -3316,7 +3374,8 @@ function populateEditableBreakTable() {
     }
 
     const allStaff = Object.keys(window.originalStaffStats);
-    const timeOptions = isDayShift ? getAvailableTimeSlots() : getSimplifiedNightTimeSlots();
+    // For night shift, only use 00:00, 02:00, 04:00 as break options
+    const timeOptions = isDayShift ? getAvailableTimeSlots() : ["00:00", "02:00", "04:00"];
 
     // Filter out nursing staff from break adjustment table
     const nonNursingStaff = allStaff.filter(staffName =>
@@ -3358,13 +3417,13 @@ function populateEditableBreakTable() {
             `;
         } else {
             // Night shift: Show only one break column (use shortBreak as the main break)
-            const nightBreak = shortBreak !== 'N/A' ? shortBreak : secondBreak; // Use whichever break is assigned
+            const nightBreak = shortBreak !== 'N/A' ? shortBreak : secondBreak;
             row.innerHTML = `
                 <td><strong>${staffName}</strong></td>
                 <td>
                     ${nightBreak === 'N/A' ?
                         '<span>N/A (Nurse in Charge)</span>' :
-                        `<select class="break-time-select" data-break-type="night">${generateSimplifiedTimeOptions(timeOptions, nightBreak)}</select>`
+                        `<select class="break-time-select" data-break-type="night">${["00:00", "02:00", "04:00"].map(time => `<option value="${time}" ${nightBreak === time ? 'selected' : ''}>${time}</option>`).join('')}</select>`
                     }
                 </td>
                 <td>
@@ -3459,7 +3518,7 @@ function applyBreakTimeChanges() {
     const rows = document.querySelectorAll('#editableBreakTable tbody tr');
     rows.forEach(row => {
         const staffName = row.getAttribute('data-staff');
-        
+
         if (isDayShift) {
             // Day shift: Handle both breaks
             const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
@@ -3483,15 +3542,15 @@ function applyBreakTimeChanges() {
         } else {
             // Night shift: Handle single break
             const nightBreakSelect = row.querySelector('select[data-break-type="night"]');
-            
+
             if (nightBreakSelect) {
                 const newNightBreak = nightBreakSelect.value;
                 const original = originalBreakTimes[staffName];
-                
+
                 if (original) {
                     // For night shift, we store the break in shortBreakTime and clear secondBreakTime
                     const originalBreak = original.shortBreakTime !== 'N/A' ? original.shortBreakTime : original.secondBreakTime;
-                    
+
                     if (newNightBreak !== originalBreak) {
                         changes[staffName] = {
                             oldShort: original.shortBreakTime,
@@ -3558,7 +3617,7 @@ function validateBreakTimeChanges(changes) {
         Object.keys(window.originalStaffStats).forEach(staffName => {
             if (!changes[staffName]) {
                 const staff = window.originalStaffStats[staffName];
-                
+
                 if (isDayShift) {
                     // Day shift: Check both break times
                     [staff.shortBreakTime, staff.secondBreakTime].forEach(time => {
@@ -3676,14 +3735,34 @@ function renderBreakHoursTable() {
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
 
-        // Break time cells
-        const shortBreakCell = document.createElement('td');
-        shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
-        row.appendChild(shortBreakCell);
+        if (isDayShift) {
+            // Day shift: show both break columns as before
+            const shortBreakCell = document.createElement('td');
+            shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
+            row.appendChild(shortBreakCell);
 
-        const secondBreakCell = document.createElement('td');
-        secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
-        row.appendChild(secondBreakCell);
+            const secondBreakCell = document.createElement('td');
+            secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
+            row.appendChild(secondBreakCell);
+        } else {
+            // Night shift: only show 00:00, 02:00, 04:00 as valid break hours
+            // If the staff's break is not one of these, show N/A
+            const allowedNightBreaks = ["00:00", "02:00", "04:00"];
+            let nightBreak = staffStats.shortBreakTime !== 'N/A' ? staffStats.shortBreakTime : staffStats.secondBreakTime;
+            // Convert e.g. "00:00-01:00" to "00:00" for comparison
+            if (nightBreak && nightBreak.includes('-')) {
+                nightBreak = nightBreak.split('-')[0];
+            }
+            const showBreak = allowedNightBreaks.includes(nightBreak) ? nightBreak : "N/A";
+            const nightBreakCell = document.createElement('td');
+            nightBreakCell.textContent = showBreak;
+            row.appendChild(nightBreakCell);
+
+            // Second column: always N/A for night shift (to keep table structure)
+            const naCell = document.createElement('td');
+            naCell.textContent = "N/A";
+            row.appendChild(naCell);
+        }
 
         breakHoursTable.appendChild(row);
     });
