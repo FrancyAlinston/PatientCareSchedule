@@ -1583,6 +1583,15 @@ function assignBreaks(allStaff, staffStats, patients) {
             { start: 8, end: 9, name: "04:00-06:00" }   // 04:00-05:00, 05:00-06:00
         ];
 
+        // DEBUG: Verify break time block mappings
+        console.log(`=== BREAK TIME BLOCK VERIFICATION ===`);
+        breakTimeBlocks.forEach((block, index) => {
+            console.log(`Block ${index + 1}: ${block.name}`);
+            console.log(`  Start index ${block.start} = ${timeSlots[block.start]}`);
+            console.log(`  End index ${block.end} = ${timeSlots[block.end]}`);
+        });
+        console.log(`========================================`);
+
         // SMART BREAK ALLOCATION: Ensure we never have too many staff on break
         const maxStaffOnBreakAtOnce = Math.max(1, staffForBreaks.length - minimumStaffNeeded);
 
@@ -1603,54 +1612,56 @@ function assignBreaks(allStaff, staffStats, patients) {
             return; // Skip break allocation
         }
 
-        // Safe break allocation - divide staff into groups that won't create conflicts
-        const numberOfGroups = Math.ceil(staffForBreaks.length / maxStaffOnBreakAtOnce);
+        // Safe break allocation - ALWAYS utilize all 3 break time blocks
+        // Ensure we create exactly 3 groups to match the 3 available break time blocks
+        const numberOfGroups = breakTimeBlocks.length; // Always 3 groups
         const staffGroups = Array.from({ length: numberOfGroups }, () => []);
 
-        // Distribute staff evenly across groups
+        // Distribute staff across ALL 3 groups in round-robin fashion
+        // This ensures every break block gets staff, even with minimal staffing
         staffForBreaks.forEach((s, index) => {
             const groupIndex = index % numberOfGroups;
             staffGroups[groupIndex].push(s);
         });
 
         console.log(`Created ${numberOfGroups} break groups:`, staffGroups.map(g => g.length));
+        console.log(`Available break time blocks: ${breakTimeBlocks.length}`);
+        console.log(`Staff distribution:`, staffGroups.map((group, i) => `Block ${i + 1} (${breakTimeBlocks[i].name}): ${group.length} staff`));
 
-        // Assign 2-hour break blocks to each group
+        // Assign 2-hour break blocks to each group - ALL groups will be used
         staffGroups.forEach((group, groupIndex) => {
-            // Only assign breaks if we have a corresponding break block
-            if (groupIndex < breakTimeBlocks.length) {
-                const breakBlock = breakTimeBlocks[groupIndex];
+            const breakBlock = breakTimeBlocks[groupIndex];
 
-                // Assign breaks to all staff in this group for the full 2-hour block
-                group.forEach(s => {
-                    // First hour of 2-hour break block
-                    schedule[timeSlots[breakBlock.start]].staffBreaks[s] = "NIGHT BREAK";
+            console.log(`Processing break block ${groupIndex + 1}: ${breakBlock.name} with ${group.length} staff`);
 
-                    // Second hour of 2-hour break block
-                    schedule[timeSlots[breakBlock.end]].staffBreaks[s] = "NIGHT BREAK";
-
-                    // Update staff stats
-                    staffStats[s].breakTime = 2; // Total break time is 2 hours
-
-                    // Store break time info for display in table (show full block)
-                    staffStats[s].shortBreakTime = breakBlock.name;
-                    staffStats[s].secondBreakTime = "CONTINUOUS";
-
-                    console.log(`Assigned ${s} to break block: ${breakBlock.name}`);
-                });
-            } else {
-                // Staff in excess groups get shorter breaks or staggered breaks
-                console.warn(`Group ${groupIndex + 1} cannot get full 2-hour break due to staffing constraints`);
-                group.forEach(s => {
-                    // Give them at least 1 hour break during the safest block (00:00-02:00)
-                    const safeBreakIndex = breakTimeBlocks[0].start; // 00:00 hour
-                    schedule[timeSlots[safeBreakIndex]].staffBreaks[s] = "SHORT NIGHT BREAK";
-
-                    staffStats[s].breakTime = 1;
-                    staffStats[s].shortBreakTime = timeSlots[safeBreakIndex];
-                    staffStats[s].secondBreakTime = "NONE";
-                });
+            // Even if a group is empty, we still want to log it for debugging
+            if (group.length === 0) {
+                console.log(`⚠️ WARNING: No staff assigned to break block: ${breakBlock.name}`);
+                return;
             }
+
+            // Assign breaks to all staff in this group for the full 2-hour block
+            group.forEach(s => {
+                // First hour of 2-hour break block
+                schedule[timeSlots[breakBlock.start]].staffBreaks[s] = "NIGHT BREAK";
+
+                // Second hour of 2-hour break block
+                schedule[timeSlots[breakBlock.end]].staffBreaks[s] = "NIGHT BREAK";
+
+                // Update staff stats
+                staffStats[s].breakTime = 2; // Total break time is 2 hours
+
+                // Store break time info for display in table (show full block)
+                staffStats[s].shortBreakTime = breakBlock.name;
+                staffStats[s].secondBreakTime = "CONTINUOUS";
+
+                console.log(`✓ Assigned ${s} to break block: ${breakBlock.name} (time slots: ${timeSlots[breakBlock.start]}, ${timeSlots[breakBlock.end]})`);
+                
+                // Special debug message for 04:00 break block
+                if (breakBlock.name === "04:00-06:00") {
+                    console.log(`🎯 CONFIRMED: ${s} assigned to 04:00-06:00 break block (slots ${breakBlock.start}-${breakBlock.end})`);
+                }
+            });
         });
 
         // Set nurses in charge break times to "N/A" since they don't get scheduled breaks
