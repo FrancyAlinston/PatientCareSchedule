@@ -6,11 +6,12 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 3.1.1
-    Date: July 21, 2025
+    Version: 3.1.2
+    Date: August 30, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
-             Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix
+             Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix,
+             Security-Only Cleaning Duties (Kitchen & Bins restricted to security staff only)
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -232,6 +233,23 @@
 
         .legend-cleaning-duty {
             background-color: #9c27b0;
+        }
+
+        /* Security-only cleaning duties styling */
+        .security-only-duty {
+            background-color: #dc3545 !important; /* Red background for security-only duties */
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+
+        .security-only-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 5px;
+            display: inline-block;
         }
 
         /* Ensure text color is visible for cells with white background in dark mode */
@@ -625,6 +643,57 @@
             return (firstInitial + lastInitial).toUpperCase();
         }
 
+        // Staff Color Management System - Consistent colors throughout the site
+        let staffColorMap = {}; // Store staff name -> color mapping
+        const staffColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E9', '#82E0AA', '#F8C471', '#F1948A', '#85C1E9', '#A9DFBF', '#F9E79F',
+            '#D7BDE2', '#A3E4D7', '#FAD7A0', '#FADBD8', '#D5DBDB', '#AED6F1', '#A9DFBF', '#FCF3CF',
+            '#EBDEF0', '#D1F2EB', '#FDEAA7', '#FDEDEC', '#EAEDED', '#D6EAF8', '#D4EDDA', '#FFF3CD'
+        ];
+
+        function getStaffColor(staffName) {
+            if (!staffName || staffName.trim() === '') return '#6c757d'; // Default gray for empty names
+            
+            const cleanName = staffName.trim();
+            
+            // If staff already has a color, return it
+            if (staffColorMap[cleanName]) {
+                return staffColorMap[cleanName];
+            }
+            
+            // Assign new color based on current number of staff
+            const assignedColors = Object.keys(staffColorMap).length;
+            const colorIndex = assignedColors % staffColors.length;
+            staffColorMap[cleanName] = staffColors[colorIndex];
+            
+            return staffColorMap[cleanName];
+        }
+
+        function getStaffWithColor(staffName) {
+            const initials = getInitials(staffName);
+            const color = getStaffColor(staffName);
+            return {
+                name: staffName,
+                initials: initials,
+                color: color
+            };
+        }
+
+        function formatStaffDisplay(staffName, showFullName = false) {
+            if (!staffName || staffName.trim() === '') return '';
+            
+            const staffData = getStaffWithColor(staffName);
+            const displayText = showFullName ? `${staffData.initials} (${staffData.name})` : staffData.initials;
+            
+            return `<span style="color: ${staffData.color}; font-weight: bold;">${displayText}</span>`;
+        }
+
+        // Reset staff color mapping (useful when staff list changes)
+        function resetStaffColors() {
+            staffColorMap = {};
+        }
+
         // In the updateLegend function, update the break hours table header
         function updateLegend() {
             // Update legend based on shift
@@ -661,6 +730,10 @@
                     <div class="legend-item">
                         <div class="legend-color legend-cleaning-duty"></div>
                         <div>Cleaning Duty</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                        <div>🔒 Security-Only Duties (Kitchen & Bins)</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
@@ -710,6 +783,9 @@
             "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
             "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
         ];
+
+        // Security-only cleaning duties (new rule: only security staff can do these)
+        let securityOnlyDuties = ["KITCHEN", "TAKE OUT BINS"];
 
         // Time slot definitions
         const dayShiftSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
@@ -1806,18 +1882,52 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         s !== nurseInCharge2
     );
 
-    if (regularStaff.length > 0) {
-        // Simplified approach: just assign duties to staff without time slots
-        const dutyAssignments = [];
+    // Separate security-only duties from regular duties
+    const regularDuties = cleaningDuties.filter(duty => !securityOnlyDuties.includes(duty));
+    
+    const dutyAssignments = [];
 
-        // First, try to give at least one duty to each staff member
+    // FIRST: Assign security-only duties (KITCHEN and TAKE OUT BINS) to security staff only
+    if (securityStaff.length > 0) {
+        let securityDutyIndex = 0;
+        securityOnlyDuties.forEach(duty => {
+            if (securityDutyIndex < securityStaff.length) {
+                const securityMember = securityStaff[securityDutyIndex % securityStaff.length];
+                
+                // Store cleaning duty in the staff stats
+                if (!staffStats[securityMember].cleaningDuties) {
+                    staffStats[securityMember].cleaningDuties = [];
+                }
+                staffStats[securityMember].cleaningDuties.push({
+                    duty: duty
+                });
+
+                // Add to duty assignments
+                dutyAssignments.push({
+                    duty: duty,
+                    staff: securityMember
+                });
+
+                securityDutyIndex++;
+            }
+        });
+    } else {
+        // Log warning if no security staff available for security-only duties
+        console.warn(`Warning: No security staff available for security-only duties: ${securityOnlyDuties.join(', ')}`);
+        
+        // Store this information
+        staffStats.unassignedSecurityDuties = securityOnlyDuties;
+    }
+
+    // SECOND: Assign regular duties to regular staff (excluding security-only duties)
+    if (regularStaff.length > 0 && regularDuties.length > 0) {
+        // First pass: try to give at least one duty to each regular staff member
         const staffWithDuties = new Set();
         let dutyIndex = 0;
 
-        // First pass: try to give at least one duty to each staff member
         regularStaff.forEach(s => {
-            if (dutyIndex < cleaningDuties.length) {
-                const duty = cleaningDuties[dutyIndex];
+            if (dutyIndex < regularDuties.length) {
+                const duty = regularDuties[dutyIndex];
 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
@@ -1840,16 +1950,18 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             }
         });
 
-        // Second pass: distribute any remaining duties, prioritizing staff with fewer duties
-        while (dutyIndex < cleaningDuties.length) {
-            // Calculate current duty count per staff
+        // Second pass: distribute any remaining regular duties, prioritizing staff with fewer duties
+        while (dutyIndex < regularDuties.length) {
+            // Calculate current duty count per staff for regular duties only
             const staffDutyCount = {};
             regularStaff.forEach(s => {
                 staffDutyCount[s] = 0;
             });
 
             dutyAssignments.forEach(assignment => {
-                staffDutyCount[assignment.staff]++;
+                if (regularStaff.includes(assignment.staff)) {
+                    staffDutyCount[assignment.staff]++;
+                }
             });
 
             // Sort staff by number of duties assigned (ascending)
@@ -1860,7 +1972,7 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             // Try to assign a duty to the staff with fewest duties
             if (staffByDutyCount.length > 0) {
                 const s = staffByDutyCount[0];
-                const duty = cleaningDuties[dutyIndex];
+                const duty = regularDuties[dutyIndex];
 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
@@ -1882,10 +1994,10 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             }
         }
 
-        // Check if any staff still don't have duties
+        // Check if any regular staff still don't have duties
         const staffWithoutDuties = regularStaff.filter(s => !staffWithDuties.has(s));
         if (staffWithoutDuties.length > 0) {
-            console.log(`The following staff have no cleaning duties assigned: ${staffWithoutDuties.join(', ')}`);
+            console.log(`The following regular staff have no cleaning duties assigned: ${staffWithoutDuties.join(', ')}`);
 
             // Store this information in staff stats
             staffWithoutDuties.forEach(s => {
@@ -1896,15 +2008,33 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             });
         }
 
-        // Add information about remaining unassigned duties to the stats
-        const assignedDutyCount = dutyAssignments.length;
-        const remainingDuties = cleaningDuties.slice(assignedDutyCount);
-        if (remainingDuties.length > 0) {
-            console.log(`Warning: ${remainingDuties.length} cleaning duties could not be assigned: ${remainingDuties.join(', ')}`);
+        // Add information about remaining unassigned regular duties to the stats
+        const assignedRegularDutyCount = dutyAssignments.filter(a => !securityOnlyDuties.includes(a.duty)).length;
+        const remainingRegularDuties = regularDuties.slice(assignedRegularDutyCount);
+        if (remainingRegularDuties.length > 0) {
+            console.log(`Warning: ${remainingRegularDuties.length} regular cleaning duties could not be assigned: ${remainingRegularDuties.join(', ')}`);
 
             // Store this information
-            staffStats.remainingDuties = remainingDuties;
+            if (!staffStats.remainingDuties) {
+                staffStats.remainingDuties = [];
+            }
+            staffStats.remainingDuties = staffStats.remainingDuties.concat(remainingRegularDuties);
         }
+    }
+
+    // Log summary of duty assignments with new security rule
+    console.log(`\n=== CLEANING DUTY ASSIGNMENT SUMMARY ===`);
+    console.log(`Security-only duties (KITCHEN, TAKE OUT BINS): ${securityOnlyDuties.length} assigned to security staff`);
+    console.log(`Regular duties: ${regularDuties.length} assigned to regular staff`);
+    console.log(`Total duty assignments: ${dutyAssignments.length}`);
+    
+    // Log security duty assignments
+    const securityAssignments = dutyAssignments.filter(a => securityOnlyDuties.includes(a.duty));
+    if (securityAssignments.length > 0) {
+        console.log(`Security staff duty assignments:`);
+        securityAssignments.forEach(assignment => {
+            console.log(`  ${assignment.staff}: ${assignment.duty}`);
+        });
     }
 }
 
@@ -2245,14 +2375,13 @@ function renderSchedule(schedule, staff, patients, staffStats) {
             cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
             cell.style.color = "#666666";
         } else {
-            // Display assigned staff for OBS
-            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-            cell.textContent = staffInitials;
+            // Display assigned staff for OBS with consistent colors
+            const staffDisplays = assignedStaff.map(staff => formatStaffDisplay(staff)).join(', ');
+            cell.innerHTML = staffDisplays; // Use innerHTML to display colored text
             cell.title = assignedStaff.join(", "); // Full names on hover
 
             // Add special styling for OBS - green background
             cell.style.backgroundColor = "#4CAF50"; // Green for OBS
-            cell.style.color = "#ffffff"; // White text
             cell.style.fontWeight = "bold";
         }
 
@@ -2285,8 +2414,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.style.color = 'white';
                 console.error(`CRITICAL: Patient ${patient} not assigned at ${time}! This should never happen.`);
             } else {
-                const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
-                cell.textContent = staffInitials;
+                // Use consistent staff colors throughout the site
+                const staffDisplays = assignedStaff.map(staff => formatStaffDisplay(staff)).join(", ");
+                cell.innerHTML = staffDisplays; // Use innerHTML to display colored text
                 cell.title = assignedStaff.join(", ");
                 cell.className = "assignable-staff-cell";
 
@@ -2294,20 +2424,12 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.setAttribute("data-time", time);
                 cell.setAttribute("data-patient", patient);
 
-                // Color the cell based on the first assigned staff member
+                // Set light background color based on the first assigned staff member's color
                 if (assignedStaff.length > 0) {
-                    // Generate a color based on the staff name
-                    const staffName = assignedStaff[0];
-                    const hash = staffName.split('').reduce((hash, char) => {
-                        return ((hash << 5) - hash) + char.charCodeAt(0);
-                    }, 0);
-
-                    const hue = Math.abs(hash) % 360;
-                    const bgColor = `hsl(${hue}, 70%, 85%)`;
-                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                    cell.style.backgroundColor = bgColor;
-                    cell.style.color = textColor;
+                    const primaryStaffColor = getStaffColor(assignedStaff[0]);
+                    // Create a light version of the staff color for background
+                    const lightBgColor = primaryStaffColor + '20'; // Add alpha for transparency
+                    cell.style.backgroundColor = lightBgColor;
                 }
             }
 
@@ -2521,15 +2643,22 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
                 // Display "NIC" for nurses in charge
                 const staffDisplayName = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : assignment.staff;
                 const staffInitials = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : getInitials(assignment.staff);
+                const isSecurityOnly = securityOnlyDuties.includes(duty);
+                const dutyDisplayName = isSecurityOnly ? `🔒 ${duty}` : duty;
+                const securityBadge = isSecurityOnly ? `<span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">SECURITY ONLY</span>` : '';
 
                 statsHtml += `<tr>
-                    <td>${duty}</td>
+                    <td>${dutyDisplayName}${securityBadge}</td>
                     <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
+                const isSecurityOnly = securityOnlyDuties.includes(duty);
+                const dutyDisplayName = isSecurityOnly ? `🔒 ${duty}` : duty;
+                const securityBadge = isSecurityOnly ? `<span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">SECURITY ONLY</span>` : '';
+                
                 statsHtml += `<tr>
-                    <td>${duty}</td>
+                    <td>${dutyDisplayName}${securityBadge}</td>
                     <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to assign staff">Not Assigned</td>
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
@@ -3173,35 +3302,48 @@ $(document).ready(function() {
         // Store duty on popup element
         $('#cleaningDutyPopup').data('duty', duty);
 
-        // Update popup title
-        $('#cleaningDutyTitle').text(duty);
+        // Update popup title with security-only indicator
+        const titleText = isSecurityOnlyDuty ? `🔒 ${duty} (SECURITY ONLY)` : duty;
+        const titleColor = isSecurityOnlyDuty ? '#dc3545' : '#9c27b0'; // Red for security-only, purple for regular
+        $('#cleaningDutyTitle').text(titleText).css('background-color', titleColor);
 
         // Show overlay and popup
         $('#popupOverlay').show();
         $('#cleaningDutyPopup').show();
 
-        // Get available staff (regular staff only, no security or nurses in charge)
+        // Get available staff based on security-only duty restriction
         let availableStaff = [];
-        $('.staff-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) availableStaff.push(name);
-        });
+        const isSecurityOnlyDuty = securityOnlyDuties.includes(duty);
+        
+        if (isSecurityOnlyDuty) {
+            // For security-only duties (KITCHEN, TAKE OUT BINS), only security staff can be assigned
+            $('.security-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) availableStaff.push(name);
+            });
+        } else {
+            // For regular duties, use regular staff (no security staff or nurses in charge)
+            $('.staff-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) availableStaff.push(name);
+            });
 
-        // Filter out security staff and nurses in charge
-        const securityStaffNames = [];
-        $('.security-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) securityStaffNames.push(name);
-        });
+            // Filter out security staff and nurses in charge for regular duties
+            const securityStaffNames = [];
+            $('.security-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) securityStaffNames.push(name);
+            });
 
-        const nurseInCharge1 = $('#nurseInChargeInput').val().trim();
-        const nurseInCharge2 = $('#nurseInCharge2Input').val().trim();
+            const nurseInCharge1 = $('#nurseInChargeInput').val().trim();
+            const nurseInCharge2 = $('#nurseInCharge2Input').val().trim();
 
-        availableStaff = availableStaff.filter(name =>
-            !securityStaffNames.includes(name) &&
-            name !== nurseInCharge1 &&
-            name !== nurseInCharge2
-        );
+            availableStaff = availableStaff.filter(name =>
+                !securityStaffNames.includes(name) &&
+                name !== nurseInCharge1 &&
+                name !== nurseInCharge2
+            );
+        }
 
         // Find currently assigned staff for this duty
         let currentlyAssigned = null;
@@ -3219,6 +3361,20 @@ $(document).ready(function() {
 
         // Build staff list
         let html = '';
+
+        // Add security restriction notice for security-only duties
+        if (isSecurityOnlyDuty) {
+            html += `<div style="background-color: #ffc107; color: #212529; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold; border-left: 4px solid #dc3545;">
+                🔒 Security Staff Only - Only security personnel can be assigned to kitchen cleaning and bin duties
+            </div>`;
+            
+            // Check if no security staff available
+            if (availableStaff.length === 0) {
+                html += `<div style="background-color: #dc3545; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+                    ⚠️ No security staff available for this duty
+                </div>`;
+            }
+        }
 
         // Status header
         const statusColor = currentlyAssigned ? '#28a745' : '#ffc107';
