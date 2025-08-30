@@ -6,12 +6,13 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 3.1.2
+    Version: 3.1.4
     Date: August 30, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
              Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix,
-             Security-Only Cleaning Duties (Kitchen & Bins restricted to security staff only)
+             Security-Only Cleaning Duties (Kitchen & Bins restricted to security staff only),
+             Consistent Staff Color Coding (Text colors only, clean table backgrounds)
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -1332,6 +1333,9 @@ function generateSchedule() {
             return;
         }
 
+        // Initialize consistent staff colors for the entire site
+        resetStaffColors();
+
         // Get current values
         const staff = Array.from(document.querySelectorAll('.staff-name'))
             .map(input => input.value.trim())
@@ -1362,6 +1366,11 @@ function generateSchedule() {
 
         // Add security staff to the combined staff list
         const allStaff = [...staff, ...securityStaff];
+
+        // Pre-assign consistent colors to all staff members
+        allStaff.forEach(staffName => {
+            getStaffColor(staffName); // This will assign a color if not already assigned
+        });
 
         // Get patient inputs
         const patients = Array.from(document.querySelectorAll('.patient-container'))
@@ -2424,13 +2433,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.setAttribute("data-time", time);
                 cell.setAttribute("data-patient", patient);
 
-                // Set light background color based on the first assigned staff member's color
-                if (assignedStaff.length > 0) {
-                    const primaryStaffColor = getStaffColor(assignedStaff[0]);
-                    // Create a light version of the staff color for background
-                    const lightBgColor = primaryStaffColor + '20'; // Add alpha for transparency
-                    cell.style.backgroundColor = lightBgColor;
-                }
+                // Keep only text colors, remove background colors for cleaner look
             }
 
             row.appendChild(cell);
@@ -2460,9 +2463,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
 
-        // Add staff name cell with initials
+        // Add staff name cell with initials using consistent colors
         const staffCell = document.createElement('td');
-        staffCell.textContent = getInitials(s);
+        staffCell.innerHTML = formatStaffDisplay(s); // Use consistent color formatting
         staffCell.title = s; // Add full name as tooltip
         staffCell.className = 'row-header';
         row.appendChild(staffCell);
@@ -2501,17 +2504,8 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                         cell.textContent = getInitials(patient);
                         cell.title = patient; // Add patient name as tooltip
 
-                        // Use consistent color based on staff
-                        const hash = s.split('').reduce((hash, char) => {
-                            return ((hash << 5) - hash) + char.charCodeAt(0);
-                        }, 0);
-
-                        const hue = Math.abs(hash) % 360;
-                        const bgColor = `hsl(${hue}, 70%, 85%)`;
-                        const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                        cell.style.backgroundColor = bgColor;
-                        cell.style.color = textColor;
+                        // Keep only default styling, remove background colors
+                        cell.style.color = '#000000'; // Dark text for readability
 
                         assigned = true;
                         break;
@@ -2520,7 +2514,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
                 if (!assigned) {
                     cell.textContent = "FREE";
-                    cell.style.backgroundColor = "#f8f9fa"; // Light gray for free time
+                    // Remove background color, keep default styling
                     cell.style.color = "#000000";
                 }
             }
@@ -2536,9 +2530,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     nonNursingStaffForBreaks.forEach(s => {
         const row = document.createElement('tr');
 
-        // Staff name cell with initials
+        // Staff name cell with initials using consistent colors
         const staffCell = document.createElement('td');
-        staffCell.textContent = getInitials(s);
+        staffCell.innerHTML = formatStaffDisplay(s); // Use consistent color formatting
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
 
@@ -2568,12 +2562,12 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     nonNursingStaffForStats.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
-        let displayName = s;
+        let displayName = formatStaffDisplay(s, true); // Show initials and full name with color
 
         if (securityStaff.includes(s)) roleDisplay = "Security Staff";
         if (s === nurseInCharge1 || s === nurseInCharge2) {
             roleDisplay = "Nurse in Charge";
-            displayName = "NIC";
+            displayName = `<span style="color: #28a745; font-weight: bold;">NIC</span> (${s})`;
         }
 
         statsHtml += `<tr>
@@ -2640,16 +2634,20 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         cleaningDuties.forEach(duty => {
             const assignment = dutyAssignments[duty];
             if (assignment) {
-                // Display "NIC" for nurses in charge
-                const staffDisplayName = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : assignment.staff;
-                const staffInitials = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : getInitials(assignment.staff);
+                // Display "NIC" for nurses in charge, otherwise use consistent color formatting
+                const isNurseInCharge = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2);
+                const staffDisplayName = isNurseInCharge ? "NIC" : assignment.staff;
+                const staffDisplay = isNurseInCharge ? 
+                    `<span style="color: #28a745; font-weight: bold;">NIC</span> (${staffDisplayName})` : 
+                    `${formatStaffDisplay(assignment.staff)} (${assignment.staff})`;
+                
                 const isSecurityOnly = securityOnlyDuties.includes(duty);
                 const dutyDisplayName = isSecurityOnly ? `🔒 ${duty}` : duty;
                 const securityBadge = isSecurityOnly ? `<span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">SECURITY ONLY</span>` : '';
 
                 statsHtml += `<tr>
                     <td>${dutyDisplayName}${securityBadge}</td>
-                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffDisplay}</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
@@ -3393,19 +3391,20 @@ $(document).ready(function() {
             }
         });
 
-        // Add staff buttons
+        // Add staff buttons with consistent colors
         availableStaff.forEach(function(name) {
             const isAssigned = currentlyAssigned === name;
             const dutyCount = staffDutyCount[name] || 0;
+            const staffData = getStaffWithColor(name);
             let buttonStyle, buttonText, buttonClass;
 
             if (isAssigned) {
                 buttonStyle = 'background-color: #28a745; color: white;';
-                buttonText = `${name} (Currently Assigned) [${dutyCount} duties]`;
+                buttonText = `${formatStaffDisplay(name, true)} (Currently Assigned) [${dutyCount} duties]`;
                 buttonClass = 'select-cleaning-staff-btn';
             } else {
-                buttonStyle = 'background-color: #9c27b0; color: white;';
-                buttonText = `${name} [${dutyCount} current duties]`;
+                buttonStyle = `background-color: ${staffData.color}; color: white;`;
+                buttonText = `${formatStaffDisplay(name, true)} [${dutyCount} current duties]`;
                 buttonClass = 'select-cleaning-staff-btn';
             }
 
