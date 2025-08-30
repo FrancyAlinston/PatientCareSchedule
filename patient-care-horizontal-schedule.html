@@ -553,7 +553,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.7)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.8)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -1962,25 +1962,25 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
     if (securityStaff.length > 0) {
         let securityDutyIndex = 0;
         securityOnlyDuties.forEach(duty => {
-            if (securityDutyIndex < securityStaff.length) {
-                const securityMember = securityStaff[securityDutyIndex % securityStaff.length];
-                
-                // Store cleaning duty in the staff stats
-                if (!staffStats[securityMember].cleaningDuties) {
-                    staffStats[securityMember].cleaningDuties = [];
-                }
-                staffStats[securityMember].cleaningDuties.push({
-                    duty: duty
-                });
-
-                // Add to duty assignments
-                dutyAssignments.push({
-                    duty: duty,
-                    staff: securityMember
-                });
-
-                securityDutyIndex++;
+            // Always assign security duties, cycling through security staff if needed
+            const securityMember = securityStaff[securityDutyIndex % securityStaff.length];
+            
+            // Store cleaning duty in the staff stats
+            if (!staffStats[securityMember].cleaningDuties) {
+                staffStats[securityMember].cleaningDuties = [];
             }
+            staffStats[securityMember].cleaningDuties.push({
+                duty: duty
+            });
+
+            // Add to duty assignments
+            dutyAssignments.push({
+                duty: duty,
+                staff: securityMember
+            });
+
+            console.log(`✓ Assigned security-only duty "${duty}" to security staff: ${securityMember}`);
+            securityDutyIndex++;
         });
     } else {
         // Log warning if no security staff available for security-only duties

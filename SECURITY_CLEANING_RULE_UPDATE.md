@@ -14,7 +14,44 @@ Implementation of three major features:
 - **OBS Version:** 3.1.5 (+ Clean OBS Design)
 - **🚨 CRITICAL VERSION:** 3.1.6 (+ Fixed Staff Double-Assignment Conflicts)
 - **📊 STATS VERSION:** 3.1.7 (+ Fixed OBS Work Hours Calculation)
+- **🗑️ SECURITY VERSION:** 3.1.8 (+ Fixed Security-Only Duties Assignment)
 - **Implementation Date:** August 30, 2025
+
+## 🗑️ SECURITY DUTIES FIX v3.1.8
+
+### **ISSUE RESOLVED**: TAKE OUT BINS Not Assigned to Security Staff
+**Problem**: When there was only one security staff member, only the first security duty (KITCHEN) was being assigned, leaving TAKE OUT BINS unassigned.
+
+### **Root Cause**: 
+Logic error in assignment condition:
+```javascript
+// PROBLEMATIC CODE:
+if (securityDutyIndex < securityStaff.length) {
+    // This failed when securityDutyIndex (1) >= securityStaff.length (1)
+}
+```
+
+### **Impact**: 
+- TAKE OUT BINS showed as "Not Assigned" 
+- Violated mandatory security-only rule for bin duties
+- Only first security duty assigned per security staff member
+
+### **Solution Implemented**:
+```javascript
+// FIXED CODE - Removed restrictive condition:
+securityOnlyDuties.forEach(duty => {
+    // Always assign security duties, cycling through security staff if needed
+    const securityMember = securityStaff[securityDutyIndex % securityStaff.length];
+    // ... assignment logic
+    securityDutyIndex++;
+});
+```
+
+### **Fix Results**:
+- ✅ Both KITCHEN and TAKE OUT BINS now assigned to security staff
+- ✅ Single security staff member can receive multiple security duties
+- ✅ No more "Not Assigned" for mandatory security duties
+- ✅ Added console logging for better debugging
 
 ## 📊 WORK HOURS FIX v3.1.7
 
