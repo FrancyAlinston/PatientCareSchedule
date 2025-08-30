@@ -10,8 +10,65 @@ Implementation of three major features:
 - **Previous Version:** 3.1.1
 - **Interim Version:** 3.1.2 (Security-Only Cleaning)
 - **Color Version:** 3.1.3 (+ Consistent Staff Colors)
-- **Current Version:** 3.1.4 (+ Clean Table Design)
+- **Design Version:** 3.1.4 (+ Clean Table Design)
+- **OBS Version:** 3.1.5 (+ Clean OBS Design)
+- **🚨 CRITICAL VERSION:** 3.1.6 (+ Fixed Staff Double-Assignment Conflicts)
+- **📊 STATS VERSION:** 3.1.7 (+ Fixed OBS Work Hours Calculation)
 - **Implementation Date:** August 30, 2025
+
+## 📊 WORK HOURS FIX v3.1.7
+
+### **ISSUE RESOLVED**: OBS Work Hours Not Counted
+**Problem**: Staff assigned to OBS (Ward Observation) duties were not getting their work hours incremented in the Staff Statistics table.
+
+### **Impact**: 
+- Staff Statistics table showed incorrect (lower) work hour counts
+- OBS assignments were not being counted as "work time"
+- Work hour calculations were inaccurate for scheduling fairness
+
+### **Solution Implemented**:
+```javascript
+// CRITICAL FIX: Increment work hours for OBS assignment
+if (staffStats[selectedStaff]) {
+    staffStats[selectedStaff].workHours++;
+}
+```
+
+### **Fix Applied To**:
+1. **Multi-staff OBS selection** - When multiple staff available for OBS
+2. **Single-staff OBS assignment** - When only one staff available for OBS
+3. **Both assignment paths** now properly increment work hours
+
+### **Testing Results**:
+- ✅ OBS assignments now count toward total work hours
+- ✅ Staff Statistics table shows accurate work hour totals
+- ✅ Work hour calculations include all assignments (patients + OBS)
+- ✅ Fair rotation logic now has correct work hour data
+
+## 🚨 CRITICAL SECURITY FIX v3.1.6
+
+### **ISSUE RESOLVED**: Staff Double-Assignment Conflicts
+**Problem**: Staff members were being assigned to multiple patients simultaneously, creating safety violations.
+
+### **Conflicts Found & Fixed**:
+- SC assigned to both TSS and CAC at 22:00-23:00
+- AG assigned to both TSS and CAC at 03:00-04:00  
+- AG assigned to both CAC and TD at 04:00-05:00
+- MS & BW both assigned to TSS and CAC at 05:00-06:00
+- SC assigned to both TSS and CAC at 06:00-07:00
+
+### **Solutions Implemented**:
+1. **Enhanced Assignment Validation** - Double-check before final assignment
+2. **Strengthened Available Staff Filtering** - Filter conflicts during selection
+3. **Post-Assignment Validation System** - Auto-fix any remaining conflicts
+4. **Enhanced Manual Assignment Protection** - Prevent user-created conflicts
+
+## PREVIOUS UPDATE v3.1.5: Clean OBS Design
+
+### OBS Background Color Removal
+- **Patient Care Schedule**: Removed green background from OBS assignment cells
+- **Clean Design**: OBS cells now match other patient assignment cells with white/transparent backgrounds
+- **Staff Color Focus**: Only staff initials/names show in their unique colors
 
 ## LATEST UPDATE v3.1.4: Clean Table Design
 

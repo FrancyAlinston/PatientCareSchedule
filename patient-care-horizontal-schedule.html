@@ -553,7 +553,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.1)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.7)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -1476,6 +1476,9 @@ function generateSchedule() {
         // Store original staffStats for reference during regeneration
         window.originalStaffStats = JSON.parse(JSON.stringify(staffStats));
 
+        // CRITICAL: Validate schedule for conflicts after all assignments
+        validateScheduleForConflicts(schedule, timeSlots);
+
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
 
@@ -1619,6 +1622,54 @@ function checkStaffSufficiency() {
     }
 
     return true;
+}
+
+// CRITICAL: Validation function to detect staff double-assignment conflicts
+function validateScheduleForConflicts(schedule, timeSlots) {
+    console.log(`🔍 VALIDATING SCHEDULE FOR CONFLICTS...`);
+    let conflictsFound = 0;
+    
+    timeSlots.forEach(time => {
+        const staffAssignments = {};
+        
+        // Track all staff assignments for this time slot
+        for (const patientName in schedule[time].patientAssignments) {
+            const assignments = schedule[time].patientAssignments[patientName] || [];
+            assignments.forEach(staffName => {
+                if (!staffAssignments[staffName]) {
+                    staffAssignments[staffName] = [];
+                }
+                staffAssignments[staffName].push(patientName);
+            });
+        }
+        
+        // Check for conflicts (staff assigned to multiple patients)
+        for (const staffName in staffAssignments) {
+            if (staffAssignments[staffName].length > 1) {
+                conflictsFound++;
+                console.error(`🚨 CONFLICT DETECTED at ${time}: ${staffName} is assigned to multiple patients: ${staffAssignments[staffName].join(', ')}`);
+                
+                // AUTO-FIX: Keep only the first assignment, remove others
+                const primaryAssignment = staffAssignments[staffName][0];
+                const conflictingAssignments = staffAssignments[staffName].slice(1);
+                
+                conflictingAssignments.forEach(conflictPatient => {
+                    const assignments = schedule[time].patientAssignments[conflictPatient];
+                    const index = assignments.indexOf(staffName);
+                    if (index > -1) {
+                        assignments.splice(index, 1);
+                        console.log(`✓ AUTO-FIX: Removed ${staffName} from ${conflictPatient}, kept assignment to ${primaryAssignment}`);
+                    }
+                });
+            }
+        }
+    });
+    
+    if (conflictsFound === 0) {
+        console.log(`✅ VALIDATION PASSED: No staff double-assignment conflicts found`);
+    } else {
+        console.warn(`⚠️ VALIDATION COMPLETE: Found and auto-fixed ${conflictsFound} conflicts`);
+    }
 }
 
 function assignBreaks(allStaff, staffStats, patients) {
@@ -1860,6 +1911,11 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
                 staffPatientHistory[selectedStaff]["OBS"]++;
             }
 
+            // CRITICAL FIX: Increment work hours for OBS assignment
+            if (staffStats[selectedStaff]) {
+                staffStats[selectedStaff].workHours++;
+            }
+
             // Update continuous assignment tracking
             regularStaff.forEach(s => {
                 if (s === selectedStaff) {
@@ -1878,6 +1934,12 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
             if (staffPatientHistory[selectedStaff]) {
                 staffPatientHistory[selectedStaff]["OBS"]++;
             }
+
+            // CRITICAL FIX: Increment work hours for OBS assignment
+            if (staffStats[selectedStaff]) {
+                staffStats[selectedStaff].workHours++;
+            }
+
             obsAssignmentTracker[selectedStaff] = (obsAssignmentTracker[selectedStaff] || 0) + 1;
         }
     });
@@ -2142,8 +2204,11 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                 if (staffNeeded > 0) {
                     console.log(`Patient ${patient.name} needs ${staffNeeded} more staff`);
 
-                    // Filter out staff already assigned to this patient
-                    const unassignedStaff = availableStaff.filter(s => !currentAssigned.includes(s));
+                    // Filter out staff already assigned to this patient AND double-check availability
+                    const unassignedStaff = availableStaff.filter(s => 
+                        !currentAssigned.includes(s) && 
+                        !isStaffAlreadyAssignedIncludingOBS(s, time, schedule)
+                    );
                     const staffToAssign = Math.min(staffNeeded, unassignedStaff.length);
 
                     if (staffToAssign > 0) {
@@ -2157,33 +2222,39 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                             timeIndex
                         );
 
-                        // Assign the staff
+                        // CRITICAL: Assign staff one by one with conflict validation
                         bestStaff.forEach(s => {
-                            schedule[time].patientAssignments[patient.name].push(s);
+                            // DOUBLE-CHECK: Verify staff is not already assigned before final assignment
+                            if (!isStaffAlreadyAssignedIncludingOBS(s, time, schedule)) {
+                                schedule[time].patientAssignments[patient.name].push(s);
 
-                            // Update rotation history
-                            if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
-                            if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
-                            staffPatientHistory[s][patient.name]++;
+                                // Update rotation history
+                                if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
+                                if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
+                                staffPatientHistory[s][patient.name]++;
 
-                            // Update stats
-                            staffStats[s].workHours++;
+                                // Update stats
+                                staffStats[s].workHours++;
 
-                            // Update continuous assignment tracker
-                            if (timeIndex > 0) {
-                                const prevTime = timeSlots[timeIndex - 1];
-                                const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
+                                // Update continuous assignment tracker
+                                if (timeIndex > 0) {
+                                    const prevTime = timeSlots[timeIndex - 1];
+                                    const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
 
-                                if (prevAssignments.includes(s)) {
-                                    continuousAssignmentTracker[s][patient.name]++;
+                                    if (prevAssignments.includes(s)) {
+                                        continuousAssignmentTracker[s][patient.name]++;
+                                    } else {
+                                        continuousAssignmentTracker[s][patient.name] = 1;
+                                    }
                                 } else {
                                     continuousAssignmentTracker[s][patient.name] = 1;
                                 }
-                            } else {
-                                continuousAssignmentTracker[s][patient.name] = 1;
-                            }
 
-                            console.log(`Assigned ${s} to ${patient.name} at ${time}`);
+                                console.log(`✓ Assigned ${s} to ${patient.name} at ${time}`);
+                            } else {
+                                console.error(`🚨 CONFLICT PREVENTED: ${s} is already assigned at ${time}. Skipping assignment to ${patient.name}`);
+                                allPatientsAssigned = false; // Mark as incomplete since we couldn't assign
+                            }
                         });
                     } else {
                         allPatientsAssigned = false;
@@ -3164,10 +3235,15 @@ $(document).ready(function() {
                     currentAssignments.splice(staffIndex, 1);
                     console.log(`Removed ${staffName} from OBS`);
                 } else {
-                    // CRITICAL: Check if staff is already assigned to other patients at this time
-                    if (isStaffAlreadyAssigned(staffName, time, schedule)) {
-                        // Find out what patients they're assigned to
+                    // CRITICAL: Check if staff is already assigned to other patients OR OBS at this time
+                    if (isStaffAlreadyAssignedIncludingOBS(staffName, time, schedule)) {
+                        // Find out what they're assigned to
                         let conflictDetails = [];
+
+                        // Check OBS assignment
+                        if (schedule[time].patientAssignments["OBS"] && schedule[time].patientAssignments["OBS"].includes(staffName)) {
+                            conflictDetails.push("OBS (Ward Observation)");
+                        }
 
                         // Check patient assignments
                         for (const otherPatient in schedule[time].patientAssignments) {
