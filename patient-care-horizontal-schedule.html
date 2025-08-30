@@ -6,13 +6,13 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 3.1.4
+    Version: 3.1.5
     Date: August 30, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
              Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix,
              Security-Only Cleaning Duties (Kitchen & Bins restricted to security staff only),
-             Consistent Staff Color Coding (Text colors only, clean table backgrounds)
+             Consistent Staff Color Coding (Text colors only, completely clean table backgrounds)
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -2381,7 +2381,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
         if (assignedStaff.length === 0) {
             cell.textContent = "";
-            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
+            // Remove background color for clean appearance
             cell.style.color = "#666666";
         } else {
             // Display assigned staff for OBS with consistent colors
@@ -2389,8 +2389,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
             cell.innerHTML = staffDisplays; // Use innerHTML to display colored text
             cell.title = assignedStaff.join(", "); // Full names on hover
 
-            // Add special styling for OBS - green background
-            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
+            // Keep only text styling, remove background color
             cell.style.fontWeight = "bold";
         }
 
