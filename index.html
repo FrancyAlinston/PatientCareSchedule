@@ -2388,26 +2388,40 @@ function renderSchedule(schedule, staff, patients, staffStats) {
             } else {
                 // Staff is not on break, find which patient they're assigned to
                 let assigned = false;
-                for (const patient of patients) {
-                    if (schedule[time].patientAssignments[patient] &&
-                        schedule[time].patientAssignments[patient].includes(s)) {
-                        cell.textContent = getInitials(patient);
-                        cell.title = patient; // Add patient name as tooltip
+                
+                // First check if assigned to OBS (Ward Observation)
+                if (schedule[time].patientAssignments["OBS"] &&
+                    schedule[time].patientAssignments["OBS"].includes(s)) {
+                    cell.textContent = "OBS";
+                    cell.title = "Ward Observation"; // Add tooltip
+                    cell.style.backgroundColor = "#e3f2fd"; // Light blue for OBS
+                    cell.style.color = '#000000'; // Dark text for readability
+                    assigned = true;
+                }
+                
+                // If not assigned to OBS, check regular patients
+                if (!assigned) {
+                    for (const patient of patients) {
+                        if (schedule[time].patientAssignments[patient] &&
+                            schedule[time].patientAssignments[patient].includes(s)) {
+                            cell.textContent = getInitials(patient);
+                            cell.title = patient; // Add patient name as tooltip
 
-                        // Use consistent color based on staff
-                        const hash = s.split('').reduce((hash, char) => {
-                            return ((hash << 5) - hash) + char.charCodeAt(0);
-                        }, 0);
+                            // Use consistent color based on staff
+                            const hash = s.split('').reduce((hash, char) => {
+                                return ((hash << 5) - hash) + char.charCodeAt(0);
+                            }, 0);
 
-                        const hue = Math.abs(hash) % 360;
-                        const bgColor = `hsl(${hue}, 70%, 85%)`;
-                        const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
+                            const hue = Math.abs(hash) % 360;
+                            const bgColor = `hsl(${hue}, 70%, 85%)`;
+                            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
 
-                        cell.style.backgroundColor = bgColor;
-                        cell.style.color = textColor;
+                            cell.style.backgroundColor = bgColor;
+                            cell.style.color = textColor;
 
-                        assigned = true;
-                        break;
+                            assigned = true;
+                            break;
+                        }
                     }
                 }
 
