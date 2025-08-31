@@ -281,6 +281,20 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Add subtle shadow for better contrast */
         }
 
+        /* Force white text for schedule table in dark mode for better readability */
+        body.dark-mode #scheduleTable td,
+        body.dark-mode #scheduleTable th,
+        body.dark-mode table td,
+        body.dark-mode table th {
+            color: #ffffff !important; /* Force white text for all table content in dark mode */
+        }
+
+        /* Ensure row headers remain visible */
+        body.dark-mode .row-header {
+            color: #ffffff !important; /* Force white text for row headers */
+            font-weight: bold;
+        }
+
         .staff-count {
             padding: 5px; /* Reduce padding */
             border: 1px solid #dfe4ea;
