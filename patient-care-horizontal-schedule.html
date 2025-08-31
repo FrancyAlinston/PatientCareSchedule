@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Care Schedule - Horizontal Layout</title>
     
-    <!-- XLSX Library for Excel Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- ExcelJS Library for Excel Export with Full Color Support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <!--
     Patient Care Schedule Application
     Version: 3.1.5
@@ -503,8 +503,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div style="display: flex; gap: 10px;">
                 <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
-                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export to Microsoft Excel with optimized formatting">📊 Export to Excel (MS Excel Optimized)</button>
-                <button onclick="exportToCSV()" style="padding: 10px 20px; font-size: 14px; background-color: #17a2b8; border-color: #17a2b8; margin-left: 10px;" title="Export Patient Care Schedule to CSV with color indicators">📄 Export to CSV</button>
+                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export to Excel with FULL COLOR SUPPORT using ExcelJS">🎨 Export to Excel (with Colors!)</button>
+                <button onclick="exportToCSV()" style="padding: 10px 20px; font-size: 14px; background-color: #17a2b8; border-color: #17a2b8; margin-left: 10px;" title="Export with color indicators for manual formatting in Excel">📄 Export to CSV (With Colors)</button>
             </div>
             <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
@@ -736,6 +736,28 @@
                 const currentShift = document.getElementById('siteTitle').textContent;
                 const currentDate = new Date().toLocaleDateString();
                 
+                // Get time slots and staff from schedule data
+                const timeSlots = Object.keys(schedule).sort();
+                const allStaff = new Set();
+                
+                // Collect all staff members from schedule
+                timeSlots.forEach(time => {
+                    const timeSchedule = schedule[time];
+                    if (timeSchedule.staffBreaks) {
+                        Object.keys(timeSchedule.staffBreaks).forEach(staff => allStaff.add(staff));
+                    }
+                    if (timeSchedule.patientAssignments) {
+                        Object.values(timeSchedule.patientAssignments).forEach(staffList => {
+                            if (Array.isArray(staffList)) {
+                                staffList.forEach(staff => allStaff.add(staff));
+                            }
+                        });
+                    }
+                });
+                
+                const nonNursingStaff = Array.from(allStaff).filter(staff => !staff.startsWith('RN'));
+                const cleaningDuties = ["BATHROOM CLEAN", "TOILET ROUNDS", "KITCHEN DUTIES", "BIN COLLECTION"];
+                
                 let csvContent = `Patient Care Schedule - ${currentShift}\n`;
                 csvContent += `Generated on: ${currentDate}\n\n`;
                 csvContent += "Color Coding Reference:\n";
@@ -760,46 +782,89 @@
                         const patients = Object.keys(schedule[time].patientAssignments || {});
                         for (const patient of patients) {
                             const assignedStaff = schedule[time].patientAssignments[patient];
-                            if (assignedStaff.includes(staff)) {
+                            if (Array.isArray(assignedStaff) && assignedStaff.includes(staff)) {
                                 assignment = patient;
                                 break;
                             }
                         }
                         
                         // Check breaks and special duties
-                        if (schedule[time].staffBreaks[staff]) {
+                        if (schedule[time].staffBreaks && schedule[time].staffBreaks[staff]) {
                             assignment = schedule[time].staffBreaks[staff];
                         }
                         
                         // Add color indicator prefix
                         let colorCode = "";
-                        if (assignment === "BREAK" || assignment === "2ND BREAK") colorCode = "[PURPLE] ";
-                        else if (assignment === "SECURITY") colorCode = "[ORANGE] ";
-                        else if (assignment === "OBS") colorCode = "[BLUE] ";
-                        else if (assignment === "FREE") colorCode = "[GRAY] ";
-                        else if (assignment !== "FREE") colorCode = "[GREEN] ";
+                        if (assignment === "BREAK" || assignment === "2ND BREAK") {
+                            colorCode = "[PURPLE] ";
+                        } else if (assignment === "SECURITY") {
+                            colorCode = "[ORANGE] ";
+                        } else if (assignment === "OBS") {
+                            colorCode = "[BLUE] ";
+                        } else if (assignment === "FREE") {
+                            colorCode = "[GRAY] ";
+                        } else if (cleaningDuties.includes(assignment)) {
+                            colorCode = "[PURPLE] ";
+                        } else if (assignment !== "FREE") {
+                            colorCode = "[GREEN] ";
+                        }
                         
                         csvContent += `${colorCode}${assignment},`;
                     });
                     csvContent += "\n";
                 });
                 
+                // Add Patient Care Schedule section
+                csvContent += "\n\nPatient Care Schedule:\n";
+                const patients = new Set();
+                timeSlots.forEach(time => {
+                    if (schedule[time].patientAssignments) {
+                        Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                            if (patient !== 'OBS') patients.add(patient);
+                        });
+                    }
+                });
+                
+                csvContent += "Patient,";
+                timeSlots.forEach(time => {
+                    csvContent += `${time},`;
+                });
+                csvContent += "\n";
+                
+                Array.from(patients).forEach(patient => {
+                    csvContent += `${patient},`;
+                    timeSlots.forEach(time => {
+                        const assignedStaff = schedule[time].patientAssignments?.[patient] || [];
+                        const staffList = Array.isArray(assignedStaff) ? assignedStaff.join('; ') : assignedStaff;
+                        csvContent += `"${staffList}",`;
+                    });
+                    csvContent += "\n";
+                });
+                
                 // Download CSV
-                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `Patient_Care_Schedule_${currentShift.replace(/\s+/g, '_')}_${currentDate.replace(/\//g, '-')}.csv`;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 
-                alert('CSV file downloaded successfully!\n\nColor codes are included in the data. You can:\n1. Open in Excel and format colors manually\n2. Use search/replace to highlight different assignment types\n3. Import into Google Sheets for better color support');
+                alert('📄 CSV file downloaded successfully!\n\n' +
+                      '🎨 Color codes are included in the data:\n' +
+                      '• [PURPLE] = Breaks & Cleaning\n' +
+                      '• [ORANGE] = Security Duties\n' +
+                      '• [BLUE] = OBS Assignments\n' +
+                      '• [GRAY] = Free Time\n' +
+                      '• [GREEN] = Patient Assignments\n\n' +
+                      '💡 In Excel: Use Find & Replace to highlight cells by color codes!');
                 
             } catch (error) {
                 console.error('CSV export error:', error);
-                alert('Error exporting CSV: ' + error.message);
+                alert('Error exporting CSV: ' + error.message + '\n\nPlease ensure you have generated a schedule first.');
             }
         }
 
@@ -811,8 +876,17 @@
                     return;
                 }
 
-                // Microsoft Excel optimized export
-                console.log("Preparing Microsoft Excel optimized export...");
+                // Microsoft Excel export (data only - no colors)
+                console.log("Preparing Excel export with data only...");
+                
+                // Note: The free version of XLSX.js has limited styling support
+                alert("📊 Excel Export Notice:\n\n" +
+                      "⚠️ This Excel export contains data only (no colors).\n" +
+                      "The free XLSX library doesn't support reliable color formatting.\n\n" +
+                      "🎨 For color-coded schedules:\n" +
+                      "• Use the CSV export option instead\n" +
+                      "• Then format colors manually in Excel\n\n" +
+                      "Proceeding with data-only Excel export...");
 
                 // Get current shift and date information
                 const currentShift = document.getElementById('siteTitle').textContent;
@@ -906,29 +980,14 @@
                     patientWS['!cols'][i] = { wch: 12 }; // Time slot columns width
                 }
                 
-                // Style header rows
+                // Style header rows - minimal styling only
                 const headerRowIndex = 4; // Row with time headers (0-indexed)
                 for (let col = 0; col <= timeSlots.length; col++) {
                     const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex - 1, c: col });
                     if (!patientWS[cellRef]) continue;
+                    // Basic styling - may not display in all Excel versions
                     patientWS[cellRef].s = {
-                        font: { 
-                            bold: true, 
-                            color: { rgb: "FFFFFF" }, 
-                            sz: 12,
-                            name: "Calibri"
-                        },
-                        fill: { 
-                            patternType: "solid",
-                            fgColor: { rgb: "4472C4" }  // Excel standard blue header
-                        },
-                        alignment: { horizontal: "center", vertical: "center" },
-                        border: {
-                            top: { style: "medium", color: { rgb: "000000" } },
-                            bottom: { style: "medium", color: { rgb: "000000" } },
-                            left: { style: "medium", color: { rgb: "000000" } },
-                            right: { style: "medium", color: { rgb: "000000" } }
-                        }
+                        font: { bold: true }
                     };
                 }
                 
@@ -1116,152 +1175,10 @@
                         const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: timeIndex + 1 });
                         if (!staffWS[cellRef]) return;
                         
-                        const cellValue = staffWS[cellRef].v;
-                        
-                        // Microsoft Excel specific styling format
-                        let cellStyle = {
+                        // Basic Excel export - no colors (not supported reliably)
+                        staffWS[cellRef].s = {
                             alignment: { horizontal: "center", vertical: "center" }
                         };
-                        
-                        if (cellValue === "BREAK" || cellValue === "2ND BREAK") {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "AA6C39" }  // Excel-compatible purple
-                                },
-                                font: { 
-                                    color: { rgb: "FFFFFF" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: true
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else if (cellValue === "SECURITY") {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "FFC000" }  // Excel orange
-                                },
-                                font: { 
-                                    color: { rgb: "000000" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: false
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else if (cellValue === "OBS") {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "9CC2E5" }  // Excel light blue
-                                },
-                                font: { 
-                                    color: { rgb: "1F4E79" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: false
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else if (cellValue === "FREE") {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "D9D9D9" }  // Excel gray
-                                },
-                                font: { 
-                                    color: { rgb: "7F7F7F" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: false
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else if (allCleaningDuties.includes(cellValue)) {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "B19CD9" }  // Excel light purple
-                                },
-                                font: { 
-                                    color: { rgb: "FFFFFF" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: true
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else if (cellValue && cellValue !== "FREE" && cellValue !== "N/A") {
-                            cellStyle = {
-                                fill: { 
-                                    patternType: "solid",
-                                    fgColor: { rgb: "C6EFCE" }  // Excel light green
-                                },
-                                font: { 
-                                    color: { rgb: "006100" },
-                                    name: "Calibri",
-                                    sz: 11,
-                                    bold: false
-                                },
-                                alignment: { horizontal: "center", vertical: "center" },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        } else {
-                            // Default styling with borders
-                            cellStyle = {
-                                alignment: { horizontal: "center", vertical: "center" },
-                                font: { 
-                                    name: "Calibri",
-                                    sz: 11,
-                                    color: { rgb: "000000" }
-                                },
-                                border: {
-                                    top: { style: "thin", color: { rgb: "000000" } },
-                                    bottom: { style: "thin", color: { rgb: "000000" } },
-                                    left: { style: "thin", color: { rgb: "000000" } },
-                                    right: { style: "thin", color: { rgb: "000000" } }
-                                }
-                            };
-                        }
-                        
-                        staffWS[cellRef].s = cellStyle;
                     });
                 });
                 
@@ -1379,19 +1296,475 @@
                 XLSX.writeFile(workbook, filename);
                 
                 // Show success message
-                alert(`✅ Microsoft Excel file exported successfully!\n\n` +
+                alert(`✅ Excel file exported successfully!\n\n` +
                       `📂 File: ${filename}\n\n` +
-                      `🎨 Features included:\n` +
-                      `• Color-coded assignment types\n` +
-                      `• Professional borders and formatting\n` +
-                      `• Calibri font for Excel compatibility\n` +
-                      `• Three worksheets: Patient Care, Staff Schedule, Statistics\n\n` +
-                      `💡 The file is optimized for Microsoft Excel and should display colors correctly.`);
+                      `📊 Contains:\n` +
+                      `• Patient Care Schedule (data only)\n` +
+                      `• Staff Schedule (data only)\n` +
+                      `• Staff Statistics\n\n` +
+                      `⚠️ Colors not included due to XLSX library limitations.\n` +
+                      `💡 Use CSV export for color-coded data that you can format in Excel.`);
                 
             } catch (error) {
                 console.error('Error exporting to Excel:', error);
                 alert('Error exporting to Excel. Please make sure you have generated a schedule first.');
             }
+        }
+
+        // NEW: ExcelJS-based Excel export with FULL COLOR SUPPORT
+        function exportToExcelWithColors() {
+            try {
+                if (!schedule || Object.keys(schedule).length === 0) {
+                    alert('No schedule data to export. Please generate a schedule first.');
+                    return;
+                }
+
+                console.log('Starting Excel export with ExcelJS (FULL COLORS)...');
+                
+                // Create a new workbook with ExcelJS
+                const workbook = new ExcelJS.Workbook();
+                
+                // Set workbook properties
+                workbook.creator = 'Patient Care Schedule System';
+                workbook.lastModifiedBy = 'User';
+                workbook.created = new Date();
+                workbook.modified = new Date();
+                
+                const timestamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '_');
+                const currentShift = document.getElementById('siteTitle').textContent;
+                const shiftType = currentShift.includes('Night') ? 'Night' : 'Day';
+                
+                // Export sheets with full color support
+                exportPatientScheduleWithColors(workbook);
+                exportStaffScheduleWithColors(workbook);
+                
+                // Generate and download the Excel file
+                const filename = `Patient_Care_Schedule_COLORED_${shiftType}_${timestamp}.xlsx`;
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    const blob = new Blob([buffer], { 
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                    });
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    console.log('Excel file with FULL COLORS generated successfully:', filename);
+                    alert(`🎨 SUCCESS! Excel file with FULL COLORS exported!\n\n` +
+                          `📂 File: ${filename}\n\n` +
+                          `✨ Now includes:\n` +
+                          `• Patient Care Schedule (with beautiful colors!)\n` +
+                          `• Staff Schedule (with color coding!)\n` +
+                          `• All assignments properly colored\n` +
+                          `• OBS assignments highlighted\n` +
+                          `• Break times color-coded\n\n` +
+                          `🚀 Powered by ExcelJS - Professional Excel library!`);
+                }).catch(error => {
+                    console.error('Error generating Excel file:', error);
+                    alert('Error generating Excel file: ' + error.message);
+                });
+                
+            } catch (error) {
+                console.error('Excel export failed:', error);
+                alert('Excel export failed: ' + error.message);
+            }
+        }
+        
+        function exportPatientScheduleWithColors(workbook) {
+            const worksheet = workbook.addWorksheet('Patient Care Schedule');
+            
+            // Check if schedule exists
+            if (!schedule || Object.keys(schedule).length === 0) {
+                console.warn('No schedule data available for export');
+                return;
+            }
+            
+            // Get schedule data
+            const allPatients = getAllPatients();
+            const timeSlots = Object.keys(schedule).sort();
+            const currentShift = document.getElementById('siteTitle').textContent;
+            const currentDate = new Date().toLocaleDateString();
+            
+            // Define beautiful color scheme (using white/transparent backgrounds with colored text)
+            const colors = {
+                header: 'FF4A90E2',      // Professional blue
+                headerText: 'FFFFFFFF',  // White text for headers
+                normalText: 'FF000000',  // Black text for normal content
+                obsText: 'FFFF6B35',     // Orange text for OBS (high priority)
+                breakText: 'FFFF69B4',   // Hot pink text for breaks
+                emptyText: 'FF808080'    // Gray text for empty cells
+            };
+            
+            // Helper function to convert hex color to ARGB
+            function hexToArgb(hexColor) {
+                // Remove # if present and ensure it's a valid hex color
+                const cleanHex = hexColor.replace('#', '');
+                return 'FF' + cleanHex; // Add full opacity prefix
+            }
+            
+            // Title rows with styling
+            let currentRow = 1;
+            const titleCell = worksheet.getCell(currentRow, 1);
+            titleCell.value = currentShift;
+            titleCell.font = { bold: true, size: 18, color: { argb: 'FF1F4E79' } };
+            titleCell.alignment = { horizontal: 'center' };
+            worksheet.mergeCells(currentRow, 1, currentRow, timeSlots.length + 1);
+            currentRow++;
+            
+            const dateCell = worksheet.getCell(currentRow, 1);
+            dateCell.value = `Generated on: ${currentDate}`;
+            dateCell.font = { italic: true, size: 12 };
+            dateCell.alignment = { horizontal: 'center' };
+            worksheet.mergeCells(currentRow, 1, currentRow, timeSlots.length + 1);
+            currentRow += 2;
+            
+            // Headers with beautiful styling
+            const headerCell = worksheet.getCell(currentRow, 1);
+            headerCell.value = 'Patient / Time';
+            headerCell.font = { bold: true, color: { argb: colors.headerText }, size: 12 };
+            headerCell.fill = { 
+                type: 'pattern', 
+                pattern: 'solid', 
+                fgColor: { argb: colors.header } 
+            };
+            headerCell.border = {
+                top: { style: 'thick' },
+                left: { style: 'thick' },
+                bottom: { style: 'thick' },
+                right: { style: 'thick' }
+            };
+            headerCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            
+            // Time slot headers
+            timeSlots.forEach((time, index) => {
+                const cell = worksheet.getCell(currentRow, index + 2);
+                cell.value = time;
+                cell.font = { bold: true, color: { argb: colors.headerText }, size: 11 };
+                cell.fill = { 
+                    type: 'pattern', 
+                    pattern: 'solid', 
+                    fgColor: { argb: colors.header } 
+                };
+                cell.border = {
+                    top: { style: 'thick' },
+                    left: { style: 'medium' },
+                    bottom: { style: 'thick' },
+                    right: { style: 'medium' }
+                };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            currentRow++;
+            
+            // Patient rows with color coding
+            allPatients.forEach(patient => {
+                // Patient name with styling
+                const nameCell = worksheet.getCell(currentRow, 1);
+                nameCell.value = patient.name;
+                nameCell.font = { bold: true, size: 11, color: { argb: colors.normalText } };
+                nameCell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thick' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'medium' }
+                };
+                nameCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                
+                // Time slots for this patient with smart color coding
+                timeSlots.forEach((time, timeIndex) => {
+                    const cell = worksheet.getCell(currentRow, timeIndex + 2);
+                    const assignments = schedule[time].patientAssignments[patient.name] || [];
+                    
+                    if (assignments.length > 0) {
+                        // Check if this is an OBS assignment
+                        const obsAssignment = schedule[time].obsAssignments && 
+                                            schedule[time].obsAssignments[patient.name] && 
+                                            schedule[time].obsAssignments[patient.name].length > 0;
+                        
+                        // Check if this involves staff on break
+                        const hasBreakStaff = assignments.some(staff => 
+                            schedule[time].staffBreaks && schedule[time].staffBreaks[staff]
+                        );
+                        
+                        // Create colored staff initials based on their assigned colors
+                        const coloredStaffList = assignments.map(staff => {
+                            const initials = getInitials(staff);
+                            const staffColor = getStaffColor(staff);
+                            return { initials, color: hexToArgb(staffColor) };
+                        });
+                        
+                        if (obsAssignment) {
+                            cell.value = coloredStaffList.map(s => s.initials).join(', ') + ' (OBS)';
+                            cell.font = { 
+                                bold: true, 
+                                color: { argb: colors.obsText },
+                                size: 10 
+                            };
+                        } else if (hasBreakStaff) {
+                            cell.value = coloredStaffList.map(s => s.initials).join(', ') + ' (Break)';
+                            cell.font = { 
+                                italic: true, 
+                                color: { argb: colors.breakText },
+                                size: 10 
+                            };
+                        } else {
+                            // For regular assignments, use the first staff member's color or mixed indicator
+                            if (coloredStaffList.length === 1) {
+                                cell.value = coloredStaffList[0].initials;
+                                cell.font = { 
+                                    color: { argb: coloredStaffList[0].color },
+                                    bold: true,
+                                    size: 10 
+                                };
+                            } else {
+                                // Multiple staff - use normal text but indicate it's multiple
+                                cell.value = coloredStaffList.map(s => s.initials).join(', ');
+                                cell.font = { 
+                                    color: { argb: colors.normalText },
+                                    bold: true,
+                                    size: 10 
+                                };
+                            }
+                        }
+                    } else {
+                        cell.value = '-';
+                        cell.font = { 
+                            color: { argb: colors.emptyText },
+                            size: 10 
+                        };
+                    }
+                    
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                });
+                
+                currentRow++;
+            });
+            
+            // Auto-fit columns for perfect display
+            worksheet.columns.forEach(column => {
+                let maxLength = 0;
+                column.eachCell((cell) => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) {
+                        maxLength = columnLength;
+                    }
+                });
+                column.width = Math.min(Math.max(maxLength + 3, 12), 35);
+            });
+        }
+        
+        function exportStaffScheduleWithColors(workbook) {
+            const worksheet = workbook.addWorksheet('Staff Schedule');
+            
+            // Check if schedule exists
+            if (!schedule || Object.keys(schedule).length === 0) {
+                console.warn('No schedule data available for staff export');
+                return;
+            }
+            
+            const allStaffNames = getAllStaffNames();
+            const timeSlots = Object.keys(schedule).sort();
+            const currentShift = document.getElementById('siteTitle').textContent;
+            const currentDate = new Date().toLocaleDateString();
+            
+            const colors = {
+                header: 'FF1F4E79',        // Dark blue for header background
+                headerText: 'FFFFFFFF',    // White text for headers
+                normalText: 'FF000000',    // Black text for normal content
+                obsText: 'FFFF8A50',       // Bright orange text for OBS
+                shortBreakText: 'FFBA68C8', // Purple text for short breaks
+                longBreakText: 'FFCE93D8',  // Light purple text for long breaks
+                securityText: 'FFFF6B35',   // Orange text for security duty
+                freeText: 'FF808080',       // Gray text for free time
+                emptyText: 'FFCCCCCC'       // Light gray for empty
+            };
+            
+            // Helper function to convert hex color to ARGB (same as patient function)
+            function hexToArgb(hexColor) {
+                const cleanHex = hexColor.replace('#', '');
+                return 'FF' + cleanHex;
+            }
+            
+            // Title rows
+            let currentRow = 1;
+            const titleCell = worksheet.getCell(currentRow, 1);
+            titleCell.value = currentShift + ' - Staff Schedule';
+            titleCell.font = { bold: true, size: 18, color: { argb: 'FF1F4E79' } };
+            titleCell.alignment = { horizontal: 'center' };
+            worksheet.mergeCells(currentRow, 1, currentRow, timeSlots.length + 1);
+            currentRow++;
+            
+            const dateCell = worksheet.getCell(currentRow, 1);
+            dateCell.value = `Generated on: ${currentDate}`;
+            dateCell.font = { italic: true, size: 12 };
+            dateCell.alignment = { horizontal: 'center' };
+            worksheet.mergeCells(currentRow, 1, currentRow, timeSlots.length + 1);
+            currentRow += 2;
+            
+            // Headers
+            const headerCell = worksheet.getCell(currentRow, 1);
+            headerCell.value = 'Staff / Time';
+            headerCell.font = { bold: true, color: { argb: colors.headerText }, size: 12 };
+            headerCell.fill = { 
+                type: 'pattern', 
+                pattern: 'solid', 
+                fgColor: { argb: colors.header } 
+            };
+            headerCell.border = {
+                top: { style: 'thick' },
+                left: { style: 'thick' },
+                bottom: { style: 'thick' },
+                right: { style: 'thick' }
+            };
+            headerCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            
+            timeSlots.forEach((time, index) => {
+                const cell = worksheet.getCell(currentRow, index + 2);
+                cell.value = time;
+                cell.font = { bold: true, color: { argb: colors.headerText }, size: 11 };
+                cell.fill = { 
+                    type: 'pattern', 
+                    pattern: 'solid', 
+                    fgColor: { argb: colors.header } 
+                };
+                cell.border = {
+                    top: { style: 'thick' },
+                    left: { style: 'medium' },
+                    bottom: { style: 'thick' },
+                    right: { style: 'medium' }
+                };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            currentRow++;
+            
+            // Staff rows with dynamic text color coding
+            allStaffNames.forEach(staff => {
+                const nameCell = worksheet.getCell(currentRow, 1);
+                nameCell.value = staff;
+                const staffColor = getStaffColor(staff);
+                nameCell.font = { 
+                    bold: true, 
+                    size: 11, 
+                    color: { argb: hexToArgb(staffColor) } 
+                };
+                nameCell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thick' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'medium' }
+                };
+                nameCell.alignment = { horizontal: 'left', vertical: 'middle' };
+                
+                timeSlots.forEach((time, timeIndex) => {
+                    const cell = worksheet.getCell(currentRow, timeIndex + 2);
+                    let assigned = false;
+                    
+                    // Check for OBS assignments (highest priority coloring)
+                    Object.keys(schedule[time].obsAssignments || {}).forEach(patient => {
+                        if (schedule[time].obsAssignments[patient].includes(staff)) {
+                            cell.value = getInitials(patient) + ' (OBS)';
+                            cell.font = { 
+                                bold: true, 
+                                color: { argb: colors.obsText },
+                                size: 10 
+                            };
+                            assigned = true;
+                        }
+                    });
+                    
+                    // Check for break assignments
+                    if (!assigned) {
+                        if (schedule[time].staffBreaks && schedule[time].staffBreaks[staff]) {
+                            const breakType = schedule[time].staffBreaks[staff];
+                            if (breakType === "30-MIN BREAK") {
+                                cell.value = 'Short Break';
+                                cell.font = { 
+                                    italic: true, 
+                                    color: { argb: colors.shortBreakText },
+                                    size: 10 
+                                };
+                                assigned = true;
+                            } else if (breakType === "2ND BREAK" || breakType === "NIGHT BREAK") {
+                                cell.value = 'Long Break';
+                                cell.font = { 
+                                    italic: true, 
+                                    color: { argb: colors.longBreakText },
+                                    size: 10 
+                                };
+                                assigned = true;
+                            } else if (breakType === "SECURITY DUTY") {
+                                cell.value = 'Security Duty';
+                                cell.font = { 
+                                    bold: true, 
+                                    color: { argb: colors.securityText },
+                                    size: 10 
+                                };
+                                assigned = true;
+                            }
+                        }
+                    }
+                    
+                    // Check for regular patient assignments
+                    if (!assigned) {
+                        const allPatients = getAllPatients();
+                        for (const patient of allPatients) {
+                            if (schedule[time].patientAssignments[patient.name] &&
+                                schedule[time].patientAssignments[patient.name].includes(staff)) {
+                                cell.value = getInitials(patient.name);
+                                // Use the staff's own color for patient assignments
+                                const staffColor = getStaffColor(staff);
+                                cell.font = { 
+                                    color: { argb: hexToArgb(staffColor) },
+                                    bold: true,
+                                    size: 10 
+                                };
+                                assigned = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!assigned) {
+                        cell.value = 'FREE';
+                        cell.font = { 
+                            color: { argb: colors.freeText },
+                            size: 10 
+                        };
+                    }
+                    
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                });
+                
+                currentRow++;
+            });
+            
+            // Auto-fit columns
+            worksheet.columns.forEach(column => {
+                let maxLength = 0;
+                column.eachCell((cell) => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) {
+                        maxLength = columnLength;
+                    }
+                });
+                column.width = Math.min(Math.max(maxLength + 3, 12), 35);
+            });
         }
 
         // In the updateLegend function, update the break hours table header
@@ -3705,6 +4078,20 @@ function getAllPatientNames() {
         .filter(name => name);
 }
 
+function getAllPatients() {
+    return Array.from(document.querySelectorAll('.patient-container'))
+        .map(container => {
+            const name = container.querySelector('.patient-name').value.trim();
+            if (!name) return null;
+
+            return {
+                name,
+                staffCount: parseInt(container.querySelector('.staff-count').value)
+            };
+        })
+        .filter(patient => patient !== null); // Filter out empty patients
+}
+
 // Initialize the application when page loads
 window.onload = function() {
     // Set moon emoji for dark mode button
@@ -3729,7 +4116,7 @@ window.onload = function() {
         saveToLocalStorage();
     });
 
-    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcelWithColors);
 
     document.getElementById('generateBtn').addEventListener('click', generateSchedule);
 

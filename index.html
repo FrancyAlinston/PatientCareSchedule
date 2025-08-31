@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Care Schedule - Horizontal Layout</title>
     
-    <!-- XLSX Library for Excel Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- ExcelJS Library for Excel Export with Full Color Support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <!--
     Patient Care Schedule Application
     Version: 3.1.1
@@ -488,7 +488,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div style="display: flex; gap: 10px;">
                 <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
-                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export Patient Care Schedule to Excel">📊 Export to Excel</button>
+                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export to Microsoft Excel with optimized formatting">📊 Export to Excel (MS Excel Optimized)</button>
+                <button onclick="exportToCSV()" style="padding: 10px 20px; font-size: 14px; background-color: #17a2b8; border-color: #17a2b8; margin-left: 10px;" title="Export Patient Care Schedule to CSV with color indicators">� Export to CSV</button>
             </div>
             <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
@@ -655,6 +656,150 @@
             const lastInitial = nameParts[nameParts.length - 1][0] || '';
 
             return (firstInitial + lastInitial).toUpperCase();
+        }
+
+        // CSV Export Function with Color Coding
+        function exportToCSV() {
+            try {
+                if (!schedule || Object.keys(schedule).length === 0) {
+                    alert('No schedule data to export. Please generate a schedule first.');
+                    return;
+                }
+
+                // Get current shift and date information
+                const currentShift = document.getElementById('siteTitle').textContent;
+                const currentDate = new Date().toLocaleDateString();
+                
+                // Get time slots and staff from schedule data
+                const timeSlots = Object.keys(schedule).sort();
+                const allStaff = new Set();
+                
+                // Collect all staff members from schedule
+                timeSlots.forEach(time => {
+                    const timeSchedule = schedule[time];
+                    if (timeSchedule.staffBreaks) {
+                        Object.keys(timeSchedule.staffBreaks).forEach(staff => allStaff.add(staff));
+                    }
+                    if (timeSchedule.patientAssignments) {
+                        Object.values(timeSchedule.patientAssignments).forEach(staffList => {
+                            if (Array.isArray(staffList)) {
+                                staffList.forEach(staff => allStaff.add(staff));
+                            }
+                        });
+                    }
+                });
+                
+                const nonNursingStaff = Array.from(allStaff).filter(staff => !staff.startsWith('RN'));
+                const cleaningDuties = ["BATHROOM CLEAN", "TOILET ROUNDS", "KITCHEN DUTIES", "BIN COLLECTION"];
+                
+                let csvContent = `Patient Care Schedule - ${currentShift}\n`;
+                csvContent += `Generated on: ${currentDate}\n\n`;
+                csvContent += "Color Coding Reference:\n";
+                csvContent += "BREAK = Purple Background, SECURITY = Orange Background\n";
+                csvContent += "OBS = Light Blue Background, FREE = Gray Background\n";
+                csvContent += "Patient Assignments = Light Green Background\n\n";
+                
+                // Staff Schedule with Color Indicators
+                csvContent += "Staff Schedule (with color indicators):\n";
+                csvContent += "Staff,";
+                timeSlots.forEach(time => {
+                    csvContent += `${time},`;
+                });
+                csvContent += "\n";
+                
+                nonNursingStaff.forEach(staff => {
+                    csvContent += `${staff},`;
+                    timeSlots.forEach(time => {
+                        let assignment = "FREE";
+                        
+                        // Check patient assignments
+                        const patients = Object.keys(schedule[time].patientAssignments || {});
+                        for (const patient of patients) {
+                            const assignedStaff = schedule[time].patientAssignments[patient];
+                            if (Array.isArray(assignedStaff) && assignedStaff.includes(staff)) {
+                                assignment = patient;
+                                break;
+                            }
+                        }
+                        
+                        // Check breaks and special duties
+                        if (schedule[time].staffBreaks && schedule[time].staffBreaks[staff]) {
+                            assignment = schedule[time].staffBreaks[staff];
+                        }
+                        
+                        // Add color indicator prefix
+                        let colorCode = "";
+                        if (assignment === "BREAK" || assignment === "2ND BREAK") {
+                            colorCode = "[PURPLE] ";
+                        } else if (assignment === "SECURITY") {
+                            colorCode = "[ORANGE] ";
+                        } else if (assignment === "OBS") {
+                            colorCode = "[BLUE] ";
+                        } else if (assignment === "FREE") {
+                            colorCode = "[GRAY] ";
+                        } else if (cleaningDuties.includes(assignment)) {
+                            colorCode = "[PURPLE] ";
+                        } else if (assignment !== "FREE") {
+                            colorCode = "[GREEN] ";
+                        }
+                        
+                        csvContent += `${colorCode}${assignment},`;
+                    });
+                    csvContent += "\n";
+                });
+                
+                // Add Patient Care Schedule section
+                csvContent += "\n\nPatient Care Schedule:\n";
+                const patients = new Set();
+                timeSlots.forEach(time => {
+                    if (schedule[time].patientAssignments) {
+                        Object.keys(schedule[time].patientAssignments).forEach(patient => {
+                            if (patient !== 'OBS') patients.add(patient);
+                        });
+                    }
+                });
+                
+                csvContent += "Patient,";
+                timeSlots.forEach(time => {
+                    csvContent += `${time},`;
+                });
+                csvContent += "\n";
+                
+                Array.from(patients).forEach(patient => {
+                    csvContent += `${patient},`;
+                    timeSlots.forEach(time => {
+                        const assignedStaff = schedule[time].patientAssignments?.[patient] || [];
+                        const staffList = Array.isArray(assignedStaff) ? assignedStaff.join('; ') : assignedStaff;
+                        csvContent += `"${staffList}",`;
+                    });
+                    csvContent += "\n";
+                });
+                
+                // Download CSV
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Patient_Care_Schedule_${currentShift.replace(/\s+/g, '_')}_${currentDate.replace(/\//g, '-')}.csv`;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                alert('📄 CSV file downloaded successfully!\n\n' +
+                      '🎨 Color codes are included in the data:\n' +
+                      '• [PURPLE] = Breaks & Cleaning\n' +
+                      '• [ORANGE] = Security Duties\n' +
+                      '• [BLUE] = OBS Assignments\n' +
+                      '• [GRAY] = Free Time\n' +
+                      '• [GREEN] = Patient Assignments\n\n' +
+                      '💡 In Excel: Use Find & Replace to highlight cells by color codes!');
+                
+            } catch (error) {
+                console.error('CSV export error:', error);
+                alert('Error exporting CSV: ' + error.message + '\n\nPlease ensure you have generated a schedule first.');
+            }
         }
 
         // Excel Export Function
