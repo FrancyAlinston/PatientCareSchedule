@@ -763,9 +763,18 @@
                     const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex - 1, c: col });
                     if (!patientWS[cellRef]) continue;
                     patientWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFF" } },
-                        fill: { fgColor: { rgb: "4A5568" } }, // Dark gray header
-                        alignment: { horizontal: "center", vertical: "center" }
+                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        fill: { 
+                            patternType: "solid",
+                            fgColor: { rgb: "FF4A5568" } 
+                        }, // Dark gray header
+                        alignment: { horizontal: "center", vertical: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "FF000000" } },
+                            bottom: { style: "thin", color: { rgb: "FF000000" } },
+                            left: { style: "thin", color: { rgb: "FF000000" } },
+                            right: { style: "thin", color: { rgb: "FF000000" } }
+                        }
                     };
                 }
                 
@@ -790,8 +799,11 @@
                     }
                     
                     patientWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "2D3748" } },
-                        fill: { fgColor: { rgb: bgColor } },
+                        font: { bold: true, color: { rgb: "FF2D3748" }, sz: 11 },
+                        fill: { 
+                            patternType: "solid",
+                            fgColor: { rgb: "FF" + bgColor } 
+                        },
                         alignment: { horizontal: "center", vertical: "center" }
                     };
                 });
@@ -879,8 +891,11 @@
                     const cellRef = XLSX.utils.encode_cell({ r: staffHeaderRowIndex - 1, c: col });
                     if (!staffWS[cellRef]) continue;
                     staffWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFF" } },
-                        fill: { fgColor: { rgb: "4A5568" } }, // Dark gray header
+                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        fill: { 
+                            patternType: "solid",
+                            fgColor: { rgb: "FF4A5568" } 
+                        }, // Dark gray header
                         alignment: { horizontal: "center", vertical: "center" }
                     };
                 }
@@ -893,8 +908,11 @@
                     const nameCell = XLSX.utils.encode_cell({ r: rowIndex, c: 0 });
                     if (staffWS[nameCell]) {
                         staffWS[nameCell].s = {
-                            font: { bold: true, color: { rgb: "2D3748" } },
-                            fill: { fgColor: { rgb: "F7FAFC" } },
+                            font: { bold: true, color: { rgb: "FF2D3748" }, sz: 11 },
+                            fill: { 
+                                patternType: "solid",
+                                fgColor: { rgb: "FFF7FAFC" } 
+                            },
                             alignment: { horizontal: "center", vertical: "center" }
                         };
                     }
@@ -912,31 +930,40 @@
                             bgColor = "9F7AEA"; // Purple for breaks
                             textColor = "FFFFFF"; // White text
                         } else if (cellValue === "SECURITY") {
-                            bgColor = "FFCCBC"; // Light orange for security
+                            bgColor = "FED7AA"; // Light orange for security
                             textColor = "000000"; // Black text
                         } else if (cellValue === "OBS") {
-                            bgColor = "E3F2FD"; // Light blue for OBS
-                            textColor = "000000"; // Black text
+                            bgColor = "DBEAFE"; // Light blue for OBS
+                            textColor = "1E40AF"; // Dark blue text
                         } else if (cellValue === "FREE") {
-                            bgColor = "F8F9FA"; // Light gray for free time
-                            textColor = "6B7280"; // Gray text
+                            bgColor = "F3F4F6"; // Light gray for free time
+                            textColor = "9CA3AF"; // Gray text
                         } else if (allCleaningDuties.includes(cellValue)) {
-                            bgColor = "9C27B0"; // Purple for cleaning duties
+                            bgColor = "A855F7"; // Purple for cleaning duties
                             textColor = "FFFFFF"; // White text
                         } else if (cellValue && cellValue !== "FREE" && cellValue !== "N/A") {
-                            // Patient assignment - use consistent color
-                            const hash = cellValue.split('').reduce((hash, char) => {
-                                return ((hash << 5) - hash) + char.charCodeAt(0);
-                            }, 0);
-                            const hue = Math.abs(hash) % 360;
-                            bgColor = hue > 30 && hue < 200 ? "E8F5E8" : "FFF3E0"; // Light green or orange
-                            textColor = "000000"; // Black text
+                            // Patient assignment - use light background with dark text
+                            bgColor = "F0FDF4"; // Very light green
+                            textColor = "166534"; // Dark green text
                         }
                         
                         staffWS[cellRef].s = {
-                            font: { color: { rgb: textColor } },
-                            fill: { fgColor: { rgb: bgColor } },
-                            alignment: { horizontal: "center", vertical: "center" }
+                            font: { 
+                                color: { rgb: "FF" + textColor }, 
+                                bold: false,
+                                sz: 11
+                            },
+                            fill: { 
+                                patternType: "solid",
+                                fgColor: { rgb: "FF" + bgColor } 
+                            },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            border: {
+                                top: { style: "thin", color: { rgb: "FFE5E7EB" } },
+                                bottom: { style: "thin", color: { rgb: "FFE5E7EB" } },
+                                left: { style: "thin", color: { rgb: "FFE5E7EB" } },
+                                right: { style: "thin", color: { rgb: "FFE5E7EB" } }
+                            }
                         };
                     });
                 });
@@ -981,8 +1008,11 @@
                     const cellRef = XLSX.utils.encode_cell({ r: statsHeaderRow - 1, c: col });
                     if (!statsWS[cellRef]) continue;
                     statsWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFF" } },
-                        fill: { fgColor: { rgb: "4A5568" } }, // Dark gray header
+                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        fill: { 
+                            patternType: "solid",
+                            fgColor: { rgb: "FF4A5568" } 
+                        }, // Dark gray header
                         alignment: { horizontal: "center", vertical: "center" }
                     };
                 }
@@ -995,8 +1025,11 @@
                     const nameCell = XLSX.utils.encode_cell({ r: rowIndex, c: 0 });
                     if (statsWS[nameCell]) {
                         statsWS[nameCell].s = {
-                            font: { bold: true, color: { rgb: "2D3748" } },
-                            fill: { fgColor: { rgb: "F7FAFC" } },
+                            font: { bold: true, color: { rgb: "FF2D3748" }, sz: 11 },
+                            fill: { 
+                                patternType: "solid",
+                                fgColor: { rgb: "FFF7FAFC" } 
+                            },
                             alignment: { horizontal: "left", vertical: "center" }
                         };
                     }
