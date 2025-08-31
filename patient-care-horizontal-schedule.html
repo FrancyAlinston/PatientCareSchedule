@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Care Schedule - Horizontal Layout</title>
+    
+    <!-- XLSX Library for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!--
     Patient Care Schedule Application
     Version: 3.1.5
@@ -498,7 +501,10 @@
 
         <!-- Buttons for toggling shift and dark mode -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
+                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export Patient Care Schedule to Excel">📊 Export to Excel</button>
+            </div>
             <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
 
@@ -715,6 +721,211 @@
         // Reset staff color mapping (useful when staff list changes)
         function resetStaffColors() {
             staffColorMap = {};
+        }
+
+        // Excel Export Function
+        function exportToExcel() {
+            try {
+                if (!schedule || Object.keys(schedule).length === 0) {
+                    alert('No schedule data to export. Please generate a schedule first.');
+                    return;
+                }
+
+                // Get current shift and date information
+                const currentShift = document.getElementById('siteTitle').textContent;
+                const currentDate = new Date().toLocaleDateString();
+                
+                // Get patients from schedule data
+                const patients = Object.keys(schedule[Object.keys(schedule)[0]].patientAssignments || {}).filter(p => p !== 'OBS');
+                
+                // Get staff from schedule data
+                const allStaffFromSchedule = new Set();
+                Object.values(schedule).forEach(timeSlot => {
+                    Object.values(timeSlot.patientAssignments).forEach(assignments => {
+                        assignments.forEach(staff => allStaffFromSchedule.add(staff));
+                    });
+                    Object.keys(timeSlot.staffBreaks).forEach(staff => allStaffFromSchedule.add(staff));
+                });
+                const allStaff = Array.from(allStaffFromSchedule);
+                
+                // Create workbook and worksheet
+                const workbook = XLSX.utils.book_new();
+                
+                // Prepare Patient Care Schedule data
+                const patientScheduleData = [];
+                
+                // Add header with date and shift info
+                patientScheduleData.push([`Patient Care Schedule - ${currentShift}`]);
+                patientScheduleData.push([`Generated on: ${currentDate}`]);
+                patientScheduleData.push([]); // Empty row
+                
+                // Get time slots
+                const timeSlots = Object.keys(schedule).sort();
+                
+                // Create header row
+                const headerRow = ['Patient/Ward'];
+                timeSlots.forEach(time => headerRow.push(time));
+                patientScheduleData.push(headerRow);
+                
+                // Get all patients including OBS
+                const allPatients = [...patients, 'OBS'];
+                
+                // Add patient rows
+                allPatients.forEach(patient => {
+                    const row = [patient];
+                    timeSlots.forEach(time => {
+                        const assignments = schedule[time].patientAssignments[patient] || [];
+                        if (assignments.length > 0) {
+                            // Join multiple staff with comma
+                            row.push(assignments.map(staff => getInitials(staff)).join(', '));
+                        } else {
+                            row.push('-');
+                        }
+                    });
+                    patientScheduleData.push(row);
+                });
+                
+                // Add cleaning duties section
+                patientScheduleData.push([]); // Empty row
+                patientScheduleData.push(['Cleaning Duties']);
+                
+                // Get cleaning duties from schedule data
+                const cleaningDutiesFromSchedule = new Set();
+                Object.values(schedule).forEach(timeSlot => {
+                    if (timeSlot.cleaningAssignments) {
+                        Object.keys(timeSlot.cleaningAssignments).forEach(duty => {
+                            cleaningDutiesFromSchedule.add(duty);
+                        });
+                    }
+                });
+                const allCleaningDuties = Array.from(cleaningDutiesFromSchedule);
+                
+                allCleaningDuties.forEach(duty => {
+                    const row = [duty];
+                    timeSlots.forEach(time => {
+                        const assignments = schedule[time].cleaningAssignments && schedule[time].cleaningAssignments[duty] || [];
+                        if (assignments.length > 0) {
+                            row.push(assignments.map(staff => getInitials(staff)).join(', '));
+                        } else {
+                            row.push('Not Assigned');
+                        }
+                    });
+                    patientScheduleData.push(row);
+                });
+                
+                // Create Patient Care Schedule worksheet
+                const patientWS = XLSX.utils.aoa_to_sheet(patientScheduleData);
+                XLSX.utils.book_append_sheet(workbook, patientWS, "Patient Care Schedule");
+                
+                // Prepare Staff Schedule data
+                const staffScheduleData = [];
+                
+                // Add header
+                staffScheduleData.push([`Staff Schedule - ${currentShift}`]);
+                staffScheduleData.push([`Generated on: ${currentDate}`]);
+                staffScheduleData.push([]); // Empty row
+                
+                // Create header row for staff schedule
+                const staffHeaderRow = ['Staff'];
+                timeSlots.forEach(time => staffHeaderRow.push(time));
+                staffScheduleData.push(staffHeaderRow);
+                
+                // Get non-nursing staff - try to get from form inputs first, then from schedule data
+                let nurseInCharge1 = document.getElementById('nurseInChargeInput')?.value || '';
+                let nurseInCharge2 = document.getElementById('nurseInCharge2Input')?.value || '';
+                const nonNursingStaff = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2 && s.trim() !== '');
+                
+                // Add staff rows
+                nonNursingStaff.forEach(s => {
+                    const row = [s];
+                    timeSlots.forEach(time => {
+                        const breakStatus = schedule[time].staffBreaks[s];
+                        
+                        if (breakStatus === "30-MIN BREAK") {
+                            row.push("BREAK");
+                        } else if (breakStatus === "2ND BREAK") {
+                            row.push("2ND BREAK");
+                        } else if (breakStatus === "NIGHT BREAK") {
+                            row.push("BREAK");
+                        } else if (breakStatus === "SECURITY DUTY") {
+                            row.push("SECURITY");
+                        } else if (breakStatus && allCleaningDuties.includes(breakStatus)) {
+                            row.push(breakStatus);
+                        } else {
+                            // Check assignments
+                            let assigned = false;
+                            
+                            // Check OBS first
+                            if (schedule[time].patientAssignments["OBS"] &&
+                                schedule[time].patientAssignments["OBS"].includes(s)) {
+                                row.push("OBS");
+                                assigned = true;
+                            }
+                            
+                            // Check regular patients
+                            if (!assigned) {
+                                for (const patient of patients) {
+                                    if (schedule[time].patientAssignments[patient] &&
+                                        schedule[time].patientAssignments[patient].includes(s)) {
+                                        row.push(getInitials(patient));
+                                        assigned = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (!assigned) {
+                                row.push("FREE");
+                            }
+                        }
+                    });
+                    staffScheduleData.push(row);
+                });
+                
+                // Create Staff Schedule worksheet
+                const staffWS = XLSX.utils.aoa_to_sheet(staffScheduleData);
+                XLSX.utils.book_append_sheet(workbook, staffWS, "Staff Schedule");
+                
+                // Prepare Staff Statistics data
+                const statsData = [];
+                statsData.push([`Staff Statistics - ${currentShift}`]);
+                statsData.push([`Generated on: ${currentDate}`]);
+                statsData.push([]); // Empty row
+                
+                // Add statistics headers
+                statsData.push(['Staff', 'Work Hours', 'Short Break Time', 'Long Break Time', 'Total Break Time']);
+                
+                // Add staff statistics - try to get from window.originalStaffStats or create basic stats
+                nonNursingStaff.forEach(s => {
+                    const stats = (window.originalStaffStats && window.originalStaffStats[s]) || {};
+                    statsData.push([
+                        s,
+                        stats.workHours || 'N/A',
+                        stats.shortBreakTime || 'N/A',
+                        stats.longBreakTime || 'N/A',
+                        stats.totalBreakTime || 'N/A'
+                    ]);
+                });
+                
+                // Create Staff Statistics worksheet
+                const statsWS = XLSX.utils.aoa_to_sheet(statsData);
+                XLSX.utils.book_append_sheet(workbook, statsWS, "Staff Statistics");
+                
+                // Generate filename with timestamp
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const shiftType = currentShift.includes('Night') ? 'Night' : 'Day';
+                const filename = `Patient_Care_Schedule_${shiftType}_${timestamp}.xlsx`;
+                
+                // Save the file
+                XLSX.writeFile(workbook, filename);
+                
+                // Show success message
+                alert(`Excel file exported successfully!\nFile: ${filename}\n\nThe file includes:\n• Patient Care Schedule\n• Staff Schedule\n• Staff Statistics`);
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                alert('Error exporting to Excel. Please make sure you have generated a schedule first.');
+            }
         }
 
         // In the updateLegend function, update the break hours table header
@@ -3051,6 +3262,8 @@ window.onload = function() {
         updateLegend();
         saveToLocalStorage();
     });
+
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
 
     document.getElementById('generateBtn').addEventListener('click', generateSchedule);
 
