@@ -503,7 +503,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div style="display: flex; gap: 10px;">
                 <button id="toggleShiftBtn" style="padding: 10px 20px; font-size: 14px;">Switch to Night Shift</button>
-                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export Patient Care Schedule to Excel">📊 Export to Excel</button>
+                <button id="exportExcelBtn" style="padding: 10px 20px; font-size: 14px; background-color: #28a745; border-color: #28a745;" title="Export to Microsoft Excel with optimized formatting">📊 Export to Excel (MS Excel Optimized)</button>
+                <button onclick="exportToCSV()" style="padding: 10px 20px; font-size: 14px; background-color: #17a2b8; border-color: #17a2b8; margin-left: 10px;" title="Export Patient Care Schedule to CSV with color indicators">📄 Export to CSV</button>
             </div>
             <button id="toggleModeBtn" title="Toggle Dark/Light Mode"></button>
         </div>
@@ -581,7 +582,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.9)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.4.0)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -723,6 +724,85 @@
             staffColorMap = {};
         }
 
+        // CSV Export Function with Color Coding
+        function exportToCSV() {
+            try {
+                if (!schedule || Object.keys(schedule).length === 0) {
+                    alert('No schedule data to export. Please generate a schedule first.');
+                    return;
+                }
+
+                // Get current shift and date information
+                const currentShift = document.getElementById('siteTitle').textContent;
+                const currentDate = new Date().toLocaleDateString();
+                
+                let csvContent = `Patient Care Schedule - ${currentShift}\n`;
+                csvContent += `Generated on: ${currentDate}\n\n`;
+                csvContent += "Color Coding Reference:\n";
+                csvContent += "BREAK = Purple Background, SECURITY = Orange Background\n";
+                csvContent += "OBS = Light Blue Background, FREE = Gray Background\n";
+                csvContent += "Patient Assignments = Light Green Background\n\n";
+                
+                // Staff Schedule with Color Indicators
+                csvContent += "Staff Schedule (with color indicators):\n";
+                csvContent += "Staff,";
+                timeSlots.forEach(time => {
+                    csvContent += `${time},`;
+                });
+                csvContent += "\n";
+                
+                nonNursingStaff.forEach(staff => {
+                    csvContent += `${staff},`;
+                    timeSlots.forEach(time => {
+                        let assignment = "FREE";
+                        
+                        // Check patient assignments
+                        const patients = Object.keys(schedule[time].patientAssignments || {});
+                        for (const patient of patients) {
+                            const assignedStaff = schedule[time].patientAssignments[patient];
+                            if (assignedStaff.includes(staff)) {
+                                assignment = patient;
+                                break;
+                            }
+                        }
+                        
+                        // Check breaks and special duties
+                        if (schedule[time].staffBreaks[staff]) {
+                            assignment = schedule[time].staffBreaks[staff];
+                        }
+                        
+                        // Add color indicator prefix
+                        let colorCode = "";
+                        if (assignment === "BREAK" || assignment === "2ND BREAK") colorCode = "[PURPLE] ";
+                        else if (assignment === "SECURITY") colorCode = "[ORANGE] ";
+                        else if (assignment === "OBS") colorCode = "[BLUE] ";
+                        else if (assignment === "FREE") colorCode = "[GRAY] ";
+                        else if (assignment !== "FREE") colorCode = "[GREEN] ";
+                        
+                        csvContent += `${colorCode}${assignment},`;
+                    });
+                    csvContent += "\n";
+                });
+                
+                // Download CSV
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Patient_Care_Schedule_${currentShift.replace(/\s+/g, '_')}_${currentDate.replace(/\//g, '-')}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                alert('CSV file downloaded successfully!\n\nColor codes are included in the data. You can:\n1. Open in Excel and format colors manually\n2. Use search/replace to highlight different assignment types\n3. Import into Google Sheets for better color support');
+                
+            } catch (error) {
+                console.error('CSV export error:', error);
+                alert('Error exporting CSV: ' + error.message);
+            }
+        }
+
         // Excel Export Function
         function exportToExcel() {
             try {
@@ -730,6 +810,9 @@
                     alert('No schedule data to export. Please generate a schedule first.');
                     return;
                 }
+
+                // Microsoft Excel optimized export
+                console.log("Preparing Microsoft Excel optimized export...");
 
                 // Get current shift and date information
                 const currentShift = document.getElementById('siteTitle').textContent;
@@ -829,17 +912,22 @@
                     const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex - 1, c: col });
                     if (!patientWS[cellRef]) continue;
                     patientWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        font: { 
+                            bold: true, 
+                            color: { rgb: "FFFFFF" }, 
+                            sz: 12,
+                            name: "Calibri"
+                        },
                         fill: { 
                             patternType: "solid",
-                            fgColor: { rgb: "FF4A5568" } 
-                        }, // Dark gray header
+                            fgColor: { rgb: "4472C4" }  // Excel standard blue header
+                        },
                         alignment: { horizontal: "center", vertical: "center" },
                         border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
+                            top: { style: "medium", color: { rgb: "000000" } },
+                            bottom: { style: "medium", color: { rgb: "000000" } },
+                            left: { style: "medium", color: { rgb: "000000" } },
+                            right: { style: "medium", color: { rgb: "000000" } }
                         }
                     };
                 }
@@ -865,14 +953,22 @@
                     }
                     
                     patientWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FF2D3748" }, sz: 11 },
-                        fill: { fgColor: { rgb: bgColor } },
+                        font: { 
+                            bold: true, 
+                            color: { rgb: "000000" }, 
+                            sz: 11,
+                            name: "Calibri"
+                        },
+                        fill: { 
+                            patternType: "solid",
+                            fgColor: { rgb: bgColor } 
+                        },
                         alignment: { horizontal: "center", vertical: "center" },
                         border: {
-                            top: { style: "thin", color: { rgb: "CCCCCC" } },
-                            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-                            left: { style: "thin", color: { rgb: "CCCCCC" } },
-                            right: { style: "thin", color: { rgb: "CCCCCC" } }
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
                         }
                     };
                 });
@@ -960,12 +1056,23 @@
                     const cellRef = XLSX.utils.encode_cell({ r: staffHeaderRowIndex - 1, c: col });
                     if (!staffWS[cellRef]) continue;
                     staffWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        font: { 
+                            bold: true, 
+                            color: { rgb: "FFFFFF" }, 
+                            sz: 12,
+                            name: "Calibri"
+                        },
                         fill: { 
                             patternType: "solid",
-                            fgColor: { rgb: "FF4A5568" } 
-                        }, // Dark gray header
-                        alignment: { horizontal: "center", vertical: "center" }
+                            fgColor: { rgb: "4472C4" }  // Excel standard blue
+                        },
+                        alignment: { horizontal: "center", vertical: "center" },
+                        border: {
+                            top: { style: "medium", color: { rgb: "000000" } },
+                            bottom: { style: "medium", color: { rgb: "000000" } },
+                            left: { style: "medium", color: { rgb: "000000" } },
+                            right: { style: "medium", color: { rgb: "000000" } }
+                        }
                     };
                 }
                 
@@ -984,10 +1091,15 @@
                         const staffColor = `hsl(${hue}, 70%, 45%)`;
                         
                         staffWS[nameCell].s = {
-                            font: { bold: true, color: { rgb: "FF1F2937" }, sz: 11 },
+                            font: { 
+                                bold: true, 
+                                color: { rgb: "000000" }, 
+                                sz: 11,
+                                name: "Calibri"
+                            },
                             fill: { 
                                 patternType: "solid",
-                                fgColor: { rgb: "FFF9FAFB" } 
+                                fgColor: { rgb: "E7E6E6" }  // Excel light gray
                             },
                             alignment: { horizontal: "center", vertical: "center" },
                             border: {
@@ -1005,48 +1117,151 @@
                         if (!staffWS[cellRef]) return;
                         
                         const cellValue = staffWS[cellRef].v;
-                        let bgColor = "FFFFFF"; // Default white
-                        let textColor = "2D3748"; // Default dark text
+                        
+                        // Microsoft Excel specific styling format
+                        let cellStyle = {
+                            alignment: { horizontal: "center", vertical: "center" }
+                        };
                         
                         if (cellValue === "BREAK" || cellValue === "2ND BREAK") {
-                            bgColor = "9F7AEA"; // Purple for breaks
-                            textColor = "FFFFFF"; // White text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "AA6C39" }  // Excel-compatible purple
+                                },
+                                font: { 
+                                    color: { rgb: "FFFFFF" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: true
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         } else if (cellValue === "SECURITY") {
-                            bgColor = "FED7AA"; // Light orange for security
-                            textColor = "000000"; // Black text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "FFC000" }  // Excel orange
+                                },
+                                font: { 
+                                    color: { rgb: "000000" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: false
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         } else if (cellValue === "OBS") {
-                            bgColor = "DBEAFE"; // Light blue for OBS
-                            textColor = "1E40AF"; // Dark blue text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "9CC2E5" }  // Excel light blue
+                                },
+                                font: { 
+                                    color: { rgb: "1F4E79" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: false
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         } else if (cellValue === "FREE") {
-                            bgColor = "F3F4F6"; // Light gray for free time
-                            textColor = "9CA3AF"; // Gray text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "D9D9D9" }  // Excel gray
+                                },
+                                font: { 
+                                    color: { rgb: "7F7F7F" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: false
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         } else if (allCleaningDuties.includes(cellValue)) {
-                            bgColor = "A855F7"; // Purple for cleaning duties
-                            textColor = "FFFFFF"; // White text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "B19CD9" }  // Excel light purple
+                                },
+                                font: { 
+                                    color: { rgb: "FFFFFF" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: true
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         } else if (cellValue && cellValue !== "FREE" && cellValue !== "N/A") {
-                            // Patient assignment - use light background with dark text
-                            bgColor = "F0FDF4"; // Very light green
-                            textColor = "166534"; // Dark green text
+                            cellStyle = {
+                                fill: { 
+                                    patternType: "solid",
+                                    fgColor: { rgb: "C6EFCE" }  // Excel light green
+                                },
+                                font: { 
+                                    color: { rgb: "006100" },
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: false
+                                },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
+                        } else {
+                            // Default styling with borders
+                            cellStyle = {
+                                alignment: { horizontal: "center", vertical: "center" },
+                                font: { 
+                                    name: "Calibri",
+                                    sz: 11,
+                                    color: { rgb: "000000" }
+                                },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
                         }
                         
-                        staffWS[cellRef].s = {
-                            font: { 
-                                color: { rgb: "FF" + textColor }, 
-                                bold: false,
-                                sz: 11
-                            },
-                            fill: { 
-                                patternType: "solid",
-                                fgColor: { rgb: "FF" + bgColor } 
-                            },
-                            alignment: { horizontal: "center", vertical: "center" },
-                            border: {
-                                top: { style: "thin", color: { rgb: "FFE5E7EB" } },
-                                bottom: { style: "thin", color: { rgb: "FFE5E7EB" } },
-                                left: { style: "thin", color: { rgb: "FFE5E7EB" } },
-                                right: { style: "thin", color: { rgb: "FFE5E7EB" } }
-                            }
-                        };
+                        staffWS[cellRef].s = cellStyle;
                     });
                 });
                 
@@ -1090,17 +1305,22 @@
                     const cellRef = XLSX.utils.encode_cell({ r: statsHeaderRow - 1, c: col });
                     if (!statsWS[cellRef]) continue;
                     statsWS[cellRef].s = {
-                        font: { bold: true, color: { rgb: "FFFFFFFF" }, sz: 12 },
+                        font: { 
+                            bold: true, 
+                            color: { rgb: "FFFFFF" }, 
+                            sz: 12,
+                            name: "Calibri"
+                        },
                         fill: { 
                             patternType: "solid",
-                            fgColor: { rgb: "FF374151" } 
-                        }, // Dark gray header
+                            fgColor: { rgb: "70AD47" }  // Excel standard green
+                        },
                         alignment: { horizontal: "center", vertical: "center" },
                         border: {
-                            top: { style: "thin", color: { rgb: "FF000000" } },
-                            bottom: { style: "thin", color: { rgb: "FF000000" } },
-                            left: { style: "thin", color: { rgb: "FF000000" } },
-                            right: { style: "thin", color: { rgb: "FF000000" } }
+                            top: { style: "medium", color: { rgb: "000000" } },
+                            bottom: { style: "medium", color: { rgb: "000000" } },
+                            left: { style: "medium", color: { rgb: "000000" } },
+                            right: { style: "medium", color: { rgb: "000000" } }
                         }
                     };
                 }
@@ -1113,7 +1333,12 @@
                     const nameCell = XLSX.utils.encode_cell({ r: rowIndex, c: 0 });
                     if (statsWS[nameCell]) {
                         statsWS[nameCell].s = {
-                            font: { bold: true, color: { rgb: "FF1F2937" }, sz: 11 },
+                            font: { 
+                                bold: true, 
+                                color: { rgb: "000000" }, 
+                                sz: 11,
+                                name: "Calibri"
+                            },
                             fill: { fgColor: { rgb: "F3F4F6" } },
                             alignment: { horizontal: "left", vertical: "center" },
                             border: {
@@ -1154,7 +1379,14 @@
                 XLSX.writeFile(workbook, filename);
                 
                 // Show success message
-                alert(`Excel file exported successfully!\nFile: ${filename}\n\nThe file includes:\n• Patient Care Schedule\n• Staff Schedule\n• Staff Statistics`);
+                alert(`✅ Microsoft Excel file exported successfully!\n\n` +
+                      `📂 File: ${filename}\n\n` +
+                      `🎨 Features included:\n` +
+                      `• Color-coded assignment types\n` +
+                      `• Professional borders and formatting\n` +
+                      `• Calibri font for Excel compatibility\n` +
+                      `• Three worksheets: Patient Care, Staff Schedule, Statistics\n\n` +
+                      `💡 The file is optimized for Microsoft Excel and should display colors correctly.`);
                 
             } catch (error) {
                 console.error('Error exporting to Excel:', error);
