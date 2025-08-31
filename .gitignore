@@ -3,6 +3,24 @@
 # Updated for GitHub Pages deployment
 
 # ===========================================
+# Private Instructions & Documentation
+# ===========================================
+
+# Copilot instructions and workflow files (private development notes)
+.copilot-instructions/
+copilot-instructions.md
+
+# Development workflow documentation (internal use only)
+ASSIGNMENT_ENHANCEMENTS.md
+OBS_IMPLEMENTATION_SUMMARY.md
+MASTER_BACKUP_*.md
+*_BACKUP_*.md
+GITHUB_PAGES_SETUP.md
+GITHUB_RELEASE_INSTRUCTIONS.md
+RELEASE_v3.0.0_COMPLETE.md
+
+# Deploy
+# ===========================================
 # GitHub Pages and Jekyll
 # ===========================================
 
@@ -30,6 +48,10 @@ _config.yml
 # GitHub Actions artifacts
 .github/workflows/deploy.yml
 dist/
+
+# Management scripts (local development only)
+run
+RUN_SCRIPT_DOCS.md
 build/
 
 # Deployment scripts

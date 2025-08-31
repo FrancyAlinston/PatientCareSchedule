@@ -538,7 +538,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v2.2.0)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.1)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -694,8 +694,8 @@
                 breakHoursTableHead.innerHTML = `
                 <tr>
                     <th>Staff</th>
-                    <th>Break Hour 1</th>
-                    <th>Break Hour 2</th>
+                    <th>2-hour Break Block</th>
+                    <th>Duration</th>
                 </tr>`;
             }
         }
@@ -1367,7 +1367,7 @@ function generateSchedule() {
         });
 
         // First, assign break times
-        assignBreaks(allStaff, staffStats);
+        assignBreaks(allStaff, staffStats, patients);
 
         // Then, assign security duties for security staff (if any)
         assignSecurityDuties(securityStaff, staffStats);
@@ -1540,7 +1540,7 @@ function checkStaffSufficiency() {
     return true;
 }
 
-function assignBreaks(allStaff, staffStats) {
+function assignBreaks(allStaff, staffStats, patients) {
     // Filter out nurses in charge from break assignments
     const staffForBreaks = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
 
@@ -1570,37 +1570,91 @@ function assignBreaks(allStaff, staffStats) {
             staffStats[nurseInCharge2].secondBreakTime = "N/A";
         }
     } else {
-        // Night shift - 2-hour continuous breaks at 00:00, 02:00, and 04:00
+        // Night shift - INTELLIGENT break scheduling to prevent staffing conflicts
+        
+        // Calculate minimum staff needed at any time (all patients + OBS + security)
+        const totalPatientRequirements = patients.reduce((total, patient) => total + patient.staffCount, 0);
+        const minimumStaffNeeded = totalPatientRequirements + 1; // +1 for OBS duty
+        
+        console.log(`Night shift staffing analysis:`);
+        console.log(`Total staff available: ${staffForBreaks.length}`);
+        console.log(`Minimum staff needed at any time: ${minimumStaffNeeded}`);
+        
+        // Break time blocks: 00:00-02:00, 02:00-04:00, 04:00-06:00
+        const breakTimeBlocks = [
+            { start: 4, end: 5, name: "00:00-02:00" },  // 00:00-01:00, 01:00-02:00
+            { start: 6, end: 7, name: "02:00-04:00" },  // 02:00-03:00, 03:00-04:00  
+            { start: 8, end: 9, name: "04:00-06:00" }   // 04:00-05:00, 05:00-06:00
+        ];
 
-        // Break starting time slots (00:00, 02:00, 04:00)
-        const breakStartSlots = [4, 6, 8]; // Indexes in nightShiftSlots
+        // SMART BREAK ALLOCATION: Ensure we never have too many staff on break
+        const maxStaffOnBreakAtOnce = Math.max(1, staffForBreaks.length - minimumStaffNeeded);
+        
+        console.log(`Maximum staff allowed on break simultaneously: ${maxStaffOnBreakAtOnce}`);
+        
+        // If we can't safely give breaks to everyone, prioritize patient safety
+        if (maxStaffOnBreakAtOnce < 1) {
+            console.warn(`INSUFFICIENT STAFFING: Cannot provide breaks without compromising patient care`);
+            console.warn(`Need at least ${minimumStaffNeeded + 1} staff for safe break rotation`);
+            
+            // Emergency: Only nurses-in-charge get no breaks, everyone else gets minimal breaks
+            staffForBreaks.forEach(s => {
+                staffStats[s].breakTime = 0;
+                staffStats[s].shortBreakTime = "STAFFING SHORTAGE";
+                staffStats[s].secondBreakTime = "UNABLE TO PROVIDE";
+            });
+            
+            return; // Skip break allocation
+        }
 
-        // Group only non-nurse-in-charge staff into 3 relatively equal groups
-        const staffGroups = [[], [], []];
+        // Safe break allocation - divide staff into groups that won't create conflicts
+        const numberOfGroups = Math.ceil(staffForBreaks.length / maxStaffOnBreakAtOnce);
+        const staffGroups = Array.from({ length: numberOfGroups }, () => []);
+        
+        // Distribute staff evenly across groups
         staffForBreaks.forEach((s, index) => {
-            const groupIndex = index % 3;
+            const groupIndex = index % numberOfGroups;
             staffGroups[groupIndex].push(s);
         });
 
-        // Assign 2-hour breaks to each group
+        console.log(`Created ${numberOfGroups} break groups:`, staffGroups.map(g => g.length));
+
+        // Assign 2-hour break blocks to each group
         staffGroups.forEach((group, groupIndex) => {
-            const breakStartIndex = breakStartSlots[groupIndex];
+            // Only assign breaks if we have a corresponding break block
+            if (groupIndex < breakTimeBlocks.length) {
+                const breakBlock = breakTimeBlocks[groupIndex];
 
-            // Assign breaks to all staff in this group
-            group.forEach(s => {
-                // First hour of break
-                schedule[timeSlots[breakStartIndex]].staffBreaks[s] = "NIGHT BREAK";
+                // Assign breaks to all staff in this group for the full 2-hour block
+                group.forEach(s => {
+                    // First hour of 2-hour break block
+                    schedule[timeSlots[breakBlock.start]].staffBreaks[s] = "NIGHT BREAK";
 
-                // Second hour of break (consecutive)
-                schedule[timeSlots[breakStartIndex + 1]].staffBreaks[s] = "NIGHT BREAK";
+                    // Second hour of 2-hour break block
+                    schedule[timeSlots[breakBlock.end]].staffBreaks[s] = "NIGHT BREAK";
 
-                // Update staff stats
-                staffStats[s].breakTime = 2; // Total break time is 2 hours
+                    // Update staff stats
+                    staffStats[s].breakTime = 2; // Total break time is 2 hours
 
-                // Store break time info for display in table
-                staffStats[s].shortBreakTime = timeSlots[breakStartIndex];
-                staffStats[s].secondBreakTime = timeSlots[breakStartIndex + 1];
-            });
+                    // Store break time info for display in table (show full block)
+                    staffStats[s].shortBreakTime = breakBlock.name;
+                    staffStats[s].secondBreakTime = "CONTINUOUS";
+                    
+                    console.log(`Assigned ${s} to break block: ${breakBlock.name}`);
+                });
+            } else {
+                // Staff in excess groups get shorter breaks or staggered breaks
+                console.warn(`Group ${groupIndex + 1} cannot get full 2-hour break due to staffing constraints`);
+                group.forEach(s => {
+                    // Give them at least 1 hour break during the safest block (00:00-02:00)
+                    const safeBreakIndex = breakTimeBlocks[0].start; // 00:00 hour
+                    schedule[timeSlots[safeBreakIndex]].staffBreaks[s] = "SHORT NIGHT BREAK";
+                    
+                    staffStats[s].breakTime = 1;
+                    staffStats[s].shortBreakTime = timeSlots[safeBreakIndex];
+                    staffStats[s].secondBreakTime = "NONE";
+                });
+            }
         });
 
         // Set nurses in charge break times to "N/A" since they don't get scheduled breaks
@@ -1852,8 +1906,34 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
     // Calculate total staff requirement across all patients
     const totalStaffRequired = patients.reduce((total, patient) => total + patient.staffCount, 0);
 
+    console.log(`=== STAFFING ADEQUACY CHECK ===`);
+    console.log(`Total staff required: ${totalStaffRequired}`);
+    console.log(`Total regular staff available: ${staff.length}`);
+    console.log(`Total security staff available: ${securityStaff.length}`);
+    console.log(`Total staff pool: ${staff.length + securityStaff.length}`);
+
     // Process each time slot with multi-pass assignment to ensure no patient is left unassigned
     timeSlots.forEach((time, timeIndex) => {
+        console.log(`\n=== Processing time slot: ${time} ===`);
+
+        // PRE-ASSIGNMENT CHECK: Count how many staff are available at this time
+        const staffOnBreak = staff.filter(s => schedule[time].staffBreaks[s]).length;
+        const securityOnDuty = securityStaff.filter(s => schedule[time].staffBreaks[s] === "SECURITY DUTY").length;
+        const staffAvailableForPatients = (staff.length - staffOnBreak) + (securityStaff.length - securityOnDuty);
+        
+        console.log(`Time ${time} staffing analysis:`);
+        console.log(`  Regular staff on break: ${staffOnBreak}/${staff.length}`);
+        console.log(`  Security staff on duty: ${securityOnDuty}/${securityStaff.length}`);
+        console.log(`  Staff available for patients: ${staffAvailableForPatients}`);
+        console.log(`  Staff required for patients: ${totalStaffRequired}`);
+        
+        if (staffAvailableForPatients < totalStaffRequired) {
+            console.error(`🚨 CRITICAL STAFFING SHORTAGE at ${time}:`);
+            console.error(`  Need: ${totalStaffRequired} staff`);
+            console.error(`  Have: ${staffAvailableForPatients} staff`);
+            console.error(`  Shortage: ${totalStaffRequired - staffAvailableForPatients} staff`);
+            console.error(`This will likely cause assignment conflicts!`);
+        }
         console.log(`\n=== Processing time slot: ${time} ===`);
 
         // PASS 1: Try to assign with optimal staff (not on breaks)
@@ -2606,10 +2686,24 @@ function regenerateScheduleStats() {
                         }
                     } else if (breakType === "NIGHT BREAK") {
                         staffStats[staffName].breakTime += 1;
-                        if (!staffStats[staffName].shortBreakTime) {
-                            staffStats[staffName].shortBreakTime = time;
-                        } else if (!staffStats[staffName].secondBreakTime) {
-                            staffStats[staffName].secondBreakTime = time;
+                        
+                        // For night shift, group consecutive NIGHT BREAK hours into 2-hour blocks
+                        if (!staffStats[staffName].nightBreakStart) {
+                            // First hour of night break - store the start time
+                            staffStats[staffName].nightBreakStart = time;
+                            staffStats[staffName].shortBreakTime = time; // Temporary, will be updated when block completes
+                        } else {
+                            // Second hour of night break - create the full block time
+                            const startTime = staffStats[staffName].nightBreakStart;
+                            const endTime = time.split('-')[1]; // Get end time of current slot
+                            const fullBlockTime = `${startTime.split('-')[0]}-${endTime}`;
+                            
+                            // Update to show full 2-hour block
+                            staffStats[staffName].shortBreakTime = fullBlockTime;
+                            staffStats[staffName].secondBreakTime = "CONTINUOUS";
+                            
+                            // Clean up temporary variable
+                            delete staffStats[staffName].nightBreakStart;
                         }
                     }
                 }
@@ -2744,15 +2838,7 @@ window.onload = function() {
     document.getElementById('resetAllBreaks').addEventListener('click', resetAllBreakTimes);
     document.getElementById('saveBreakChanges').addEventListener('click', applyBreakTimeChanges);
 
-    // Debug button functionality
-    document.getElementById('debugFillBtn').addEventListener('click', async function() {
-        try {
-            // Debug fill code here
-            saveToSessionStorage();
-        } catch (error) {
-            console.error("Debug fill error:", error);
-        }
-    });
+
 
     // Debug panel toggle button
     document.getElementById('toggleDebugBtn').addEventListener('click', function() {
@@ -3295,21 +3381,29 @@ function populateEditableBreakTable() {
     tbody.innerHTML = '';
 
     // Update headers based on shift type
+    const secondBreakHeader = document.getElementById('secondBreakHeader');
+    const actionHeaders = document.querySelectorAll('#editableBreakTable th:last-child');
+
     if (isDayShift) {
         document.getElementById('firstBreakHeader').textContent = '30-min Break';
-        document.getElementById('secondBreakHeader').textContent = '1-hour 2nd Break';
+        secondBreakHeader.textContent = '1-hour 2nd Break';
+        secondBreakHeader.style.display = ''; // Show second break column
+        actionHeaders.forEach(header => header.style.display = ''); // Show actions column
     } else {
-        document.getElementById('firstBreakHeader').textContent = '1st Break Hour';
-        document.getElementById('secondBreakHeader').textContent = '2nd Break Hour';
+        document.getElementById('firstBreakHeader').textContent = '2-Hour Night Break';
+        secondBreakHeader.style.display = 'none'; // Hide second break column for night shift
+        actionHeaders.forEach(header => header.style.display = ''); // Keep actions column visible
     }
 
     if (!window.originalStaffStats) {
-        tbody.innerHTML = '<tr><td colspan="4">No schedule generated yet. Please generate a schedule first.</td></tr>';
+        const colspan = isDayShift ? '4' : '3'; // Adjust colspan based on shift type
+        tbody.innerHTML = `<tr><td colspan="${colspan}">No schedule generated yet. Please generate a schedule first.</td></tr>`;
         return;
     }
 
     const allStaff = Object.keys(window.originalStaffStats);
-    const timeOptions = getAvailableTimeSlots();
+    // For night shift, only use 00:00, 02:00, 04:00 as break options
+    const timeOptions = isDayShift ? getAvailableTimeSlots() : ["00:00", "02:00", "04:00"];
 
     // Filter out nursing staff from break adjustment table
     const nonNursingStaff = allStaff.filter(staffName =>
@@ -3324,29 +3418,52 @@ function populateEditableBreakTable() {
         const row = document.createElement('tr');
         row.setAttribute('data-staff', staffName);
 
-        row.innerHTML = `
-            <td><strong>${staffName}</strong></td>
-            <td>
-                ${shortBreak === 'N/A' ?
-                    '<span>N/A (Nurse in Charge)</span>' :
-                    `<select class="break-time-select" data-break-type="short">${generateTimeOptions(timeOptions, shortBreak)}</select>`
-                }
-            </td>
-            <td>
-                ${secondBreak === 'N/A' ?
-                    '<span>N/A (Nurse in Charge)</span>' :
-                    `<select class="break-time-select" data-break-type="second">${generateTimeOptions(timeOptions, secondBreak)}</select>`
-                }
-            </td>
-            <td>
-                <div class="staff-break-actions">
-                    ${(shortBreak !== 'N/A' && secondBreak !== 'N/A') ?
-                        `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
-                        '<span>-</span>'
+        if (isDayShift) {
+            // Day shift: Show both break columns
+            row.innerHTML = `
+                <td><strong>${staffName}</strong></td>
+                <td>
+                    ${shortBreak === 'N/A' ?
+                        '<span>N/A (Nurse in Charge)</span>' :
+                        `<select class="break-time-select" data-break-type="short">${generateTimeOptions(timeOptions, shortBreak)}</select>`
                     }
-                </div>
-            </td>
-        `;
+                </td>
+                <td>
+                    ${secondBreak === 'N/A' ?
+                        '<span>N/A (Nurse in Charge)</span>' :
+                        `<select class="break-time-select" data-break-type="second">${generateTimeOptions(timeOptions, secondBreak)}</select>`
+                    }
+                </td>
+                <td>
+                    <div class="staff-break-actions">
+                        ${(shortBreak !== 'N/A' && secondBreak !== 'N/A') ?
+                            `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
+                            '<span>-</span>'
+                        }
+                    </div>
+                </td>
+            `;
+        } else {
+            // Night shift: Show only one break column (use shortBreak as the main break)
+            const nightBreak = shortBreak !== 'N/A' ? shortBreak : secondBreak;
+            row.innerHTML = `
+                <td><strong>${staffName}</strong></td>
+                <td>
+                    ${nightBreak === 'N/A' ?
+                        '<span>N/A (Nurse in Charge)</span>' :
+                        `<select class="break-time-select" data-break-type="night">${["00:00", "02:00", "04:00"].map(time => `<option value="${time}" ${nightBreak === time ? 'selected' : ''}>${time}</option>`).join('')}</select>`
+                    }
+                </td>
+                <td>
+                    <div class="staff-break-actions">
+                        ${nightBreak !== 'N/A' ?
+                            `<button class="reset-staff-btn" onclick="resetStaffBreaks('${staffName}')">Reset</button>` :
+                            '<span>-</span>'
+                        }
+                    </div>
+                </td>
+            `;
+        }
 
         tbody.appendChild(row);
     });
@@ -3354,6 +3471,14 @@ function populateEditableBreakTable() {
 
 function getAvailableTimeSlots() {
     return [...timeSlots]; // Use the global timeSlots array directly
+}
+
+function getSimplifiedNightTimeSlots() {
+    // Return simplified time format for night shift: just the hour (00:00, 02:00, 04:00, etc.)
+    return timeSlots.map(timeSlot => {
+        // Extract the hour from time format like "22:00-23:00" and return just "22:00"
+        return timeSlot.split('-')[0];
+    });
 }
 
 function generateTimeOptions(timeSlots, selectedTime) {
@@ -3365,17 +3490,38 @@ function generateTimeOptions(timeSlots, selectedTime) {
     return options;
 }
 
+function generateSimplifiedTimeOptions(timeSlots, selectedTime) {
+    let options = '';
+    timeSlots.forEach(timeSlot => {
+        const selected = timeSlot === selectedTime || timeSlot === selectedTime.split('-')[0] ? 'selected' : '';
+        // Display simplified format but store the original format for compatibility
+        const displayTime = timeSlot;
+        const storeTime = isDayShift ? timeSlot : timeSlot;
+        options += `<option value="${storeTime}" ${selected}>${displayTime}</option>`;
+    });
+    return options;
+}
+
 function resetStaffBreaks(staffName) {
     if (originalBreakTimes[staffName]) {
         const original = originalBreakTimes[staffName];
         const row = document.querySelector(`tr[data-staff="${staffName}"]`);
 
-        // Reset the select values
-        const shortSelect = row.querySelector('select[data-break-type="short"]');
-        const secondSelect = row.querySelector('select[data-break-type="second"]');
+        if (isDayShift) {
+            // Day shift: Reset both break selects
+            const shortSelect = row.querySelector('select[data-break-type="short"]');
+            const secondSelect = row.querySelector('select[data-break-type="second"]');
 
-        if (shortSelect) shortSelect.value = original.shortBreakTime;
-        if (secondSelect) secondSelect.value = original.secondBreakTime;
+            if (shortSelect) shortSelect.value = original.shortBreakTime;
+            if (secondSelect) secondSelect.value = original.secondBreakTime;
+        } else {
+            // Night shift: Reset single break select
+            const nightSelect = row.querySelector('select[data-break-type="night"]');
+            if (nightSelect) {
+                const originalBreak = original.shortBreakTime !== 'N/A' ? original.shortBreakTime : original.secondBreakTime;
+                nightSelect.value = originalBreak;
+            }
+        }
     }
 }
 
@@ -3400,22 +3546,49 @@ function applyBreakTimeChanges() {
     const rows = document.querySelectorAll('#editableBreakTable tbody tr');
     rows.forEach(row => {
         const staffName = row.getAttribute('data-staff');
-        const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
-        const secondBreakSelect = row.querySelector('select[data-break-type="second"]');
 
-        if (shortBreakSelect && secondBreakSelect) {
-            const newShortBreak = shortBreakSelect.value;
-            const newSecondBreak = secondBreakSelect.value;
-            const original = originalBreakTimes[staffName];
+        if (isDayShift) {
+            // Day shift: Handle both breaks
+            const shortBreakSelect = row.querySelector('select[data-break-type="short"]');
+            const secondBreakSelect = row.querySelector('select[data-break-type="second"]');
 
-            if (original && (newShortBreak !== original.shortBreakTime || newSecondBreak !== original.secondBreakTime)) {
-                changes[staffName] = {
-                    oldShort: original.shortBreakTime,
-                    oldSecond: original.secondBreakTime,
-                    newShort: newShortBreak,
-                    newSecond: newSecondBreak
-                };
-                hasChanges = true;
+            if (shortBreakSelect && secondBreakSelect) {
+                const newShortBreak = shortBreakSelect.value;
+                const newSecondBreak = secondBreakSelect.value;
+                const original = originalBreakTimes[staffName];
+
+                if (original && (newShortBreak !== original.shortBreakTime || newSecondBreak !== original.secondBreakTime)) {
+                    changes[staffName] = {
+                        oldShort: original.shortBreakTime,
+                        oldSecond: original.secondBreakTime,
+                        newShort: newShortBreak,
+                        newSecond: newSecondBreak
+                    };
+                    hasChanges = true;
+                }
+            }
+        } else {
+            // Night shift: Handle single break
+            const nightBreakSelect = row.querySelector('select[data-break-type="night"]');
+
+            if (nightBreakSelect) {
+                const newNightBreak = nightBreakSelect.value;
+                const original = originalBreakTimes[staffName];
+
+                if (original) {
+                    // For night shift, we store the break in shortBreakTime and clear secondBreakTime
+                    const originalBreak = original.shortBreakTime !== 'N/A' ? original.shortBreakTime : original.secondBreakTime;
+
+                    if (newNightBreak !== originalBreak) {
+                        changes[staffName] = {
+                            oldShort: original.shortBreakTime,
+                            oldSecond: original.secondBreakTime,
+                            newShort: newNightBreak, // Store night break as shortBreakTime
+                            newSecond: 'N/A' // Clear second break for night shift
+                        };
+                        hasChanges = true;
+                    }
+                }
             }
         }
     });
@@ -3446,14 +3619,25 @@ function validateBreakTimeChanges(changes) {
     Object.keys(changes).forEach(staffName => {
         const change = changes[staffName];
 
-        [change.newShort, change.newSecond].forEach(time => {
-            if (time && time !== 'N/A') {
-                if (!timeSlotUsage[time]) {
-                    timeSlotUsage[time] = [];
+        if (isDayShift) {
+            // Day shift: Check both breaks
+            [change.newShort, change.newSecond].forEach(time => {
+                if (time && time !== 'N/A') {
+                    if (!timeSlotUsage[time]) {
+                        timeSlotUsage[time] = [];
+                    }
+                    timeSlotUsage[time].push(staffName);
                 }
-                timeSlotUsage[time].push(staffName);
+            });
+        } else {
+            // Night shift: Only check the single break (stored in newShort)
+            if (change.newShort && change.newShort !== 'N/A') {
+                if (!timeSlotUsage[change.newShort]) {
+                    timeSlotUsage[change.newShort] = [];
+                }
+                timeSlotUsage[change.newShort].push(staffName);
             }
-        });
+        }
     });
 
     // Check for conflicts with unchanged staff
@@ -3461,14 +3645,27 @@ function validateBreakTimeChanges(changes) {
         Object.keys(window.originalStaffStats).forEach(staffName => {
             if (!changes[staffName]) {
                 const staff = window.originalStaffStats[staffName];
-                [staff.shortBreakTime, staff.secondBreakTime].forEach(time => {
-                    if (time && time !== 'N/A') {
-                        if (!timeSlotUsage[time]) {
-                            timeSlotUsage[time] = [];
+
+                if (isDayShift) {
+                    // Day shift: Check both break times
+                    [staff.shortBreakTime, staff.secondBreakTime].forEach(time => {
+                        if (time && time !== 'N/A') {
+                            if (!timeSlotUsage[time]) {
+                                timeSlotUsage[time] = [];
+                            }
+                            timeSlotUsage[time].push(staffName);
                         }
-                        timeSlotUsage[time].push(staffName);
+                    });
+                } else {
+                    // Night shift: Check only the assigned break time
+                    const nightBreak = staff.shortBreakTime !== 'N/A' ? staff.shortBreakTime : staff.secondBreakTime;
+                    if (nightBreak && nightBreak !== 'N/A') {
+                        if (!timeSlotUsage[nightBreak]) {
+                            timeSlotUsage[nightBreak] = [];
+                        }
+                        timeSlotUsage[nightBreak].push(staffName);
                     }
-                });
+                }
             }
         });
     }
@@ -3566,14 +3763,34 @@ function renderBreakHoursTable() {
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
 
-        // Break time cells
-        const shortBreakCell = document.createElement('td');
-        shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
-        row.appendChild(shortBreakCell);
+        if (isDayShift) {
+            // Day shift: show both break columns as before
+            const shortBreakCell = document.createElement('td');
+            shortBreakCell.textContent = staffStats.shortBreakTime || "N/A";
+            row.appendChild(shortBreakCell);
 
-        const secondBreakCell = document.createElement('td');
-        secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
-        row.appendChild(secondBreakCell);
+            const secondBreakCell = document.createElement('td');
+            secondBreakCell.textContent = staffStats.secondBreakTime || "N/A";
+            row.appendChild(secondBreakCell);
+        } else {
+            // Night shift: only show 00:00, 02:00, 04:00 as valid break hours
+            // If the staff's break is not one of these, show N/A
+            const allowedNightBreaks = ["00:00", "02:00", "04:00"];
+            let nightBreak = staffStats.shortBreakTime !== 'N/A' ? staffStats.shortBreakTime : staffStats.secondBreakTime;
+            // Convert e.g. "00:00-01:00" to "00:00" for comparison
+            if (nightBreak && nightBreak.includes('-')) {
+                nightBreak = nightBreak.split('-')[0];
+            }
+            const showBreak = allowedNightBreaks.includes(nightBreak) ? nightBreak : "N/A";
+            const nightBreakCell = document.createElement('td');
+            nightBreakCell.textContent = showBreak;
+            row.appendChild(nightBreakCell);
+
+            // Second column: always N/A for night shift (to keep table structure)
+            const naCell = document.createElement('td');
+            naCell.textContent = "N/A";
+            row.appendChild(naCell);
+        }
 
         breakHoursTable.appendChild(row);
     });
