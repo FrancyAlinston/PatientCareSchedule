@@ -273,6 +273,14 @@
             color: #333333; /* Dark text color for white background */
         }
 
+        /* Ensure headings are clearly visible in dark mode */
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3 {
+            color: #ffffff !important; /* Force white text for all headings in dark mode */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Add subtle shadow for better contrast */
+        }
+
         .staff-count {
             padding: 5px; /* Reduce padding */
             border: 1px solid #dfe4ea;
