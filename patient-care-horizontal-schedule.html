@@ -553,7 +553,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.8)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.9)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -2360,8 +2360,24 @@ function findStaffWithContinuityLimit(availableStaff, patientName, count, staffS
         const continuousHoursB = continuousTracker[b] ? (continuousTracker[b][patientName] || 0) : 0;
 
         // Apply strong penalty for staff with 3+ continuous hours (to force rotation)
-        const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
-        const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+        // SPECIAL CASE: Allow continuity during first 2 hours of night shift (20:00-22:00)
+        const isEarlyNightShift = timeIndex < 2; // First 2 time slots (20:00-21:00, 21:00-22:00)
+        
+        if (isEarlyNightShift) {
+            console.log(`📅 Early night shift detected (${timeSlots[timeIndex]}): Allowing staff continuity for ${patientName}`);
+        }
+        
+        let continuityPenaltyA, continuityPenaltyB;
+        
+        if (isEarlyNightShift) {
+            // During first 2 hours: Much reduced penalties to allow continuity
+            continuityPenaltyA = continuousHoursA >= 4 ? 500 : (continuousHoursA >= 3 ? 50 : 0);
+            continuityPenaltyB = continuousHoursB >= 4 ? 500 : (continuousHoursB >= 3 ? 50 : 0);
+        } else {
+            // Normal hours: Standard penalties to encourage rotation
+            continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+            continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+        }
 
         // Other factors from original algorithm
         const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;

@@ -15,7 +15,45 @@ Implementation of three major features:
 - **🚨 CRITICAL VERSION:** 3.1.6 (+ Fixed Staff Double-Assignment Conflicts)
 - **📊 STATS VERSION:** 3.1.7 (+ Fixed OBS Work Hours Calculation)
 - **🗑️ SECURITY VERSION:** 3.1.8 (+ Fixed Security-Only Duties Assignment)
+- **⏰ CONTINUITY VERSION:** 3.1.9 (+ Allow Staff Continuity During Early Night Shift)
 - **Implementation Date:** August 30, 2025
+
+## ⏰ EARLY NIGHT SHIFT CONTINUITY v3.1.9
+
+### **FEATURE ADDED**: Staff Continuity During 20:00-22:00
+**Enhancement**: Staff can now continue working with the same patient during the **first 2 hours of night shift** (20:00-21:00 and 21:00-22:00).
+
+### **Rationale**: 
+- **Shift Transition**: First 2 hours are critical transition period from day shift
+- **Continuity Benefits**: Same staff can maintain patient care during handover period
+- **Stability**: Reduces disruption during shift change
+
+### **Implementation**:
+```javascript
+// SPECIAL CASE: Allow continuity during first 2 hours of night shift (20:00-22:00)
+const isEarlyNightShift = timeIndex < 2; // First 2 time slots
+
+if (isEarlyNightShift) {
+    // During first 2 hours: Much reduced penalties to allow continuity
+    continuityPenaltyA = continuousHoursA >= 4 ? 500 : (continuousHoursA >= 3 ? 50 : 0);
+    continuityPenaltyB = continuousHoursB >= 4 ? 500 : (continuousHoursB >= 3 ? 50 : 0);
+} else {
+    // Normal hours: Standard penalties to encourage rotation
+    continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+    continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+}
+```
+
+### **Behavior Changes**:
+- ✅ **20:00-21:00 → 21:00-22:00**: Same staff can continue with same patient
+- ✅ **Reduced Rotation Pressure**: Lower penalties for consecutive assignments
+- ✅ **After 22:00**: Normal rotation rules apply to encourage fairness
+- ✅ **Logging**: Console shows when early night shift continuity is allowed
+
+### **Benefits**:
+- **Smoother Transitions**: Better patient care continuity during shift change
+- **Reduced Confusion**: Same staff familiar with patient condition
+- **Flexible Scheduling**: Natural flow from day shift assignments
 
 ## 🗑️ SECURITY DUTIES FIX v3.1.8
 
