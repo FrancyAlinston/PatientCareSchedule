@@ -666,13 +666,42 @@
             return (firstInitial + lastInitial).toUpperCase();
         }
 
-        // Staff Color Management System - Consistent colors throughout the site
+        // Staff Color Management System - HIGH CONTRAST colors for better visibility
         let staffColorMap = {}; // Store staff name -> color mapping
         const staffColors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
-            '#BB8FCE', '#85C1E9', '#82E0AA', '#F8C471', '#F1948A', '#85C1E9', '#A9DFBF', '#F9E79F',
-            '#D7BDE2', '#A3E4D7', '#FAD7A0', '#FADBD8', '#D5DBDB', '#AED6F1', '#A9DFBF', '#FCF3CF',
-            '#EBDEF0', '#D1F2EB', '#FDEAA7', '#FDEDEC', '#EAEDED', '#D6EAF8', '#D4EDDA', '#FFF3CD'
+            // Primary distinct colors
+            '#FF0000', // Bright Red
+            '#0000FF', // Bright Blue  
+            '#00AA00', // Green
+            '#FF8C00', // Dark Orange
+            '#8B00FF', // Blue Violet
+            '#DC143C', // Crimson
+            '#00CED1', // Dark Turquoise
+            '#FFD700', // Gold
+            '#FF1493', // Deep Pink
+            '#32CD32', // Lime Green
+            '#4169E1', // Royal Blue
+            '#FF4500', // Orange Red
+            '#9932CC', // Dark Orchid
+            '#00FFFF', // Cyan
+            '#FF69B4', // Hot Pink
+            '#228B22', // Forest Green
+            '#FF6347', // Tomato
+            '#4682B4', // Steel Blue
+            '#DA70D6', // Orchid
+            '#20B2AA', // Light Sea Green
+            '#B22222', // Fire Brick
+            '#6495ED', // Cornflower Blue
+            '#FF7F50', // Coral
+            '#9370DB', // Medium Purple
+            '#3CB371', // Medium Sea Green
+            '#CD5C5C', // Indian Red
+            '#87CEEB', // Sky Blue
+            '#F0E68C', // Khaki
+            '#DDA0DD', // Plum
+            '#98FB98', // Pale Green
+            '#F4A460', // Sandy Brown
+            '#66CDAA'  // Medium Aquamarine
         ];
 
         function getStaffColor(staffName) {
