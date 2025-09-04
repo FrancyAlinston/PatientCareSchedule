@@ -6,11 +6,16 @@
     <title>Patient Care Schedule - Horizontal Layout</title>
     <!--
     Patient Care Schedule Application
-    Version: 3.1.1
-    Date: July 21, 2025
+    Version: 3.2.0
+    Date: September 4, 2025
     Features: OBS Ward Observation, Enhanced Popup with Staff Allocation Tracking,
              Patient Care Ratio Enforcement, Night Shift Cleaning Duties with Reassignment,
-             Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix
+             Break Management, Interactive Cleaning Duty Assignment, jQuery Popup Fix,
+             Security-Only Cleaning Duties (Kitchen & Bins restricted to security staff only),
+             Consistent Staff Color Coding (Text colors only, completely clean table backgrounds),
+             Enhanced Emergency Assignment Logic, Improved Workload Balancing,
+             Smart Security Staff Utilization, Night Shift Continuity (20:00-22:00),
+             3-Hour Rule Enforcement, Security Exception for 06:00-07:00
     -->
     <style>
         /* Core styling for light and dark modes */
@@ -232,6 +237,23 @@
 
         .legend-cleaning-duty {
             background-color: #9c27b0;
+        }
+
+        /* Security-only cleaning duties styling */
+        .security-only-duty {
+            background-color: #dc3545 !important; /* Red background for security-only duties */
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+
+        .security-only-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 5px;
+            display: inline-block;
         }
 
         /* Ensure text color is visible for cells with white background in dark mode */
@@ -560,7 +582,7 @@
 
         <!-- Schedule tables -->
         <div class="schedule-container">
-            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.1)</span></h2>
+            <h2>Patient Care Schedule <span style="font-size: 0.6em; color: #666; font-weight: normal;">(v3.1.9)</span></h2>
             <table id="scheduleTable">
                 <thead id="scheduleHeader"></thead>
                 <tbody id="scheduleBody"></tbody>
@@ -651,6 +673,86 @@
             return (firstInitial + lastInitial).toUpperCase();
         }
 
+        // Staff Color Management System - HIGH CONTRAST colors for better visibility
+        let staffColorMap = {}; // Store staff name -> color mapping
+        const staffColors = [
+            // Primary distinct colors
+            '#FF0000', // Bright Red
+            '#0000FF', // Bright Blue  
+            '#00AA00', // Green
+            '#FF8C00', // Dark Orange
+            '#8B00FF', // Blue Violet
+            '#DC143C', // Crimson
+            '#00CED1', // Dark Turquoise
+            '#FFD700', // Gold
+            '#FF1493', // Deep Pink
+            '#32CD32', // Lime Green
+            '#4169E1', // Royal Blue
+            '#FF4500', // Orange Red
+            '#9932CC', // Dark Orchid
+            '#00FFFF', // Cyan
+            '#FF69B4', // Hot Pink
+            '#228B22', // Forest Green
+            '#FF6347', // Tomato
+            '#4682B4', // Steel Blue
+            '#DA70D6', // Orchid
+            '#20B2AA', // Light Sea Green
+            '#B22222', // Fire Brick
+            '#6495ED', // Cornflower Blue
+            '#FF7F50', // Coral
+            '#9370DB', // Medium Purple
+            '#3CB371', // Medium Sea Green
+            '#CD5C5C', // Indian Red
+            '#87CEEB', // Sky Blue
+            '#F0E68C', // Khaki
+            '#DDA0DD', // Plum
+            '#98FB98', // Pale Green
+            '#F4A460', // Sandy Brown
+            '#66CDAA'  // Medium Aquamarine
+        ];
+
+        function getStaffColor(staffName) {
+            if (!staffName || staffName.trim() === '') return '#6c757d'; // Default gray for empty names
+            
+            const cleanName = staffName.trim();
+            
+            // If staff already has a color, return it
+            if (staffColorMap[cleanName]) {
+                return staffColorMap[cleanName];
+            }
+            
+            // Assign new color based on current number of staff
+            const assignedColors = Object.keys(staffColorMap).length;
+            const colorIndex = assignedColors % staffColors.length;
+            staffColorMap[cleanName] = staffColors[colorIndex];
+            
+            return staffColorMap[cleanName];
+        }
+
+        function getStaffWithColor(staffName) {
+            const initials = getInitials(staffName);
+            const color = getStaffColor(staffName);
+            return {
+                name: staffName,
+                initials: initials,
+                color: color
+            };
+        }
+
+        function formatStaffDisplay(staffName, showFullName = false) {
+            if (!staffName || staffName.trim() === '') return '';
+            
+            const staffData = getStaffWithColor(staffName);
+            const displayText = showFullName ? `${staffData.initials} (${staffData.name})` : staffData.initials;
+            
+            return `<span style="color: ${staffData.color}; font-weight: bold;">${displayText}</span>`;
+        }
+
+        // Reset staff color mapping (useful when staff list changes)
+        function resetStaffColors() {
+            staffColorMap = {};
+        }
+
         // In the updateLegend function, update the break hours table header
         function updateLegend() {
             // Update legend based on shift
@@ -687,6 +789,10 @@
                     <div class="legend-item">
                         <div class="legend-color legend-cleaning-duty"></div>
                         <div>Cleaning Duty</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                        <div>🔒 Security-Only Duties (Kitchen & Bins)</div>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color legend-unassigned"></div>
@@ -736,6 +842,9 @@
             "DINING ROOM", "OFFICE ROOM", "TAKE OUT BINS", "LAUNDRY ROOM", "PHONE ROOM",
             "LOUNGE", "KITCHEN", "QUIET ROOM", "CORRIDOR", "TOILETS"
         ];
+
+        // Security-only cleaning duties (new rule: only security staff can do these)
+        let securityOnlyDuties = ["KITCHEN", "TAKE OUT BINS"];
 
         // Time slot definitions
         const dayShiftSlots = ["08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00", "18:00-19:00", "19:00-20:00"];
@@ -865,8 +974,8 @@ function createMessageDiv() {
                 sessionStorage.setItem('patientCareData', JSON.stringify(data));
                 return true;
             } catch (error) {
-                console.error("Error saving to sessionStorage:", error);
-                showError("Failed to save your changes. This is a demo - data is temporary. Session storage might be restricted. This is a demo - data is temporary..");
+                console.error("Error saving to localStorage:", error);
+                showError("Failed to save your changes. Your browser storage might be full or restricted.");
                 return false;
             }
         }
@@ -876,7 +985,7 @@ function createMessageDiv() {
             try {
                 const savedData = sessionStorage.getItem('patientCareData');
                 if (!savedData) {
-                    console.warn("No data found in sessionStorage.");
+                    console.warn("No data found in localStorage.");
                     // Add default data
                     addStaffInput();
                     addPatientInput();
@@ -921,11 +1030,11 @@ function createMessageDiv() {
                 // Set up legend based on shift type
                 updateLegend();
 
-                console.log("Data loaded successfully from sessionStorage");
+                console.log("DEMO: Data loaded successfully from sessionStorage (temporary)");
                 return true;
             } catch (error) {
-                console.error("Error loading from sessionStorage:", error);
-                showError("Failed to load your saved data. This is a demo with temporary storage. Using default settings instead.");
+                console.error("Error loading from localStorage:", error);
+                showError("Failed to load your saved data. Using default settings instead.");
                 return false;
             }
         }
@@ -1222,7 +1331,7 @@ document.getElementById('debugFillBtn').addEventListener('click', async function
         document.body.appendChild(confirmationDiv);
         setTimeout(() => confirmationDiv.remove(), 3000);
 
-        // Save to sessionStorage
+        // Save to localStorage
         saveToSessionStorage();
     } catch (error) {
         console.error("Error fetching random names:", error);
@@ -1282,6 +1391,9 @@ function generateSchedule() {
             return;
         }
 
+        // Initialize consistent staff colors for the entire site
+        resetStaffColors();
+
         // Get current values
         const staff = Array.from(document.querySelectorAll('.staff-name'))
             .map(input => input.value.trim())
@@ -1312,6 +1424,11 @@ function generateSchedule() {
 
         // Add security staff to the combined staff list
         const allStaff = [...staff, ...securityStaff];
+
+        // Pre-assign consistent colors to all staff members
+        allStaff.forEach(staffName => {
+            getStaffColor(staffName); // This will assign a color if not already assigned
+        });
 
         // Get patient inputs
         const patients = Array.from(document.querySelectorAll('.patient-container'))
@@ -1417,6 +1534,9 @@ function generateSchedule() {
         // Store original staffStats for reference during regeneration
         window.originalStaffStats = JSON.parse(JSON.stringify(staffStats));
 
+        // CRITICAL: Validate schedule for conflicts after all assignments
+        validateScheduleForConflicts(schedule, timeSlots);
+
         // Render the schedule
         renderSchedule(schedule, allStaff, patients.map(p => p.name), staffStats);
 
@@ -1435,7 +1555,7 @@ function generateSchedule() {
             breakAdjustmentSection.style.display = 'block';
         }
 
-        // Save to sessionStorage
+        // Save to localStorage
         saveToSessionStorage();
 
         return true;
@@ -1562,6 +1682,54 @@ function checkStaffSufficiency() {
     return true;
 }
 
+// CRITICAL: Validation function to detect staff double-assignment conflicts
+function validateScheduleForConflicts(schedule, timeSlots) {
+    console.log(`🔍 VALIDATING SCHEDULE FOR CONFLICTS...`);
+    let conflictsFound = 0;
+    
+    timeSlots.forEach(time => {
+        const staffAssignments = {};
+        
+        // Track all staff assignments for this time slot
+        for (const patientName in schedule[time].patientAssignments) {
+            const assignments = schedule[time].patientAssignments[patientName] || [];
+            assignments.forEach(staffName => {
+                if (!staffAssignments[staffName]) {
+                    staffAssignments[staffName] = [];
+                }
+                staffAssignments[staffName].push(patientName);
+            });
+        }
+        
+        // Check for conflicts (staff assigned to multiple patients)
+        for (const staffName in staffAssignments) {
+            if (staffAssignments[staffName].length > 1) {
+                conflictsFound++;
+                console.error(`🚨 CONFLICT DETECTED at ${time}: ${staffName} is assigned to multiple patients: ${staffAssignments[staffName].join(', ')}`);
+                
+                // AUTO-FIX: Keep only the first assignment, remove others
+                const primaryAssignment = staffAssignments[staffName][0];
+                const conflictingAssignments = staffAssignments[staffName].slice(1);
+                
+                conflictingAssignments.forEach(conflictPatient => {
+                    const assignments = schedule[time].patientAssignments[conflictPatient];
+                    const index = assignments.indexOf(staffName);
+                    if (index > -1) {
+                        assignments.splice(index, 1);
+                        console.log(`✓ AUTO-FIX: Removed ${staffName} from ${conflictPatient}, kept assignment to ${primaryAssignment}`);
+                    }
+                });
+            }
+        }
+    });
+    
+    if (conflictsFound === 0) {
+        console.log(`✅ VALIDATION PASSED: No staff double-assignment conflicts found`);
+    } else {
+        console.warn(`⚠️ VALIDATION COMPLETE: Found and auto-fixed ${conflictsFound} conflicts`);
+    }
+}
+
 function assignBreaks(allStaff, staffStats, patients) {
     // Filter out nurses in charge from break assignments
     const staffForBreaks = allStaff.filter(s => s !== nurseInCharge1 && s !== nurseInCharge2);
@@ -1593,90 +1761,101 @@ function assignBreaks(allStaff, staffStats, patients) {
         }
     } else {
         // Night shift - INTELLIGENT break scheduling to prevent staffing conflicts
-        
+
         // Calculate minimum staff needed at any time (all patients + OBS + security)
         const totalPatientRequirements = patients.reduce((total, patient) => total + patient.staffCount, 0);
         const minimumStaffNeeded = totalPatientRequirements + 1; // +1 for OBS duty
-        
+
         console.log(`Night shift staffing analysis:`);
         console.log(`Total staff available: ${staffForBreaks.length}`);
         console.log(`Minimum staff needed at any time: ${minimumStaffNeeded}`);
-        
+
         // Break time blocks: 00:00-02:00, 02:00-04:00, 04:00-06:00
         const breakTimeBlocks = [
             { start: 4, end: 5, name: "00:00-02:00" },  // 00:00-01:00, 01:00-02:00
-            { start: 6, end: 7, name: "02:00-04:00" },  // 02:00-03:00, 03:00-04:00  
+            { start: 6, end: 7, name: "02:00-04:00" },  // 02:00-03:00, 03:00-04:00
             { start: 8, end: 9, name: "04:00-06:00" }   // 04:00-05:00, 05:00-06:00
         ];
 
+        // DEBUG: Verify break time block mappings
+        console.log(`=== BREAK TIME BLOCK VERIFICATION ===`);
+        breakTimeBlocks.forEach((block, index) => {
+            console.log(`Block ${index + 1}: ${block.name}`);
+            console.log(`  Start index ${block.start} = ${timeSlots[block.start]}`);
+            console.log(`  End index ${block.end} = ${timeSlots[block.end]}`);
+        });
+        console.log(`========================================`);
+
         // SMART BREAK ALLOCATION: Ensure we never have too many staff on break
         const maxStaffOnBreakAtOnce = Math.max(1, staffForBreaks.length - minimumStaffNeeded);
-        
+
         console.log(`Maximum staff allowed on break simultaneously: ${maxStaffOnBreakAtOnce}`);
-        
+
         // If we can't safely give breaks to everyone, prioritize patient safety
         if (maxStaffOnBreakAtOnce < 1) {
             console.warn(`INSUFFICIENT STAFFING: Cannot provide breaks without compromising patient care`);
             console.warn(`Need at least ${minimumStaffNeeded + 1} staff for safe break rotation`);
-            
+
             // Emergency: Only nurses-in-charge get no breaks, everyone else gets minimal breaks
             staffForBreaks.forEach(s => {
                 staffStats[s].breakTime = 0;
                 staffStats[s].shortBreakTime = "STAFFING SHORTAGE";
                 staffStats[s].secondBreakTime = "UNABLE TO PROVIDE";
             });
-            
+
             return; // Skip break allocation
         }
 
-        // Safe break allocation - divide staff into groups that won't create conflicts
-        const numberOfGroups = Math.ceil(staffForBreaks.length / maxStaffOnBreakAtOnce);
+        // Safe break allocation - ALWAYS utilize all 3 break time blocks
+        // Ensure we create exactly 3 groups to match the 3 available break time blocks
+        const numberOfGroups = breakTimeBlocks.length; // Always 3 groups
         const staffGroups = Array.from({ length: numberOfGroups }, () => []);
-        
-        // Distribute staff evenly across groups
+
+        // Distribute staff across ALL 3 groups in round-robin fashion
+        // This ensures every break block gets staff, even with minimal staffing
         staffForBreaks.forEach((s, index) => {
             const groupIndex = index % numberOfGroups;
             staffGroups[groupIndex].push(s);
         });
 
         console.log(`Created ${numberOfGroups} break groups:`, staffGroups.map(g => g.length));
+        console.log(`Available break time blocks: ${breakTimeBlocks.length}`);
+        console.log(`Staff distribution:`, staffGroups.map((group, i) => `Block ${i + 1} (${breakTimeBlocks[i].name}): ${group.length} staff`));
 
-        // Assign 2-hour break blocks to each group
+        // Assign 2-hour break blocks to each group - ALL groups will be used
         staffGroups.forEach((group, groupIndex) => {
-            // Only assign breaks if we have a corresponding break block
-            if (groupIndex < breakTimeBlocks.length) {
-                const breakBlock = breakTimeBlocks[groupIndex];
+            const breakBlock = breakTimeBlocks[groupIndex];
 
-                // Assign breaks to all staff in this group for the full 2-hour block
-                group.forEach(s => {
-                    // First hour of 2-hour break block
-                    schedule[timeSlots[breakBlock.start]].staffBreaks[s] = "NIGHT BREAK";
+            console.log(`Processing break block ${groupIndex + 1}: ${breakBlock.name} with ${group.length} staff`);
 
-                    // Second hour of 2-hour break block
-                    schedule[timeSlots[breakBlock.end]].staffBreaks[s] = "NIGHT BREAK";
-
-                    // Update staff stats
-                    staffStats[s].breakTime = 2; // Total break time is 2 hours
-
-                    // Store break time info for display in table (show full block)
-                    staffStats[s].shortBreakTime = breakBlock.name;
-                    staffStats[s].secondBreakTime = "CONTINUOUS";
-                    
-                    console.log(`Assigned ${s} to break block: ${breakBlock.name}`);
-                });
-            } else {
-                // Staff in excess groups get shorter breaks or staggered breaks
-                console.warn(`Group ${groupIndex + 1} cannot get full 2-hour break due to staffing constraints`);
-                group.forEach(s => {
-                    // Give them at least 1 hour break during the safest block (00:00-02:00)
-                    const safeBreakIndex = breakTimeBlocks[0].start; // 00:00 hour
-                    schedule[timeSlots[safeBreakIndex]].staffBreaks[s] = "SHORT NIGHT BREAK";
-                    
-                    staffStats[s].breakTime = 1;
-                    staffStats[s].shortBreakTime = timeSlots[safeBreakIndex];
-                    staffStats[s].secondBreakTime = "NONE";
-                });
+            // Even if a group is empty, we still want to log it for debugging
+            if (group.length === 0) {
+                console.log(`⚠️ WARNING: No staff assigned to break block: ${breakBlock.name}`);
+                return;
             }
+
+            // Assign breaks to all staff in this group for the full 2-hour block
+            group.forEach(s => {
+                // First hour of 2-hour break block
+                schedule[timeSlots[breakBlock.start]].staffBreaks[s] = "NIGHT BREAK";
+
+                // Second hour of 2-hour break block
+                schedule[timeSlots[breakBlock.end]].staffBreaks[s] = "NIGHT BREAK";
+
+                // Update staff stats
+                staffStats[s].breakTime = 2; // Total break time is 2 hours
+
+                // Store break time info for display in table (show full block)
+                staffStats[s].shortBreakTime = breakBlock.name;
+                staffStats[s].secondBreakTime = "CONTINUOUS";
+
+                console.log(`✓ Assigned ${s} to break block: ${breakBlock.name} (time slots: ${timeSlots[breakBlock.start]}, ${timeSlots[breakBlock.end]})`);
+                
+                // Special debug message for 04:00 break block
+                if (breakBlock.name === "04:00-06:00") {
+                    console.log(`🎯 CONFIRMED: ${s} assigned to 04:00-06:00 break block (slots ${breakBlock.start}-${breakBlock.end})`);
+                }
+            });
         });
 
         // Set nurses in charge break times to "N/A" since they don't get scheduled breaks
@@ -1742,52 +1921,109 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
 
     // Process each time slot for OBS assignment
     timeSlots.forEach((time, timeIndex) => {
-        // Get available staff for this time slot (those not on break AND not assigned to patients)
-        const availableStaff = regularStaff.filter(s =>
-            !schedule[time].staffBreaks[s] &&
-            !isStaffAlreadyAssigned(s, time, schedule)
-        );
+        // Get available staff for this time slot (those not on break AND not assigned to patients AND respecting 3-hour rule)
+        const availableStaff = regularStaff.filter(s => {
+            // Basic availability checks
+            const basicAvailability = !schedule[time].staffBreaks[s] && 
+                                     !isStaffAlreadyAssigned(s, time, schedule);
+            
+            if (!basicAvailability) return false;
+            
+            // 3-HOUR RULE: Calculate total continuous work hours (OBS + patients)
+            const totalContinuousHours = calculateTotalContinuousWorkHours(s, timeIndex);
+            const within3HourLimit = totalContinuousHours < 3;
+            
+            if (!within3HourLimit) {
+                console.log(`⚠️ 3-HOUR RULE BLOCKED: ${s} has already worked ${totalContinuousHours} continuous hours (OBS + patients), cannot assign to OBS (max 3 hours)`);
+            }
+            
+            return within3HourLimit;
+        });
 
         let allAvailableStaff = availableStaff.length > 0 ? availableStaff :
-            regularStaff.filter(s => !isStaffAlreadyAssigned(s, time, schedule));
+            regularStaff.filter(s => {
+                const basicAvailability = !isStaffAlreadyAssigned(s, time, schedule);
+                if (!basicAvailability) return false;
+                
+                // Still enforce 3-hour rule even in emergency situations
+                const totalContinuousHours = calculateTotalContinuousWorkHours(s, timeIndex);
+                return totalContinuousHours < 3;
+            });
 
         // For first 2 and last 2 hours, prefer continuity but still allow rotation
         const isFixedPeriod = timeIndex < 2 || timeIndex >= totalHours - 2;
 
-        // If we have multiple staff, use fair rotation logic
+        // If we have multiple staff, use fair rotation logic with night shift continuity
         if (allAvailableStaff.length > 1) {
-            // Sort staff based on assignment history and continuous hours
-            const sortedStaff = [...allAvailableStaff].sort((a, b) => {
-                // Continuous hours penalty (to prevent long continuous assignments)
-                const continuousHoursA = obsAssignmentTracker[a] || 0;
-                const continuousHoursB = obsAssignmentTracker[b] || 0;
+            let selectedStaff;
+            
+            // NIGHT SHIFT CONTINUITY: For 21:00-22:00 (timeIndex 1), prioritize staff from 20:00-21:00 (timeIndex 0)
+            if (!isDayShift && timeIndex === 1) { // Second hour of night shift (21:00-22:00)
+                const firstHourTime = timeSlots[0]; // 20:00-21:00
+                const firstHourOBSAssignment = schedule[firstHourTime].patientAssignments["OBS"] || [];
+                
+                if (firstHourOBSAssignment.length > 0) {
+                    const firstHourOBSStaff = firstHourOBSAssignment[0]; // OBS is typically one staff member
+                    
+                    // Check if the staff from first hour is available for continuity
+                    const isAvailable = allAvailableStaff.includes(firstHourOBSStaff);
+                    
+                    // 3-HOUR RULE CHECK: Calculate total continuous work hours (OBS + patients)
+                    const totalContinuousHours = calculateTotalContinuousWorkHours(firstHourOBSStaff, timeIndex);
+                    const within3HourLimit = totalContinuousHours < 3;
+                    
+                    if (isAvailable && within3HourLimit) {
+                        selectedStaff = firstHourOBSStaff;
+                        console.log(`🌙 OBS CONTINUITY: ${selectedStaff} continues OBS duty from 20:00-21:00 to 21:00-22:00 (total ${totalContinuousHours + 1} continuous work hours)`);
+                    } else if (isAvailable && !within3HourLimit) {
+                        console.log(`⚠️ 3-HOUR RULE: ${firstHourOBSStaff} has already worked ${totalContinuousHours} continuous hours (OBS + patients), cannot continue OBS (max 3 hours)`);
+                    } else {
+                        console.log(`🌙 OBS CONTINUITY: ${firstHourOBSStaff} from first hour not available, using rotation logic`);
+                    }
+                }
+            }
+            
+            // If no continuity staff selected, use normal rotation logic
+            if (!selectedStaff) {
+                // Sort staff based on assignment history and continuous hours
+                const sortedStaff = [...allAvailableStaff].sort((a, b) => {
+                    // Continuous hours penalty (to prevent long continuous assignments)
+                    const continuousHoursA = obsAssignmentTracker[a] || 0;
+                    const continuousHoursB = obsAssignmentTracker[b] || 0;
 
-                // Apply penalty for continuous assignments (more than 2 hours)
-                const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
-                const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+                    // Apply penalty for continuous assignments (more than 2 hours)
+                    const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+                    const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
 
-                // OBS assignment history (for fair rotation)
-                const obsHistoryA = staffPatientHistory[a]["OBS"] || 0;
-                const obsHistoryB = staffPatientHistory[b]["OBS"] || 0;
+                    // OBS assignment history (for fair rotation)
+                    const obsHistoryA = staffPatientHistory[a]["OBS"] || 0;
+                    const obsHistoryB = staffPatientHistory[b]["OBS"] || 0;
 
-                // Overall workload
-                const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
-                const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
+                    // Overall workload
+                    const workloadA = staffStats[a] ? (staffStats[a].workHours || 0) : 0;
+                    const workloadB = staffStats[b] ? (staffStats[b].workHours || 0) : 0;
 
-                // Combined score (lower is better)
-                const scoreA = continuityPenaltyA + (obsHistoryA * 10) + workloadA;
-                const scoreB = continuityPenaltyB + (obsHistoryB * 10) + workloadB;
+                    // Combined score (lower is better)
+                    const scoreA = continuityPenaltyA + (obsHistoryA * 10) + workloadA;
+                    const scoreB = continuityPenaltyB + (obsHistoryB * 10) + workloadB;
 
-                return scoreA - scoreB;
-            });
+                    return scoreA - scoreB;
+                });
 
-            // Select the best candidate
-            const selectedStaff = sortedStaff[0];
+                // Select the best candidate
+                selectedStaff = sortedStaff[0];
+            }
+            
             schedule[time].patientAssignments["OBS"] = [selectedStaff];
 
             // Update tracking
             if (staffPatientHistory[selectedStaff]) {
                 staffPatientHistory[selectedStaff]["OBS"]++;
+            }
+
+            // CRITICAL FIX: Increment work hours for OBS assignment
+            if (staffStats[selectedStaff]) {
+                staffStats[selectedStaff].workHours++;
             }
 
             // Update continuous assignment tracking
@@ -1808,6 +2044,12 @@ function assignObservationDuties(staff, securityStaff, nurseInCharge1, nurseInCh
             if (staffPatientHistory[selectedStaff]) {
                 staffPatientHistory[selectedStaff]["OBS"]++;
             }
+
+            // CRITICAL FIX: Increment work hours for OBS assignment
+            if (staffStats[selectedStaff]) {
+                staffStats[selectedStaff].workHours++;
+            }
+
             obsAssignmentTracker[selectedStaff] = (obsAssignmentTracker[selectedStaff] || 0) + 1;
         }
     });
@@ -1821,18 +2063,52 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
         s !== nurseInCharge2
     );
 
-    if (regularStaff.length > 0) {
-        // Simplified approach: just assign duties to staff without time slots
-        const dutyAssignments = [];
+    // Separate security-only duties from regular duties
+    const regularDuties = cleaningDuties.filter(duty => !securityOnlyDuties.includes(duty));
+    
+    const dutyAssignments = [];
 
-        // First, try to give at least one duty to each staff member
+    // FIRST: Assign security-only duties (KITCHEN and TAKE OUT BINS) to security staff only
+    if (securityStaff.length > 0) {
+        let securityDutyIndex = 0;
+        securityOnlyDuties.forEach(duty => {
+            // Always assign security duties, cycling through security staff if needed
+            const securityMember = securityStaff[securityDutyIndex % securityStaff.length];
+            
+            // Store cleaning duty in the staff stats
+            if (!staffStats[securityMember].cleaningDuties) {
+                staffStats[securityMember].cleaningDuties = [];
+            }
+            staffStats[securityMember].cleaningDuties.push({
+                duty: duty
+            });
+
+            // Add to duty assignments
+            dutyAssignments.push({
+                duty: duty,
+                staff: securityMember
+            });
+
+            console.log(`✓ Assigned security-only duty "${duty}" to security staff: ${securityMember}`);
+            securityDutyIndex++;
+        });
+    } else {
+        // Log warning if no security staff available for security-only duties
+        console.warn(`Warning: No security staff available for security-only duties: ${securityOnlyDuties.join(', ')}`);
+        
+        // Store this information
+        staffStats.unassignedSecurityDuties = securityOnlyDuties;
+    }
+
+    // SECOND: Assign regular duties to regular staff (excluding security-only duties)
+    if (regularStaff.length > 0 && regularDuties.length > 0) {
+        // First pass: try to give at least one duty to each regular staff member
         const staffWithDuties = new Set();
         let dutyIndex = 0;
 
-        // First pass: try to give at least one duty to each staff member
         regularStaff.forEach(s => {
-            if (dutyIndex < cleaningDuties.length) {
-                const duty = cleaningDuties[dutyIndex];
+            if (dutyIndex < regularDuties.length) {
+                const duty = regularDuties[dutyIndex];
 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
@@ -1855,16 +2131,18 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             }
         });
 
-        // Second pass: distribute any remaining duties, prioritizing staff with fewer duties
-        while (dutyIndex < cleaningDuties.length) {
-            // Calculate current duty count per staff
+        // Second pass: distribute any remaining regular duties, prioritizing staff with fewer duties
+        while (dutyIndex < regularDuties.length) {
+            // Calculate current duty count per staff for regular duties only
             const staffDutyCount = {};
             regularStaff.forEach(s => {
                 staffDutyCount[s] = 0;
             });
 
             dutyAssignments.forEach(assignment => {
-                staffDutyCount[assignment.staff]++;
+                if (regularStaff.includes(assignment.staff)) {
+                    staffDutyCount[assignment.staff]++;
+                }
             });
 
             // Sort staff by number of duties assigned (ascending)
@@ -1875,7 +2153,7 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             // Try to assign a duty to the staff with fewest duties
             if (staffByDutyCount.length > 0) {
                 const s = staffByDutyCount[0];
-                const duty = cleaningDuties[dutyIndex];
+                const duty = regularDuties[dutyIndex];
 
                 // Store cleaning duty in the staff stats
                 if (!staffStats[s].cleaningDuties) {
@@ -1897,10 +2175,10 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             }
         }
 
-        // Check if any staff still don't have duties
+        // Check if any regular staff still don't have duties
         const staffWithoutDuties = regularStaff.filter(s => !staffWithDuties.has(s));
         if (staffWithoutDuties.length > 0) {
-            console.log(`The following staff have no cleaning duties assigned: ${staffWithoutDuties.join(', ')}`);
+            console.log(`The following regular staff have no cleaning duties assigned: ${staffWithoutDuties.join(', ')}`);
 
             // Store this information in staff stats
             staffWithoutDuties.forEach(s => {
@@ -1911,15 +2189,33 @@ function assignCleaningDuties(staff, securityStaff, nurseInCharge1, nurseInCharg
             });
         }
 
-        // Add information about remaining unassigned duties to the stats
-        const assignedDutyCount = dutyAssignments.length;
-        const remainingDuties = cleaningDuties.slice(assignedDutyCount);
-        if (remainingDuties.length > 0) {
-            console.log(`Warning: ${remainingDuties.length} cleaning duties could not be assigned: ${remainingDuties.join(', ')}`);
+        // Add information about remaining unassigned regular duties to the stats
+        const assignedRegularDutyCount = dutyAssignments.filter(a => !securityOnlyDuties.includes(a.duty)).length;
+        const remainingRegularDuties = regularDuties.slice(assignedRegularDutyCount);
+        if (remainingRegularDuties.length > 0) {
+            console.log(`Warning: ${remainingRegularDuties.length} regular cleaning duties could not be assigned: ${remainingRegularDuties.join(', ')}`);
 
             // Store this information
-            staffStats.remainingDuties = remainingDuties;
+            if (!staffStats.remainingDuties) {
+                staffStats.remainingDuties = [];
+            }
+            staffStats.remainingDuties = staffStats.remainingDuties.concat(remainingRegularDuties);
         }
+    }
+
+    // Log summary of duty assignments with new security rule
+    console.log(`\n=== CLEANING DUTY ASSIGNMENT SUMMARY ===`);
+    console.log(`Security-only duties (KITCHEN, TAKE OUT BINS): ${securityOnlyDuties.length} assigned to security staff`);
+    console.log(`Regular duties: ${regularDuties.length} assigned to regular staff`);
+    console.log(`Total duty assignments: ${dutyAssignments.length}`);
+    
+    // Log security duty assignments
+    const securityAssignments = dutyAssignments.filter(a => securityOnlyDuties.includes(a.duty));
+    if (securityAssignments.length > 0) {
+        console.log(`Security staff duty assignments:`);
+        securityAssignments.forEach(assignment => {
+            console.log(`  ${assignment.staff}: ${assignment.duty}`);
+        });
     }
 }
 
@@ -1942,13 +2238,13 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
         const staffOnBreak = staff.filter(s => schedule[time].staffBreaks[s]).length;
         const securityOnDuty = securityStaff.filter(s => schedule[time].staffBreaks[s] === "SECURITY DUTY").length;
         const staffAvailableForPatients = (staff.length - staffOnBreak) + (securityStaff.length - securityOnDuty);
-        
+
         console.log(`Time ${time} staffing analysis:`);
         console.log(`  Regular staff on break: ${staffOnBreak}/${staff.length}`);
         console.log(`  Security staff on duty: ${securityOnDuty}/${securityStaff.length}`);
         console.log(`  Staff available for patients: ${staffAvailableForPatients}`);
         console.log(`  Staff required for patients: ${totalStaffRequired}`);
-        
+
         if (staffAvailableForPatients < totalStaffRequired) {
             console.error(`🚨 CRITICAL STAFFING SHORTAGE at ${time}:`);
             console.error(`  Need: ${totalStaffRequired} staff`);
@@ -2018,48 +2314,124 @@ function assignPatients(staff, patients, staffStats, continuousAssignmentTracker
                 if (staffNeeded > 0) {
                     console.log(`Patient ${patient.name} needs ${staffNeeded} more staff`);
 
-                    // Filter out staff already assigned to this patient
-                    const unassignedStaff = availableStaff.filter(s => !currentAssigned.includes(s));
+                    // NIGHT SHIFT CONTINUITY: For 21:00-22:00 (timeIndex 1), prioritize staff from 20:00-21:00 (timeIndex 0)
+                    let prioritizedStaff = [];
+                    if (!isDayShift && timeIndex === 1) { // Second hour of night shift (21:00-22:00)
+                        const firstHourTime = timeSlots[0]; // 20:00-21:00
+                        const firstHourAssignments = schedule[firstHourTime].patientAssignments[patient.name] || [];
+                        
+                        // Check which staff from first hour are available for second hour AND haven't exceeded 3-hour limit
+                        const availableFromFirstHour = firstHourAssignments.filter(s => {
+                            // Basic availability check
+                            const isAvailable = availableStaff.includes(s) && 
+                                               !currentAssigned.includes(s) && 
+                                               !isStaffAlreadyAssignedIncludingOBS(s, time, schedule);
+                            
+                            // 3-HOUR RULE CHECK: Ensure staff hasn't worked continuously for 3+ hours already
+                            const currentContinuousHours = continuousAssignmentTracker[s] ? 
+                                                         (continuousAssignmentTracker[s][patient.name] || 0) : 0;
+                            
+                            const within3HourLimit = currentContinuousHours < 3;
+                            
+                            if (!within3HourLimit) {
+                                console.log(`⚠️ 3-HOUR RULE: ${s} has already worked ${currentContinuousHours} continuous hours with ${patient.name}, cannot continue (max 3 hours)`);
+                            }
+                            
+                            return isAvailable && within3HourLimit;
+                        });
+                        
+                        prioritizedStaff = availableFromFirstHour;
+                        console.log(`🌙 NIGHT SHIFT CONTINUITY: ${patient.name} - ${prioritizedStaff.length} staff available from first hour (20:00-21:00) for continuity (respecting 3-hour rule)`);
+                    }
+
+                    // Filter out staff already assigned to this patient AND double-check availability AND enforce 3-hour rule
+                    const unassignedStaff = availableStaff.filter(s => {
+                        // Basic availability checks
+                        const basicAvailability = !currentAssigned.includes(s) && 
+                                                 !isStaffAlreadyAssignedIncludingOBS(s, time, schedule);
+                        
+                        if (!basicAvailability) return false;
+                        
+                        // 3-HOUR RULE: Calculate total continuous work hours (OBS + patients)
+                        const totalContinuousHours = calculateTotalContinuousWorkHours(s, timeIndex);
+                        const within3HourLimit = totalContinuousHours < 3;
+                        
+                        if (!within3HourLimit) {
+                            console.log(`⚠️ 3-HOUR RULE BLOCKED: ${s} has already worked ${totalContinuousHours} continuous hours (OBS + patients), cannot assign to ${patient.name} (max 3 hours)`);
+                        }
+                        
+                        return within3HourLimit;
+                    });
                     const staffToAssign = Math.min(staffNeeded, unassignedStaff.length);
 
                     if (staffToAssign > 0) {
-                        // Find best staff for this patient
-                        const bestStaff = findStaffWithContinuityLimit(
-                            unassignedStaff,
-                            patient.name,
-                            staffToAssign,
-                            staffStats,
-                            continuousAssignmentTracker,
-                            timeIndex
-                        );
+                        let bestStaff;
+                        
+                        // Use prioritized staff for night shift continuity first
+                        if (prioritizedStaff.length > 0 && staffToAssign > 0) {
+                            const continuityStaffCount = Math.min(prioritizedStaff.length, staffToAssign);
+                            bestStaff = prioritizedStaff.slice(0, continuityStaffCount);
+                            
+                            // If we still need more staff after continuity assignments
+                            if (bestStaff.length < staffToAssign) {
+                                const remainingStaff = unassignedStaff.filter(s => !bestStaff.includes(s));
+                                const additionalStaff = findStaffWithContinuityLimit(
+                                    remainingStaff,
+                                    patient.name,
+                                    staffToAssign - bestStaff.length,
+                                    staffStats,
+                                    continuousAssignmentTracker,
+                                    timeIndex
+                                );
+                                bestStaff = [...bestStaff, ...additionalStaff];
+                            }
+                            
+                            console.log(`🌙 CONTINUITY APPLIED: ${patient.name} - ${continuityStaffCount} staff continued from previous hour`);
+                        } else {
+                            // Normal assignment logic
+                            bestStaff = findStaffWithContinuityLimit(
+                                unassignedStaff,
+                                patient.name,
+                                staffToAssign,
+                                staffStats,
+                                continuousAssignmentTracker,
+                                timeIndex
+                            );
+                        }
 
-                        // Assign the staff
+                        // CRITICAL: Assign staff one by one with conflict validation
                         bestStaff.forEach(s => {
-                            schedule[time].patientAssignments[patient.name].push(s);
+                            // DOUBLE-CHECK: Verify staff is not already assigned before final assignment
+                            if (!isStaffAlreadyAssignedIncludingOBS(s, time, schedule)) {
+                                schedule[time].patientAssignments[patient.name].push(s);
 
-                            // Update rotation history
-                            if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
-                            if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
-                            staffPatientHistory[s][patient.name]++;
+                                // Update rotation history
+                                if (!staffPatientHistory[s]) staffPatientHistory[s] = {};
+                                if (!staffPatientHistory[s][patient.name]) staffPatientHistory[s][patient.name] = 0;
+                                staffPatientHistory[s][patient.name]++;
 
-                            // Update stats
-                            staffStats[s].workHours++;
+                                // Update stats
+                                staffStats[s].workHours++;
 
-                            // Update continuous assignment tracker
-                            if (timeIndex > 0) {
-                                const prevTime = timeSlots[timeIndex - 1];
-                                const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
+                                // Update continuous assignment tracker
+                                if (timeIndex > 0) {
+                                    const prevTime = timeSlots[timeIndex - 1];
+                                    const prevAssignments = schedule[prevTime].patientAssignments[patient.name] || [];
 
-                                if (prevAssignments.includes(s)) {
-                                    continuousAssignmentTracker[s][patient.name]++;
+                                    if (prevAssignments.includes(s)) {
+                                        continuousAssignmentTracker[s][patient.name]++;
+                                    } else {
+                                        continuousAssignmentTracker[s][patient.name] = 1;
+                                    }
                                 } else {
                                     continuousAssignmentTracker[s][patient.name] = 1;
                                 }
-                            } else {
-                                continuousAssignmentTracker[s][patient.name] = 1;
-                            }
 
-                            console.log(`Assigned ${s} to ${patient.name} at ${time}`);
+                                console.log(`✓ Assigned ${s} to ${patient.name} at ${time}`);
+                            } else {
+                                console.error(`🚨 CONFLICT PREVENTED: ${s} is already assigned at ${time}. Skipping assignment to ${patient.name}`);
+                                allPatientsAssigned = false; // Mark as incomplete since we couldn't assign
+                            }
                         });
                     } else {
                         allPatientsAssigned = false;
@@ -2156,6 +2528,47 @@ function isStaffAlreadyAssignedIncludingOBS(staffName, time, schedule) {
     return false;
 }
 
+// Add this new function to calculate TOTAL continuous work hours (OBS + patients)
+function calculateTotalContinuousWorkHours(staffName, timeIndex) {
+    if (timeIndex === 0) return 0; // First hour, no previous work
+    
+    let continuousHours = 0;
+    
+    // Look backwards from current time to count continuous work hours
+    for (let i = timeIndex - 1; i >= 0; i--) {
+        const time = timeSlots[i];
+        let wasWorking = false;
+        
+        // Check if staff was assigned to OBS
+        const obsAssignments = schedule[time].patientAssignments["OBS"] || [];
+        if (obsAssignments.includes(staffName)) {
+            wasWorking = true;
+        }
+        
+        // Check if staff was assigned to any patient
+        if (!wasWorking) {
+            for (const patientName in schedule[time].patientAssignments) {
+                if (patientName !== "OBS") {
+                    const patientAssignments = schedule[time].patientAssignments[patientName] || [];
+                    if (patientAssignments.includes(staffName)) {
+                        wasWorking = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If staff was working, increment continuous hours; if not, break the chain
+        if (wasWorking) {
+            continuousHours++;
+        } else {
+            break; // Stop counting if there's a gap in work
+        }
+    }
+    
+    return continuousHours;
+}
+
 // Add this new function to find staff with continuity limits
 function findStaffWithContinuityLimit(availableStaff, patientName, count, staffStats, continuousTracker, timeIndex) {
     // Sort staff based on multiple factors
@@ -2165,8 +2578,24 @@ function findStaffWithContinuityLimit(availableStaff, patientName, count, staffS
         const continuousHoursB = continuousTracker[b] ? (continuousTracker[b][patientName] || 0) : 0;
 
         // Apply strong penalty for staff with 3+ continuous hours (to force rotation)
-        const continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
-        const continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+        // SPECIAL CASE: Allow continuity during first 2 hours of night shift (20:00-22:00)
+        const isEarlyNightShift = timeIndex < 2; // First 2 time slots (20:00-21:00, 21:00-22:00)
+        
+        if (isEarlyNightShift) {
+            console.log(`📅 Early night shift detected (${timeSlots[timeIndex]}): Allowing staff continuity for ${patientName}`);
+        }
+        
+        let continuityPenaltyA, continuityPenaltyB;
+        
+        if (isEarlyNightShift) {
+            // During first 2 hours: Much reduced penalties to allow continuity
+            continuityPenaltyA = continuousHoursA >= 4 ? 500 : (continuousHoursA >= 3 ? 50 : 0);
+            continuityPenaltyB = continuousHoursB >= 4 ? 500 : (continuousHoursB >= 3 ? 50 : 0);
+        } else {
+            // Normal hours: Standard penalties to encourage rotation
+            continuityPenaltyA = continuousHoursA >= 3 ? 1000 : (continuousHoursA >= 2 ? 100 : 0);
+            continuityPenaltyB = continuousHoursB >= 3 ? 1000 : (continuousHoursB >= 2 ? 100 : 0);
+        }
 
         // Other factors from original algorithm
         const rotationA = (staffPatientHistory[a] && staffPatientHistory[a][patientName]) || 0;
@@ -2257,17 +2686,15 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
         if (assignedStaff.length === 0) {
             cell.textContent = "";
-            cell.style.backgroundColor = "#f0f0f0"; // Light gray for unassigned OBS
+            // Remove background color for clean appearance
             cell.style.color = "#666666";
         } else {
-            // Display assigned staff for OBS
-            const staffInitials = assignedStaff.map(staff => getInitials(staff)).join(', ');
-            cell.textContent = staffInitials;
+            // Display assigned staff for OBS with consistent colors
+            const staffDisplays = assignedStaff.map(staff => formatStaffDisplay(staff)).join(', ');
+            cell.innerHTML = staffDisplays; // Use innerHTML to display colored text
             cell.title = assignedStaff.join(", "); // Full names on hover
 
-            // Add special styling for OBS - green background
-            cell.style.backgroundColor = "#4CAF50"; // Green for OBS
-            cell.style.color = "#ffffff"; // White text
+            // Keep only text styling, remove background color
             cell.style.fontWeight = "bold";
         }
 
@@ -2300,8 +2727,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.style.color = 'white';
                 console.error(`CRITICAL: Patient ${patient} not assigned at ${time}! This should never happen.`);
             } else {
-                const staffInitials = assignedStaff.map(name => getInitials(name)).join(", ");
-                cell.textContent = staffInitials;
+                // Use consistent staff colors throughout the site
+                const staffDisplays = assignedStaff.map(staff => formatStaffDisplay(staff)).join(", ");
+                cell.innerHTML = staffDisplays; // Use innerHTML to display colored text
                 cell.title = assignedStaff.join(", ");
                 cell.className = "assignable-staff-cell";
 
@@ -2309,21 +2737,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                 cell.setAttribute("data-time", time);
                 cell.setAttribute("data-patient", patient);
 
-                // Color the cell based on the first assigned staff member
-                if (assignedStaff.length > 0) {
-                    // Generate a color based on the staff name
-                    const staffName = assignedStaff[0];
-                    const hash = staffName.split('').reduce((hash, char) => {
-                        return ((hash << 5) - hash) + char.charCodeAt(0);
-                    }, 0);
-
-                    const hue = Math.abs(hash) % 360;
-                    const bgColor = `hsl(${hue}, 70%, 85%)`;
-                    const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                    cell.style.backgroundColor = bgColor;
-                    cell.style.color = textColor;
-                }
+                // Keep only text colors, remove background colors for cleaner look
             }
 
             row.appendChild(cell);
@@ -2353,9 +2767,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     nonNursingStaff.forEach(s => {
         const row = document.createElement('tr');
 
-        // Add staff name cell with initials
+        // Add staff name cell with initials using consistent colors
         const staffCell = document.createElement('td');
-        staffCell.textContent = getInitials(s);
+        staffCell.innerHTML = formatStaffDisplay(s); // Use consistent color formatting
         staffCell.title = s; // Add full name as tooltip
         staffCell.className = 'row-header';
         row.appendChild(staffCell);
@@ -2394,7 +2808,6 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                     schedule[time].patientAssignments["OBS"].includes(s)) {
                     cell.textContent = "OBS";
                     cell.title = "Ward Observation"; // Add tooltip
-                    cell.style.backgroundColor = "#e3f2fd"; // Light blue for OBS
                     cell.style.color = '#000000'; // Dark text for readability
                     assigned = true;
                 }
@@ -2407,17 +2820,8 @@ function renderSchedule(schedule, staff, patients, staffStats) {
                             cell.textContent = getInitials(patient);
                             cell.title = patient; // Add patient name as tooltip
 
-                            // Use consistent color based on staff
-                            const hash = s.split('').reduce((hash, char) => {
-                                return ((hash << 5) - hash) + char.charCodeAt(0);
-                            }, 0);
-
-                            const hue = Math.abs(hash) % 360;
-                            const bgColor = `hsl(${hue}, 70%, 85%)`;
-                            const textColor = hue > 30 && hue < 200 ? '#000000' : '#ffffff';
-
-                            cell.style.backgroundColor = bgColor;
-                            cell.style.color = textColor;
+                            // Keep only default styling, remove background colors
+                            cell.style.color = '#000000'; // Dark text for readability
 
                             assigned = true;
                             break;
@@ -2427,7 +2831,7 @@ function renderSchedule(schedule, staff, patients, staffStats) {
 
                 if (!assigned) {
                     cell.textContent = "FREE";
-                    cell.style.backgroundColor = "#f8f9fa"; // Light gray for free time
+                    // Remove background color, keep default styling
                     cell.style.color = "#000000";
                 }
             }
@@ -2443,9 +2847,9 @@ function renderSchedule(schedule, staff, patients, staffStats) {
     nonNursingStaffForBreaks.forEach(s => {
         const row = document.createElement('tr');
 
-        // Staff name cell with initials
+        // Staff name cell with initials using consistent colors
         const staffCell = document.createElement('td');
-        staffCell.textContent = getInitials(s);
+        staffCell.innerHTML = formatStaffDisplay(s); // Use consistent color formatting
         staffCell.title = s; // Add full name as tooltip
         row.appendChild(staffCell);
 
@@ -2475,12 +2879,12 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
     nonNursingStaffForStats.forEach(s => {
         // Determine staff role for display
         let roleDisplay = "Health Care Worker";
-        let displayName = s;
+        let displayName = formatStaffDisplay(s, true); // Show initials and full name with color
 
         if (securityStaff.includes(s)) roleDisplay = "Security Staff";
         if (s === nurseInCharge1 || s === nurseInCharge2) {
             roleDisplay = "Nurse in Charge";
-            displayName = "NIC";
+            displayName = `<span style="color: #28a745; font-weight: bold;">NIC</span> (${s})`;
         }
 
         statsHtml += `<tr>
@@ -2547,18 +2951,29 @@ function renderStats(staffStats, staff, patients, continuousAssignmentTracker) {
         cleaningDuties.forEach(duty => {
             const assignment = dutyAssignments[duty];
             if (assignment) {
-                // Display "NIC" for nurses in charge
-                const staffDisplayName = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : assignment.staff;
-                const staffInitials = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2) ? "NIC" : getInitials(assignment.staff);
+                // Display "NIC" for nurses in charge, otherwise use consistent color formatting
+                const isNurseInCharge = (assignment.staff === nurseInCharge1 || assignment.staff === nurseInCharge2);
+                const staffDisplayName = isNurseInCharge ? "NIC" : assignment.staff;
+                const staffDisplay = isNurseInCharge ? 
+                    `<span style="color: #28a745; font-weight: bold;">NIC</span> (${staffDisplayName})` : 
+                    `${formatStaffDisplay(assignment.staff)} (${assignment.staff})`;
+                
+                const isSecurityOnly = securityOnlyDuties.includes(duty);
+                const dutyDisplayName = isSecurityOnly ? `🔒 ${duty}` : duty;
+                const securityBadge = isSecurityOnly ? `<span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">SECURITY ONLY</span>` : '';
 
                 statsHtml += `<tr>
-                    <td>${duty}</td>
-                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffInitials} (${staffDisplayName})</td>
+                    <td>${dutyDisplayName}${securityBadge}</td>
+                    <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; font-weight: bold;" title="Click to reassign - ${assignment.staff}">${staffDisplay}</td>
                     <td style="color: green;">✓ Assigned</td>
                 </tr>`;
             } else {
+                const isSecurityOnly = securityOnlyDuties.includes(duty);
+                const dutyDisplayName = isSecurityOnly ? `🔒 ${duty}` : duty;
+                const securityBadge = isSecurityOnly ? `<span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">SECURITY ONLY</span>` : '';
+                
                 statsHtml += `<tr>
-                    <td>${duty}</td>
+                    <td>${dutyDisplayName}${securityBadge}</td>
                     <td class="cleaning-duty-assignable" data-duty="${duty}" style="cursor: pointer; color: var(--table-cell-text-color); font-weight: bold;" title="Click to assign staff">Not Assigned</td>
                     <td style="color: red;">⚠ Unassigned</td>
                 </tr>`;
@@ -2722,7 +3137,7 @@ function regenerateScheduleStats() {
                         }
                     } else if (breakType === "NIGHT BREAK") {
                         staffStats[staffName].breakTime += 1;
-                        
+
                         // For night shift, group consecutive NIGHT BREAK hours into 2-hour blocks
                         if (!staffStats[staffName].nightBreakStart) {
                             // First hour of night break - store the start time
@@ -2733,11 +3148,11 @@ function regenerateScheduleStats() {
                             const startTime = staffStats[staffName].nightBreakStart;
                             const endTime = time.split('-')[1]; // Get end time of current slot
                             const fullBlockTime = `${startTime.split('-')[0]}-${endTime}`;
-                            
+
                             // Update to show full 2-hour block
                             staffStats[staffName].shortBreakTime = fullBlockTime;
                             staffStats[staffName].secondBreakTime = "CONTINUOUS";
-                            
+
                             // Clean up temporary variable
                             delete staffStats[staffName].nightBreakStart;
                         }
@@ -2779,7 +3194,7 @@ function regenerateScheduleStats() {
     renderStats(staffStats, allStaff, patients, continuousAssignmentTracker);
     renderStaffRotationStats(patients, allStaff.filter(s => !securityStaff.includes(s)));
 
-    // Save changes to sessionStorage
+    // Save changes to localStorage
     saveToSessionStorage();
 }
 
@@ -2817,7 +3232,7 @@ window.onload = function() {
     // Set moon emoji for dark mode button
     document.getElementById('toggleModeBtn').innerHTML = '🌙';
 
-    // Load data from sessionStorage
+    // Load data from localStorage
     loadFromSessionStorage();
 
     // Add event listeners for all buttons
@@ -3070,10 +3485,15 @@ $(document).ready(function() {
                     currentAssignments.splice(staffIndex, 1);
                     console.log(`Removed ${staffName} from OBS`);
                 } else {
-                    // CRITICAL: Check if staff is already assigned to other patients at this time
-                    if (isStaffAlreadyAssigned(staffName, time, schedule)) {
-                        // Find out what patients they're assigned to
+                    // CRITICAL: Check if staff is already assigned to other patients OR OBS at this time
+                    if (isStaffAlreadyAssignedIncludingOBS(staffName, time, schedule)) {
+                        // Find out what they're assigned to
                         let conflictDetails = [];
+
+                        // Check OBS assignment
+                        if (schedule[time].patientAssignments["OBS"] && schedule[time].patientAssignments["OBS"].includes(staffName)) {
+                            conflictDetails.push("OBS (Ward Observation)");
+                        }
 
                         // Check patient assignments
                         for (const otherPatient in schedule[time].patientAssignments) {
@@ -3205,35 +3625,48 @@ $(document).ready(function() {
         // Store duty on popup element
         $('#cleaningDutyPopup').data('duty', duty);
 
-        // Update popup title
-        $('#cleaningDutyTitle').text(duty);
+        // Update popup title with security-only indicator
+        const titleText = isSecurityOnlyDuty ? `🔒 ${duty} (SECURITY ONLY)` : duty;
+        const titleColor = isSecurityOnlyDuty ? '#dc3545' : '#9c27b0'; // Red for security-only, purple for regular
+        $('#cleaningDutyTitle').text(titleText).css('background-color', titleColor);
 
         // Show overlay and popup
         $('#popupOverlay').show();
         $('#cleaningDutyPopup').show();
 
-        // Get available staff (regular staff only, no security or nurses in charge)
+        // Get available staff based on security-only duty restriction
         let availableStaff = [];
-        $('.staff-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) availableStaff.push(name);
-        });
+        const isSecurityOnlyDuty = securityOnlyDuties.includes(duty);
+        
+        if (isSecurityOnlyDuty) {
+            // For security-only duties (KITCHEN, TAKE OUT BINS), only security staff can be assigned
+            $('.security-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) availableStaff.push(name);
+            });
+        } else {
+            // For regular duties, use regular staff (no security staff or nurses in charge)
+            $('.staff-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) availableStaff.push(name);
+            });
 
-        // Filter out security staff and nurses in charge
-        const securityStaffNames = [];
-        $('.security-name').each(function() {
-            const name = $(this).val().trim();
-            if (name) securityStaffNames.push(name);
-        });
+            // Filter out security staff and nurses in charge for regular duties
+            const securityStaffNames = [];
+            $('.security-name').each(function() {
+                const name = $(this).val().trim();
+                if (name) securityStaffNames.push(name);
+            });
 
-        const nurseInCharge1 = $('#nurseInChargeInput').val().trim();
-        const nurseInCharge2 = $('#nurseInCharge2Input').val().trim();
+            const nurseInCharge1 = $('#nurseInChargeInput').val().trim();
+            const nurseInCharge2 = $('#nurseInCharge2Input').val().trim();
 
-        availableStaff = availableStaff.filter(name =>
-            !securityStaffNames.includes(name) &&
-            name !== nurseInCharge1 &&
-            name !== nurseInCharge2
-        );
+            availableStaff = availableStaff.filter(name =>
+                !securityStaffNames.includes(name) &&
+                name !== nurseInCharge1 &&
+                name !== nurseInCharge2
+            );
+        }
 
         // Find currently assigned staff for this duty
         let currentlyAssigned = null;
@@ -3252,6 +3685,20 @@ $(document).ready(function() {
         // Build staff list
         let html = '';
 
+        // Add security restriction notice for security-only duties
+        if (isSecurityOnlyDuty) {
+            html += `<div style="background-color: #ffc107; color: #212529; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold; border-left: 4px solid #dc3545;">
+                🔒 Security Staff Only - Only security personnel can be assigned to kitchen cleaning and bin duties
+            </div>`;
+            
+            // Check if no security staff available
+            if (availableStaff.length === 0) {
+                html += `<div style="background-color: #dc3545; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+                    ⚠️ No security staff available for this duty
+                </div>`;
+            }
+        }
+
         // Status header
         const statusColor = currentlyAssigned ? '#28a745' : '#ffc107';
         const displayName = (currentlyAssigned === nurseInCharge1 || currentlyAssigned === nurseInCharge2) ? "NIC" : currentlyAssigned;
@@ -3269,19 +3716,20 @@ $(document).ready(function() {
             }
         });
 
-        // Add staff buttons
+        // Add staff buttons with consistent colors
         availableStaff.forEach(function(name) {
             const isAssigned = currentlyAssigned === name;
             const dutyCount = staffDutyCount[name] || 0;
+            const staffData = getStaffWithColor(name);
             let buttonStyle, buttonText, buttonClass;
 
             if (isAssigned) {
                 buttonStyle = 'background-color: #28a745; color: white;';
-                buttonText = `${name} (Currently Assigned) [${dutyCount} duties]`;
+                buttonText = `${formatStaffDisplay(name, true)} (Currently Assigned) [${dutyCount} duties]`;
                 buttonClass = 'select-cleaning-staff-btn';
             } else {
-                buttonStyle = 'background-color: #9c27b0; color: white;';
-                buttonText = `${name} [${dutyCount} current duties]`;
+                buttonStyle = `background-color: ${staffData.color}; color: white;`;
+                buttonText = `${formatStaffDisplay(name, true)} [${dutyCount} current duties]`;
                 buttonClass = 'select-cleaning-staff-btn';
             }
 
